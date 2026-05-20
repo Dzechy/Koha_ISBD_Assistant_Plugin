@@ -1,0 +1,535 @@
+[% INCLUDE 'doc-head-open.inc' %]
+<title>Koha: Koha_ISBD_Assistant_Plugin</title>
+[% INCLUDE 'doc-head-close.inc' %]
+[% INCLUDE 'calendar.inc' %]
+<style>
+    :root {
+        --isbd-accent: #408540;
+        --isbd-accent-soft: #eaf4ea;
+        --isbd-border: #d7dde6;
+        --isbd-surface: #f4f7fb;
+        --isbd-card: #ffffff;
+        --isbd-muted: #5b6b7c;
+        --isbd-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+    }
+    .configuration-section {
+        background: var(--isbd-card);
+        border: 1px solid var(--isbd-border);
+        border-radius: 8px;
+        margin-bottom: 24px;
+        box-shadow: var(--isbd-shadow);
+    }
+    .configuration-section legend {
+        background: var(--isbd-accent);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 8px 8px 0 0;
+        margin: 0;
+        width: 100%;
+        font-size: 13px;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+    }
+    .configuration-section .rows {
+        padding: 18px 18px 12px 18px;
+        margin: 0;
+    }
+    .configuration-section .rows > li {
+        padding: 8px 0;
+    }
+    .configuration-section .rows p {
+        margin: 0 0 8px;
+    }
+    .configuration-section .rows ul {
+        margin: 8px 0 8px 18px;
+        padding-left: 18px;
+    }
+    .hint {
+        color: var(--isbd-muted);
+        font-size: 12px;
+        font-style: normal;
+        display: block;
+        margin-top: 3px;
+    }
+    .alert-success {
+        background: #dff0d8;
+        border: 1px solid #d6e9c6;
+        color: #408540;
+        padding: 10px;
+        border-radius: 4px;
+    }
+    .label {
+        background: transparent;
+        border: none;
+        padding: 0;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        line-height: 1.2;
+    }
+    .label::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #8d99a6;
+        display: inline-block;
+        flex: 0 0 auto;
+    }
+    .label-success {
+        color: #408540;
+    }
+    .label-success::before {
+        background: #408540;
+    }
+    .label-danger {
+        color: #b33a3a;
+    }
+    .label-danger::before {
+        background: #b33a3a;
+    }
+    .label-warning,
+    .label-default {
+        color: #b33a3a;
+    }
+    .label-warning::before,
+    .label-default::before {
+        background: #b33a3a;
+    }
+    .label.dot-only {
+        font-size: 0;
+        line-height: 0;
+        gap: 0;
+        min-width: 8px;
+    }
+    .label.dot-only::before {
+        margin: 0;
+    }
+    .label.text-only {
+        gap: 0;
+    }
+    .label.text-only::before {
+        display: none;
+    }
+    .field-table {
+        width: 100%;
+        margin-bottom: 20px;
+        border-collapse: collapse;
+        background: var(--isbd-card);
+        border: 1px solid var(--isbd-border);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .field-table th, .field-table td {
+        padding: 8px 12px;
+        font-size: 14px;
+        color: #333;
+        border: 1px solid var(--isbd-border);
+    }
+    .field-table th {
+        background: var(--isbd-surface);
+        font-weight: bold;
+    }
+    .punctuation-field-example {
+        font-family: monospace;
+        background: var(--isbd-surface);
+        padding: 3px 6px;
+        border: 1px solid var(--isbd-border);
+        border-radius: 4px;
+    }
+    .action {
+        margin-top: 15px;
+    }
+    .action .btn {
+        margin-right: 8px;
+    }
+    .status-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 10px;
+    }
+    .status-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 10px;
+        background: var(--isbd-surface);
+        border: 1px solid var(--isbd-border);
+        border-radius: 6px;
+    }
+    .status-label {
+        font-size: 11px;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        color: var(--isbd-muted);
+        font-weight: 600;
+    }
+    .status-value {
+        color: #333;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .status-value .label {
+        color: inherit;
+    }
+    .status-value .label-success {
+        color: #408540 !important;
+    }
+    .status-value .label-danger,
+    .status-value .label-warning,
+    .status-value .label-default {
+        color: #b33a3a !important;
+    }
+    .status-value a {
+        word-break: break-all;
+    }
+    .warning-text {
+        color: red;
+        font-weight: bold;
+    }
+    @media (max-width: 991px) {
+        .main .row > [class*="col-sm-"] {
+            float: none;
+            width: 100%;
+            left: auto;
+            right: auto;
+        }
+        .status-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+</head>
+<body>
+[% INCLUDE 'header.inc' %]
+[% INCLUDE 'cat-search.inc' %]
+<div id="breadcrumbs">
+    <div class="container">
+        <a href="/cgi-bin/koha/mainpage.pl">Home</a> ⁄
+        <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> ⁄
+        <span class="active">Koha_ISBD_Assistant_Plugin</span>
+    </div>
+</div>
+<div class="main container-fluid">
+    <div class="row">
+        <div class="col-sm-10 col-sm-push-2">
+            <main>
+                <h1>Koha_ISBD_Assistant_Plugin</h1>
+
+                [% IF settings.last_updated %]
+                <div class="alert alert-success">
+                    <p><i class="fa fa-check-circle"></i> Last configuration update: [% settings.last_updated | html %]</p>
+                </div>
+                [% END %]
+                [% IF update_info && update_info.update_available %]
+                <div class="alert alert-warning" id="isbd-update-alert">
+                    <p><i class="fa fa-exclamation-circle"></i> New release available: [% update_info.latest_version | html %] (current [% current_version | html %]).</p>
+                    <p><a href="[% update_info.release_url | url %]" target="_blank" rel="noopener">View release on GitHub</a></p>
+                </div>
+                [% END %]
+
+                <div class="row">
+                    <div class="col-sm-6">
+                        <fieldset class="configuration-section">
+                            <legend>Plugin Status</legend>
+                            <div class="rows">
+                                <div class="status-grid">
+                                    <div class="status-item">
+                                        <span class="status-label">ISBD Rules &amp; Punctuation</span>
+                                        <span class="status-value">
+                                            [% IF settings.enabled %]
+                                                <span class="label label-success dot-only" title="Enabled" aria-label="Enabled">Enabled</span>
+                                            [% ELSE %]
+                                                <span class="label label-danger dot-only" title="Disabled" aria-label="Disabled">Disabled</span>
+                                            [% END %]
+                                        </span>
+                                    </div>
+                                    <div class="status-item">
+                                        <span class="status-label">Debug Mode</span>
+                                        <span class="status-value">
+                                            [% IF settings.debug_mode %]
+                                                <span class="label label-success dot-only" title="Enabled" aria-label="Enabled">Enabled</span>
+                                            [% ELSE %]
+                                                <span class="label label-danger dot-only" title="Disabled" aria-label="Disabled">Disabled</span>
+                                            [% END %]
+                                        </span>
+                                    </div>
+                                    <div class="status-item">
+                                        <span class="status-label">Interactive Guide</span>
+                                        <span class="status-value">
+                                            [% IF settings.enable_guide %]
+                                                <span class="label label-success dot-only" title="Enabled" aria-label="Enabled">Enabled</span>
+                                            [% ELSE %]
+                                                <span class="label label-danger dot-only" title="Disabled" aria-label="Disabled">Disabled</span>
+                                            [% END %]
+                                        </span>
+                                    </div>
+                                    <div class="status-item">
+                                        <span class="status-label">Internship Mode</span>
+                                        <span class="status-value">
+                                            [% IF settings.internship_mode %]
+                                                <span class="label label-success dot-only" title="Enabled" aria-label="Enabled">Enabled</span>
+                                            [% ELSE %]
+                                                <span class="label label-danger dot-only" title="Disabled" aria-label="Disabled">Disabled</span>
+                                            [% END %]
+                                        </span>
+                                    </div>
+                                    <div class="status-item">
+                                        <span class="status-label">ISBD Guardrails</span>
+                                        <span class="status-value">
+                                            [% IF settings.enforce_isbd_guardrails %]
+                                                <span class="label label-success dot-only" title="Enforced" aria-label="Enforced">Enforced</span>
+                                            [% ELSE %]
+                                                <span class="label label-danger dot-only" title="Disabled" aria-label="Disabled">Disabled</span>
+                                            [% END %]
+                                        </span>
+                                    </div>
+                                    <div class="status-item">
+                                        <span class="status-label">Live Validation</span>
+                                        <span class="status-value">
+                                            [% IF settings.enable_live_validation %]
+                                                <span class="label label-success dot-only" title="On" aria-label="On">On</span>
+                                            [% ELSE %]
+                                                <span class="label label-danger dot-only" title="Off" aria-label="Off">Off</span>
+                                            [% END %]
+                                        </span>
+                                    </div>
+                                    <div class="status-item">
+                                        <span class="status-label">AI Assist</span>
+                                        <span class="status-value">
+                                            [% IF ai_ready %]
+                                                <span class="label label-success dot-only" title="Enabled" aria-label="Enabled"></span>
+                                            [% ELSIF settings.ai_enable %]
+                                                <span class="label label-danger dot-only" title="Disabled (key missing)" aria-label="Disabled (key missing)"></span>
+                                            [% ELSE %]
+                                                <span class="label label-danger dot-only" title="Disabled" aria-label="Disabled"></span>
+                                            [% END %]
+                                        </span>
+                                    </div>
+                                    <div class="status-item">
+                                        <span class="status-label">API Key Status</span>
+                                        <span class="status-value"
+                                              id="isbd-tool-ai-key-status"
+                                              data-provider="[% IF ai_provider_is_openrouter %]openrouter[% ELSE %]openai[% END %]"
+                                              data-server-configured="[% IF ai_provider_is_openrouter %][% IF openrouter_api_key_set %]1[% ELSE %]0[% END %][% ELSE %][% IF llm_api_key_set %]1[% ELSE %]0[% END %][% END %]">
+                                            [% IF ai_provider_is_openrouter %]
+                                                [% IF openrouter_api_key_set %]
+                                                    <span class="label label-success dot-only" title="Configured" aria-label="Configured"></span>
+                                                [% ELSE %]
+                                                    <span class="label label-danger dot-only" title="Missing" aria-label="Missing"></span>
+                                                [% END %]
+                                            [% ELSE %]
+                                                [% IF llm_api_key_set %]
+                                                    <span class="label label-success dot-only" title="Configured" aria-label="Configured"></span>
+                                                [% ELSE %]
+                                                    <span class="label label-danger dot-only" title="Missing" aria-label="Missing"></span>
+                                                [% END %]
+                                            [% END %]
+                                        </span>
+                                    </div>
+                                    <div class="status-item">
+                                        <span class="status-label">AI Provider</span>
+                                        <span class="status-value">[% ai_provider | html %]</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <span class="status-label">AI Model</span>
+                                        <span class="status-value">[% (ai_model || 'Not set') | html %]</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <span class="status-label">Cataloging Standard</span>
+                                        <span class="status-value">ISBD (MARC21)</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <span class="status-label">Author LinkedIn</span>
+                                        <span class="status-value"><a href="[% author_linkedin | url %]" target="_blank" rel="noopener">[% author_linkedin | html %]</a></span>
+                                    </div>
+                                    <div class="status-item">
+                                        <span class="status-label">Plugin GitHub</span>
+                                        <span class="status-value"><a href="[% plugin_repo_url | url %]" target="_blank" rel="noopener">[% plugin_repo_url | html %]</a></span>
+                                    </div>
+                                    [% IF settings.last_updated %]
+                                    <div class="status-item">
+                                        <span class="status-label">Last Updated</span>
+                                        <span class="status-value">[% settings.last_updated | html %]</span>
+                                    </div>
+                                    [% END %]
+                                </div>
+                                <div class="action">
+                                    <a href="/cgi-bin/koha/plugins/run.pl?class=[% CLASS | uri %]&method=configure" class="btn btn-primary">
+                                        <i class="fa fa-cog"></i> Configure Plugin
+                                    </a>
+                                    <a href="/cgi-bin/koha/plugins/plugins-home.pl" class="btn btn-default">
+                                        <i class="fa fa-arrow-left"></i> Back to Plugins
+                                    </a>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+
+                    <div class="col-sm-6">
+                        <fieldset class="configuration-section">
+                            <legend>How to Use</legend>
+                            <div class="rows">
+                                <p>This plugin enforces ISBD rules and punctuation guardrails across MARC21 bibliographic fields.</p>
+                                <span class="hint">Deterministic rules first, AI guidance only with explicit review.</span>
+                                <p>Key features:</p>
+                                <ul>
+                                    <li>ISBD rules and punctuation guardrails</li>
+                                    <li>Inline indicators, ghost text suggestions, and quick fixes</li>
+                                    <li>Handles field relationships (e.g., 245$a adjusts based on $b, $c)</li>
+                                    <li>Prefix-suffix interdependence (prevents duplicate punctuation at subfield boundaries)</li>
+                                    <li>Auto-apply fixes toggle or suggestion-only mode</li>
+                                    <li>Internship trainee lists and access controls for supervised training</li>
+                                    <li>Live validation that blocks save when violations remain (optional)</li>
+                                    <li>Interactive guide for training</li>
+                                    <li>AI-driven ISBD guidance, subjects, and call number assistance</li>
+                                </ul>
+                                <p>Key ISBD conventions applied:</p>
+                                <ul>
+                                    <li><strong>Area separator:</strong> Each area after the first is preceded by ". — " (period-space-dash-space)</li>
+                                    <li><strong>Double punctuation (A.3.2.7):</strong> When abbreviation period meets prescribed period, both are given (e.g., "3rd ed.. — ")</li>
+                                    <li><strong>Parentheses/brackets (A.3.2.2):</strong> No space before closing paren/bracket when followed by comma, point, or other punctuation</li>
+                                    <li><strong>Ratio colons:</strong> Scale statements like "1:25000" are NOT prescribed punctuation — spaces are never added</li>
+                                    <li><strong>264 second indicator:</strong> 0=production, 1=publication, 2=distribution, 3=manufacture, 4=copyright</li>
+                                </ul>
+                                <p>To try it, <a href="/cgi-bin/koha/cataloguing/addbiblio.pl?frameworkcode=">create a new bibliographic record</a>.</p>
+                                <span class="hint">Click the link above to start cataloging with automatic punctuation.</span>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+
+                <fieldset class="configuration-section">
+                    <legend>Supported Fields</legend>
+                    <div class="rows">
+                        <p>The plugin ships with a baseline ISBD rule pack and supports custom rule extensions.</p>
+                        <span class="hint">See the Coverage Report in configuration for full framework coverage.</span>
+
+                        <h3>Title Fields (245)</h3>
+                        <table class="field-table table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Field</th>
+                                    <th>Rule / Punctuation</th>
+                                    <th>Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>245$a</td>
+                                    <td>No suffix when $b/$c/$n/$p follows; ends with <code>.</code> only when nothing follows</td>
+                                    <td><span class="punctuation-field-example">$aThe great Gatsby$b : a novel$c / F. Scott Fitzgerald.</span></td>
+                                </tr>
+                                <tr>
+                                    <td>245$b</td>
+                                    <td>Receives <code> : </code> prefix when needed; no slash suffix when $c follows; ends with <code>.</code> otherwise</td>
+                                    <td><span class="punctuation-field-example">$aThe great Gatsby$b : a novel$c / F. Scott Fitzgerald.</span></td>
+                                </tr>
+                                <tr>
+                                    <td>245$c</td>
+                                    <td>Receives <code> / </code> prefix when a title, subtitle, or part subfield precedes it; ends with <code>.</code></td>
+                                    <td><span class="punctuation-field-example">$aThe great Gatsby$c / F. Scott Fitzgerald.</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3>Publication Fields (260/264)</h3>
+                        <table class="field-table table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Field</th>
+                                    <th>Rule / Punctuation</th>
+                                    <th>Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>260$a / 264$a (ind2=0,1,2,3)</td>
+                                    <td>Ends with <code> : </code> when $b follows; <code>, </code> when only $c follows (no $b); <code>.</code> when nothing follows</td>
+                                    <td><span class="punctuation-field-example">$aNew York :$bScribner,$c1925.</span></td>
+                                </tr>
+                                <tr>
+                                    <td>260$b / 264$b (ind2=0,1,2,3)</td>
+                                    <td>Ends with <code>, </code> when $c follows, <code>.</code> otherwise</td>
+                                    <td><span class="punctuation-field-example">$bScribner,</span></td>
+                                </tr>
+                                <tr>
+                                    <td>260$c / 264$c (ind2=0,1,2,3)</td>
+                                    <td>Ends with <code>.</code></td>
+                                    <td><span class="punctuation-field-example">$c1925.</span></td>
+                                </tr>
+                                <tr>
+                                    <td>264$c (ind2=4, copyright)</td>
+                                    <td>Copyright date; ends with <code>.</code>; © and ℗ preserved. Typically only $c present.</td>
+                                    <td><span class="punctuation-field-example">$c©2020.</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <span class="hint">264 second indicator: 0=production, 1=publication, 2=distribution, 3=manufacture, 4=copyright. ind2=0,1,2,3 use same punctuation as 260.</span>
+
+                        <h3>Physical Description Fields (300)</h3>
+                        <table class="field-table table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Field</th>
+                                    <th>Rule / Punctuation</th>
+                                    <th>Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>300$a</td>
+                                    <td>Ends with <code> : </code> if $b follows; <code> ; </code> if $c follows (no $b); <code>.</code> when final</td>
+                                    <td><span class="punctuation-field-example">$a180 pages :$bill. ;$c23 cm.</span></td>
+                                </tr>
+                                <tr>
+                                    <td>300$b</td>
+                                    <td>Starts with <code> : </code> when $a precedes; ends with <code> ; </code> if $c follows, <code>.</code> otherwise</td>
+                                    <td><span class="punctuation-field-example">$a180 pages :$bill. ;$c23 cm.</span></td>
+                                </tr>
+                                <tr>
+                                    <td>300$c</td>
+                                    <td>Ends with <code>.</code></td>
+                                    <td><span class="punctuation-field-example">$c23 cm.</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <p>Other supported fields include 1XX/7XX (names), 5XX (notes), 6XX (subjects), 7XX/8XX access points, and linking entries.</p>
+                        <span class="hint">Non-ISBD elements are excluded by default.</span>
+                    </div>
+                </fieldset>
+
+                <fieldset class="configuration-section">
+                    <legend>Troubleshooting</legend>
+                    <div class="rows">
+                        <p>If you encounter issues with the plugin:</p>
+                        <ul>
+                            <li>Ensure the plugin is enabled in the configuration settings.</li>
+                            <li>Ensure ISBD-only mode matches your cataloging practice.</li>
+                            <li>Manually edit fields if automatic punctuation is incorrect.</li>
+                            <li>Toggle auto-punctuation off for specific records if needed.</li>
+                            <li>Verify your OpenAI API key for AI assist features.</li>
+                            <li>Enable debug mode to view console logs for troubleshooting.</li>
+                            <li>Contact your system administrator for configuration issues.</li>
+                        </ul>
+                        <p>If problems persist, check the Koha logs or reinstall the plugin.</p>
+                        <span class="hint">Debug mode can be enabled in the configuration settings to provide detailed error information.</span>
+                    </div>
+                </fieldset>
+
+            </main>
+        </div>
+
+        <div class="col-sm-2 col-sm-pull-10">
+            <aside>
+                [% INCLUDE 'tools-menu.inc' %]
+            </aside>
+        </div>
+    </div>
+</div>
+[% INCLUDE 'intranet-bottom.inc' %]

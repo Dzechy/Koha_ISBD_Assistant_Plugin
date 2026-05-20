@@ -1,0 +1,38 @@
+# Local credentials and personal files
+*PAT
+*.pat
+*.token
+*.secret
+
+# Build and release artifacts
+*.kpz
+*.zip
+dist/
+build/
+tmp/
+*.tmp
+
+# Logs and runtime output
+*.log
+logs/
+
+# Local Koha and environment files
+koha-conf.xml
+.env
+.env.*
+local/
+
+# Dependency and cache directories
+node_modules/
+.cache/
+__pycache__/
+*.py[cod]
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+.idea/
+.vscode/

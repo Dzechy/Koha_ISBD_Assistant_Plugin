@@ -1,0 +1,116 @@
+{
+  "guide_version": "2.0.0",
+  "rules_version": "1.0.0",
+  "progress_policy": {
+    "store_guide_version_with_progress": true,
+    "mark_modules_for_review_when_guide_or_rules_version_changes": true,
+    "supervisor_statuses": ["not_started", "in_progress", "completed", "mastered"],
+    "export_formats": ["csv", "json"]
+  },
+  "modules": [
+    {
+      "id": "novice-isbd-foundations",
+      "level": "novice",
+      "title": "ISBD Foundations",
+      "objectives": ["Describe bibliographic records", "Identify MARC tags, indicators, and subfields", "Name ISBD areas 0-8", "Explain prescribed punctuation"],
+      "depends_on": [],
+      "mastery_threshold": 0.85,
+      "lessons": [
+        {
+          "id": "bibliographic-records",
+          "why": "Reviewers need to know that the record describes a resource, not the cataloger workflow.",
+          "how": "Read tags, indicators, and subfields as structured evidence.",
+          "common_mistake": "Treating punctuation as decoration instead of encoded display logic.",
+          "do_not_automate": "Do not infer missing source-of-information facts."
+        },
+        {
+          "id": "what-plugin-automates",
+          "why": "The deterministic engine is intentionally narrow.",
+          "how": "Use findings for punctuation-only changes and hand off authority, URL, coordinate, control, and local-policy fields.",
+          "common_mistake": "Accepting AI advice as cataloging authority.",
+          "do_not_automate": "Authority headings, URLs, control fields, complex structured notes, complex cartographic coordinates, and local-policy fields."
+        },
+        {
+          "id": "reading-a-finding",
+          "rule_id": "ISBD_TITLE_245C_001",
+          "why": "Safe review depends on comparing current value, expected value, rationale, severity, and patch target.",
+          "how": "Confirm the rule, inspect the proposed replacement, apply, and undo in sandbox mode if needed.",
+          "common_mistake": "Applying a patch to the right tag but wrong repeated subfield.",
+          "do_not_automate": "Non-punctuation wording changes."
+        }
+      ],
+      "examples": [
+        {
+          "name": "245 title/responsibility prefix convention",
+          "fixture": "245 title/responsibility prefix convention"
+        }
+      ],
+      "quiz": [
+        {
+          "question": "Where does the slash live in the baseline 245 title/responsibility convention?",
+          "answers": [
+            { "text": "At the start of 245$c", "correct": true, "explanation": "The baseline engine uses prefix-on-current for 245$c." },
+            { "text": "At the end of 245$b", "correct": false, "explanation": "That is legacy guide text and does not match the engine." }
+          ]
+        }
+      ],
+      "scenario_records": [
+        {
+          "id": "novice-title-sandbox",
+          "description": "Fix a 245 field with missing title/responsibility boundary punctuation.",
+          "field": {
+            "tag": "245",
+            "subfields": [
+              { "code": "a", "value": "The great Gatsby" },
+              { "code": "b", "value": "a novel" },
+              { "code": "c", "value": "F. Scott Fitzgerald" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "practitioner-area-rules",
+      "level": "practitioner",
+      "title": "Applying Area Rules",
+      "objectives": ["Review Areas 1-8", "Separate deterministic punctuation from cataloger judgment", "Use AI only as advisory help"],
+      "depends_on": ["novice-isbd-foundations"],
+      "mastery_threshold": 0.85,
+      "lessons": [
+        { "id": "area-1-245-246", "rule_id": "ISBD_TITLE_245B_001", "why": "Title boundaries are common and visible.", "how": "Use prefix-on-current for 245$b and 245$c.", "common_mistake": "Putting slash at the end of $b.", "do_not_automate": "Choosing title proper from ambiguous source data." },
+        { "id": "area-2-250", "rule_id": "ISBD_EDITION_250A_ALONE", "why": "Edition abbreviations often end with meaningful periods.", "how": "Preserve abbreviation points and add prescribed punctuation only where needed.", "common_mistake": "Collapsing 'ed.. —' to one period.", "do_not_automate": "Deciding whether wording is an edition statement." },
+        { "id": "area-3-254-255-362", "rule_id": "ISBD_CARTO_255A_001", "why": "Some material-specific punctuation is deterministic.", "how": "Apply terminal punctuation to simple scale/music/serial statements.", "common_mistake": "Spacing ratio colons.", "do_not_automate": "Complex coordinate internals." },
+        { "id": "area-4-260-264", "rule_id": "ISBD_PUBL_260B_HAS_C", "why": "Publication boundaries drive common display punctuation.", "how": "Use the 264 second indicator for function and preserve publisher abbreviation periods.", "common_mistake": "Using the wrong 264 indicator for production/publication/distribution/manufacture/copyright function.", "do_not_automate": "Local production-process mappings." },
+        { "id": "area-5-300", "rule_id": "ISBD_PHYS_300A_HAS_C_NO_B", "why": "Physical descriptions frequently use abbreviation periods.", "how": "Preserve 'p.' and 'ill.' before semicolons.", "common_mistake": "Stripping the period before adding ' ;'.", "do_not_automate": "Material extent decisions." },
+        { "id": "area-6-series", "rule_id": "ISBD_SERIES_490A", "why": "Series transcription and tracing differ.", "how": "Patch transcribed 490/440 fields and hand off controlled 8XX headings.", "common_mistake": "Editing authority-controlled series tracing punctuation.", "do_not_automate": "Authority-controlled 8XX headings." },
+        { "id": "area-7-notes", "rule_id": "ISBD_NOTES_500A_001", "why": "Simple note periods are deterministic.", "how": "Patch simple notes and hand off structured notes.", "common_mistake": "Normalizing internal 505/533 syntax without context.", "do_not_automate": "Complex structured notes." },
+        { "id": "area-8-identifiers", "rule_id": "ISBD_ISBN_020", "why": "Identifiers should not carry sentence punctuation.", "how": "Remove terminal punctuation from identifier values.", "common_mistake": "Treating ISBN periods like note punctuation.", "do_not_automate": "Changing identifier digits." },
+        { "id": "handoff-ai", "why": "AI can explain punctuation and suggest LCC/LCSH candidates, but it cannot authorize record changes.", "how": "Treat AI output as advisory. Apply only punctuation-only patches that pass deterministic guardrails; review LCC/LCSH candidates against authority/cataloging policy before saving.", "common_mistake": "Letting AI rewrite descriptive data or bypass deterministic ISBD findings.", "do_not_automate": "Authoritative headings, URLs, local fields, control fields, source-of-information decisions, and any non-punctuation rewrite." }
+      ],
+      "examples": [
+        { "fixture": "300 preserves p. before semicolon" },
+        { "fixture": "260 preserves Co. before comma" },
+        { "fixture": "264 publication second indicator" }
+      ],
+      "quiz": [],
+      "scenario_records": []
+    },
+    {
+      "id": "reviewer-quality-control",
+      "level": "reviewer",
+      "title": "Reviewer Quality Control",
+      "objectives": ["Explain rule rationales", "Spot false positives", "Write safe custom rules", "Review intern work", "Run regression tests", "Document local exceptions"],
+      "depends_on": ["practitioner-area-rules"],
+      "mastery_threshold": 0.85,
+      "lessons": [
+        { "id": "explain-rationale", "why": "Supervisors must defend every automated change.", "how": "Trace finding code to rule rationale and ISBD coverage status.", "common_mistake": "Approving a fix without checking rule scope.", "do_not_automate": "Judgment-heavy cataloging decisions." },
+        { "id": "false-positives", "why": "Conservative automation still needs review.", "how": "Compare current value, expected value, subfield index, and field context.", "common_mistake": "Ignoring repeated subfield indexes.", "do_not_automate": "Ambiguous source interpretation." },
+        { "id": "custom-rules", "why": "Local policy belongs in explicit local rules.", "how": "Use schema-valid punctuation-only checks with tests.", "common_mistake": "Writing broad regexes that alter headings.", "do_not_automate": "Authority, URL, control, and local fields by default." },
+        { "id": "regression-testing", "why": "JS and Perl engines must stay identical.", "how": "Run shared fixtures through both test runners before release.", "common_mistake": "Testing only the browser path.", "do_not_automate": "Untested production-process mappings." }
+      ],
+      "examples": [],
+      "quiz": [],
+      "scenario_records": []
+    }
+  ]
+}

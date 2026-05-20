@@ -1,0 +1,88 @@
+[
+  {
+    "name": "245 title/responsibility prefix convention",
+    "field": {
+      "tag": "245",
+      "subfields": [
+        { "code": "a", "value": "The great Gatsby" },
+        { "code": "b", "value": "a novel" },
+        { "code": "c", "value": "F. Scott Fitzgerald" }
+      ]
+    },
+    "expected": [
+      { "subfield": "b", "value": " : a novel" },
+      { "subfield": "c", "value": " / F. Scott Fitzgerald." }
+    ]
+  },
+  {
+    "name": "300 preserves p. before semicolon",
+    "field": {
+      "tag": "300",
+      "subfields": [
+        { "code": "a", "value": "180 p." },
+        { "code": "c", "value": "23 cm" }
+      ]
+    },
+    "expected": [
+      { "subfield": "a", "value": "180 p. ;" },
+      { "subfield": "c", "value": "23 cm." }
+    ]
+  },
+  {
+    "name": "300 preserves ill. before semicolon",
+    "field": {
+      "tag": "300",
+      "subfields": [
+        { "code": "a", "value": "180 p" },
+        { "code": "b", "value": "ill." },
+        { "code": "c", "value": "23 cm" }
+      ]
+    },
+    "expected": [
+      { "subfield": "b", "value": "ill. ;" }
+    ]
+  },
+  {
+    "name": "260 preserves Co. before comma",
+    "field": {
+      "tag": "260",
+      "subfields": [
+        { "code": "a", "value": "New York" },
+        { "code": "b", "value": "Scribner & Co." },
+        { "code": "c", "value": "1925" }
+      ]
+    },
+    "expected": [
+      { "subfield": "b", "value": "Scribner & Co.," }
+    ]
+  },
+  {
+    "name": "264 publication second indicator",
+    "field": {
+      "tag": "264",
+      "ind2": "1",
+      "subfields": [
+        { "code": "a", "value": "London" },
+        { "code": "b", "value": "Penguin" },
+        { "code": "c", "value": "2020" }
+      ]
+    },
+    "expected": [
+      { "subfield": "a", "value": "London :" },
+      { "subfield": "b", "value": "Penguin," },
+      { "subfield": "c", "value": "2020." }
+    ]
+  },
+  {
+    "name": "250 preserves abbreviation before area separator",
+    "field": {
+      "tag": "250",
+      "subfields": [
+        { "code": "a", "value": "3rd ed. - Publication area" }
+      ]
+    },
+    "expected": [
+      { "subfield": "a", "value": "3rd ed.. \u2014 Publication area" }
+    ]
+  }
+]

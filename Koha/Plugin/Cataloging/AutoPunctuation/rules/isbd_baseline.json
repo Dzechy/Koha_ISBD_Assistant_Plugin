@@ -1,0 +1,2006 @@
+{
+  "version": "1.0.0",
+  "standard": "ISBD 2021",
+  "description": "Baseline ISBD punctuation rules for MARC21 bibliographic records, aligned with IFLA ISBD 2011 Consolidated Edition 2021 Update. Prescribed punctuation per A.3.2.1: space-colon-space ( : ), space-semicolon-space ( ; ), space-slash-space ( / ), space-equals-space ( = ), comma-space (, ), period-space (. ), space-plus-space ( + ), period-space-dash-space (. — ) for area separators. Prescribed punctuation is preceded and followed by a space with exception of comma and point which are only followed by a space (A.3.2.1). Prescribed punctuation is retained even when this results in double punctuation (A.3.2.7) — e.g. '3rd ed.. — ' is correct. Parentheses and brackets each treated as single punctuation symbols (A.3.2.2). Each area after the first is preceded by period-space-dash-space (. — ) per A.3.2.3. Automates deterministic punctuation in selected ISBD areas and uses handoff guardrails where MARC21/authority/local policy should govern. Area 0 is partial/handoff: 336 content type and 337 media type may inform content form/media type, but 338 is carrier type and is not ISBD production process; production process requires a local mapping if a library wants generated Area 0 display. Area 1 Title (245$a/b/c/n/p, 246$a with indicators 0/1/2/3), Area 2 Edition (250$a/b), Area 3 Cartographic (255$a-f), Music (254$a), Serial numbering (362$a), Area 4 Publication (260/264$a/b/c/e/f/g; 264 ind2=0 production, 1 publication, 2 distribution, 3 manufacture, 4 copyright), Area 5 Material (300$a/b/c/e/f/g), Area 6 Series (440/490/830$a/v/x), Area 7 Notes (500-599 including 530/532/533/534 reproduction notes, 310/321 frequency, 505 contents, 590 local notes), Area 8 Standard numbers (020/022/024/028). Ratio colons in scale statements (1:25000) preserved per ISBD 3.1.1.1. Printing/manufacturing info enclosed in parentheses per ISBD 4G. MARC21 encoding handles certain conventions (e.g. subfield delimiters, indicator-defined contexts) so some ISBD display conventions are not duplicated. Prefix-suffix interdependence: when adjacent subfields share boundary punctuation, the suffix of one subfield and the prefix of the next are coordinated to prevent redundant/duplicate punctuation (e.g. colon on $a suffix + colon on $b prefix produces only one colon). Empty subfield values are treated as absent for punctuation dependency checks.",
+  "rules": [
+    {
+      "id": "ISBD_CTRL_FIXED_001",
+      "tag_pattern": "^00[0-9]$",
+      "severity": "INFO",
+      "rationale": "Control fields are fixed-length or system-managed; ISBD punctuation does not apply.",
+      "checks": [
+        {
+          "type": "fixed_field",
+          "severity": "INFO",
+          "message": "Control field; no ISBD punctuation applied."
+        }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "001 123456", "after": "001 123456" }
+      ]
+    },
+    {
+      "id": "ISBD_SPACING_ALL_001",
+      "tag_pattern": "^[1-8][0-9][0-9]$",
+      "subfield_pattern": "^[a-z0-9]$",
+      "severity": "INFO",
+      "rationale": "ISBD A.3.2.1: Prescribed punctuation is preceded and followed by a space. Double spacing within element text is discouraged.",
+      "checks": [
+        {
+          "type": "spacing",
+          "severity": "INFO",
+          "message": "Reduce double spaces in ISBD text."
+        }
+      ],
+      "fixes": [
+        { "label": "Normalize spacing", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "New  York", "after": "New York" }
+      ]
+    },
+    {
+      "id": "ISBD_STDNUM_NO_PUNCT_001",
+      "tag_pattern": "^(010|015|016|020|022|024|028|030|035|036|037|038|039)$",
+      "subfield_pattern": "^[a-z0-9]$",
+      "only_when_no_other_rule": true,
+      "severity": "INFO",
+      "rationale": "Standard numbers and control data do not carry terminal punctuation. MARC21 encoding handles the display.",
+      "checks": [
+        {
+          "type": "no_terminal_punctuation",
+          "severity": "INFO",
+          "message": "Remove trailing punctuation from standard numbers."
+        }
+      ],
+      "fixes": [
+        { "label": "Remove trailing punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "9781234567890.", "after": "9781234567890" }
+      ]
+    },
+    {
+      "id": "ISBD_ISBN_020",
+      "tag": "020",
+      "subfields": ["a"],
+      "severity": "INFO",
+      "rationale": "ISBD 8.1.2: Standard identifier recorded per its relevant standard. ISBN may include qualifier in parentheses (binding, volume designation). No terminal punctuation on the identifier itself. MARC21 handles display.",
+      "checks": [
+        {
+          "type": "no_terminal_punctuation",
+          "severity": "INFO",
+          "message": "Remove trailing punctuation from ISBN."
+        }
+      ],
+      "fixes": [
+        { "label": "Remove trailing punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "978-3-16-148410-0.", "after": "978-3-16-148410-0" },
+        { "before": "978-0-85020-025-6 (cloth).", "after": "978-0-85020-025-6 (cloth)" }
+      ]
+    },
+    {
+      "id": "ISBD_ISBN_PRICE_020C",
+      "tag": "020",
+      "subfields": ["c"],
+      "severity": "INFO",
+      "rationale": "ISBD 8.3: Terms of availability. In MARC21, $c of 020 records the price/terms of availability. No terminal punctuation.",
+      "checks": [
+        {
+          "type": "no_terminal_punctuation",
+          "severity": "INFO",
+          "message": "Remove trailing punctuation from terms of availability."
+        }
+      ],
+      "fixes": [
+        { "label": "Remove trailing punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "$19.95.", "after": "$19.95" }
+      ]
+    },
+    {
+      "id": "ISBD_ISSN_022",
+      "tag": "022",
+      "subfields": ["a"],
+      "severity": "INFO",
+      "rationale": "ISBD 8.1.2: ISSN recorded per its relevant standard. No terminal punctuation.",
+      "checks": [
+        {
+          "type": "no_terminal_punctuation",
+          "severity": "INFO",
+          "message": "Remove trailing punctuation from ISSN."
+        }
+      ],
+      "fixes": [
+        { "label": "Remove trailing punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "0024-2667.", "after": "0024-2667" }
+      ]
+    },
+    {
+      "id": "ISBD_CLASS_NO_PUNCT_001",
+      "tag_pattern": "^(050|060|082|084|090|092|099)$",
+      "subfields": ["a", "b"],
+      "severity": "INFO",
+      "rationale": "Classification and call numbers should not include terminal punctuation per standard library practice.",
+      "checks": [
+        {
+          "type": "no_terminal_punctuation",
+          "severity": "INFO",
+          "message": "Remove trailing punctuation from call numbers."
+        }
+      ],
+      "fixes": [
+        { "label": "Remove trailing punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "PS3511.I9 G7.", "after": "PS3511.I9 G7" }
+      ]
+    },
+    {
+      "id": "ISBD_LANG_041_HANDSOFF_001",
+      "tag": "041",
+      "subfield_pattern": "^[a-z0-9]$",
+      "severity": "INFO",
+      "rationale": "Language code fields are coded data and should not receive punctuation normalization.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Language code field; no automatic punctuation enforced." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "eng", "after": "eng" }
+      ]
+    },
+    {
+      "id": "ISBD_GEO_043_HANDSOFF_001",
+      "tag": "043",
+      "subfield_pattern": "^[a-z0-9]$",
+      "severity": "INFO",
+      "rationale": "Geographic area codes are coded data.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Geographic area code; no automatic punctuation enforced." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "n-us---", "after": "n-us---" }
+      ]
+    },
+    {
+      "id": "ISBD_HEADING_HANDSOFF_001",
+      "tag_pattern": "^(1\\d\\d|6\\d\\d|7\\d\\d|8\\d\\d)$",
+      "subfield_pattern": "^[a-z0-9]$",
+      "severity": "INFO",
+      "rationale": "MARC heading/access-point fields are controlled headings; do not auto-append terminal punctuation. MARC21 encoding handles display of these fields.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Heading/access-point field; no automatic punctuation enforced." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "Fitzgerald, F. Scott", "after": "Fitzgerald, F. Scott" },
+        { "before": "Women -- History -- 20th century", "after": "Women -- History -- 20th century" }
+      ]
+    },
+    {
+      "id": "ISBD_UNIFORM_TITLE_HANDSOFF_001",
+      "tag_pattern": "^(130|240|730|830)$",
+      "subfield_pattern": "^[a-z0-9]$",
+      "severity": "INFO",
+      "rationale": "Uniform title headings are controlled; no automatic punctuation.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Uniform title field; no automatic punctuation enforced." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "Selections", "after": "Selections" }
+      ]
+    },
+
+    {
+      "id": "ISBD_TITLE_245A_001",
+      "tag": "245",
+      "subfields": ["a"],
+      "severity": "WARNING",
+      "rationale": "ISBD 1.1: Title proper. ISBD 1F: Titles of individual works by different authors separated by period-space (. ). ISBD 1H: Dependent title designation or dependent title following common title preceded by period-space (. ). When $b or $c follows, the title area continues; when final, title proper ends with period per ISBD area convention. MARC21 encoding handles area separator display via subfield breaks.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "end_not_in": [" .", ".", " /", "/", " ;", ";", " ,", ","],
+          "suffix_mode": "conditional_following",
+          "when_following_subfields": ["b", "c", "n", "p"],
+          "suffix_by_following_subfield": { "b": "", "c": "", "n": "", "p": "" },
+          "suffix_if_following": "",
+          "suffix_if_last": ".",
+          "end_in": [".", "?", "!"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Title proper: no suffix when $b/$c/$n/$p follows; terminal period when final."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply title punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "The Great Gatsby", "after": "The Great Gatsby" },
+        { "before": "The Great Gatsby", "after": "The Great Gatsby.", "note": "When final (no $b/$c follow)." }
+      ]
+    },
+    {
+      "id": "ISBD_TITLE_245A_SUBTITLE_SEP",
+      "tag": "245",
+      "subfields": ["a"],
+      "severity": "WARNING",
+      "rationale": "ISBD 1F: Titles of individual works by different authors separated by period-space (. ). ISBD 1H: Dependent title following common title preceded by period-space (. ). ISBD 1I: Dependent title designation followed by comma-space (, ). This rule detects multiple titles or common/dependent title patterns within $a and ensures correct period-space separator.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Ensure period-space (. ) separates titles by different authors or common/dependent titles within $a."
+        }
+      ],
+      "fixes": [
+        { "label": "Normalize title separators", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Title one / Author one Title two / Author two", "after": "Title one / Author one. Title two / Author two" },
+        { "before": "Common title-Dependent title", "after": "Common title. Dependent title" }
+      ]
+    },
+
+    {
+      "id": "ISBD_TITLE_245B_001",
+      "tag": "245",
+      "subfields": ["b"],
+      "severity": "WARNING",
+      "rationale": "ISBD 1C: Other title information preceded by space-colon-space ( : ). ISBD 1.2: Parallel title preceded by space-equals-space ( = ). The colon before $b is interdependent with $a; if it is not already supplied by $a, $b receives the prefix. Statement of responsibility punctuation is supplied by $c when $c follows. Ends with period when final.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "case_mode": "initial_lower",
+          "strip_prefixes": [":", "="],
+          "prefix_mode": "conditional_preceding",
+          "when_preceding_subfields": ["a", "n", "p"],
+          "prefix_if_preceding": " : ",
+          "parallel_prefix": " = ",
+          "end_not_in": [" :", ":", " =", "=", " /", "/", " ;", ";", " ,", ","],
+          "suffix_mode": "conditional_following",
+          "when_following_subfields": ["c"],
+          "suffix_if_following": "",
+          "suffix_if_last": ".",
+          "end_in": [".", "?", "!"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Subtitle: use colon prefix when needed, strip redundant : or =, no terminal punctuation when $c follows."
+        }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": ": Great Gatsby", "after": "Great Gatsby" },
+        { "before": "Great Gatsby", "after": "Great Gatsby" },
+        { "before": "= Le Grand Gatsby", "after": "= Le Grand Gatsby" }
+      ]
+    },
+    {
+      "id": "ISBD_TITLE_245C_001",
+      "tag": "245",
+      "subfields": ["c"],
+      "severity": "WARNING",
+      "rationale": "ISBD 1D: First statement of responsibility preceded by space-slash-space ( / ). ISBD 1E: Subsequent statements preceded by space-semicolon-space ( ; ). The slash before $c is interdependent with the preceding title/subtitle/part subfield; if it is not already supplied there, $c receives the prefix. Statement of responsibility ends with period when final in the title area.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "strip_prefixes": ["/"],
+          "prefix_mode": "conditional_preceding",
+          "when_preceding_subfields": ["a", "b", "n", "p"],
+          "prefix_if_preceding": " / ",
+          "end_not_in": [" .", ".", " ;", ";", " ,", ",", " :", ":"],
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Statement of responsibility: use slash prefix when needed, strip redundant /, add period suffix."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply responsibility punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "by F. Scott Fitzgerald", "after": "by F. Scott Fitzgerald." }
+      ]
+    },
+    {
+      "id": "ISBD_TITLE_245N_001",
+      "tag": "245",
+      "subfields": ["n"],
+      "severity": "WARNING",
+      "rationale": "ISBD 1H: Dependent title designation preceded by period-space (. ) when following common title. ISBD 1I: Dependent title following dependent title designation preceded by comma-space (, ). MARC21 subfield break handles the period-space between $a and $n. Strip redundant leading punctuation.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "strip_prefixes": ["."],
+          "prefix_mode": "conditional_preceding",
+          "when_preceding_subfields": ["a", "b", "p"],
+          "prefix_if_preceding": ". ",
+          "end_not_in": [" .", ".", " ,", ",", " ;", ";"],
+          "suffix_mode": "conditional_following",
+          "when_following_subfields": ["p"],
+          "suffix_if_following": "",
+          "suffix_if_last": ".",
+          "end_in": [".", "?", "!"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Dependent title designation: use period prefix when needed; $p supplies the comma when it follows."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply dependent title designation punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "pt. 1", "after": "pt. 1" },
+        { "before": "No. 5", "after": "No. 5" }
+      ]
+    },
+    {
+      "id": "ISBD_TITLE_245P_001",
+      "tag": "245",
+      "subfields": ["p"],
+      "severity": "WARNING",
+      "rationale": "ISBD 1H: Dependent title preceded by period-space (. ) or comma-space (, ) after dependent title designation. ISBD 1J: Dependent title following other title information preceded by period-space (. ). MARC21 subfield break handles separator. Strip redundant leading punctuation.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "strip_prefixes": [".", ","],
+          "prefix_mode": "conditional_preceding",
+          "when_preceding_subfields": ["a", "b", "n"],
+          "prefix_if_preceding": ". ",
+          "prefix_by_preceding_subfield": { "n": ", " },
+          "end_not_in": [" .", ".", " ,", ",", " ;", ";"],
+          "suffix_mode": "conditional_following",
+          "when_following_subfields": ["b", "c"],
+          "suffix_by_following_subfield": { "b": " : ", "c": "" },
+          "suffix_if_following": "",
+          "suffix_if_last": ".",
+          "end_in": [".", "?", "!"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Dependent title: strip redundant prefix; no terminal period when responsibility statement follows."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply dependent title punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Physics", "after": "Physics." }
+      ]
+    },
+
+    {
+      "id": "ISBD_VARIANT_TITLE_246_IND13",
+      "tag": "246",
+      "ind1": "3",
+      "subfields": ["a"],
+      "severity": "WARNING",
+      "rationale": "ISBD 7.1.2: Notes on variant titles. When 246 indicator 1 = 3, it provides a variant title for display. Ends with period per ISBD note conventions.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "WARNING",
+          "message": "Add terminal period to variant title (246 ind1=3)."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply variant title punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Alternative title", "after": "Alternative title." }
+      ]
+    },
+
+    {
+      "id": "ISBD_EDITION_250A_HAS_B",
+      "tag": "250",
+      "subfields": ["a"],
+      "requires_subfields": ["b"],
+      "severity": "WARNING",
+      "rationale": "ISBD 2.1: Edition statement. ISBD 2E: Additional edition statement ($b) follows with comma-space (, ) — so $a has no terminal punctuation when $b follows. Interdependent: $a suffix is empty when $b follows; the comma belongs to $b's prefix.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "end_not_in": [" ,", ",", " .", ".", " ;", ";"],
+          "suffix_mode": "conditional_following",
+          "when_following_subfields": ["b"],
+          "suffix_if_following": "",
+          "suffix_if_last": ".",
+          "end_in": [".", "?", "!"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Edition statement: no suffix when $b follows (comma on $b)."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply edition punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "2nd ed.", "after": "2nd ed.", "note": "Abbreviation period retained per ISBD A.3.2.7." }
+      ]
+    },
+    {
+      "id": "ISBD_EDITION_250A_ALONE",
+      "tag": "250",
+      "subfields": ["a"],
+      "forbids_subfields": ["b"],
+      "severity": "WARNING",
+      "rationale": "ISBD 2.1: Edition statement ends with period when final. Per ISBD A.3.2.7, if the element ends with a period (abbreviation) and the next prescribed punctuation begins with a period, both are given.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "WARNING",
+          "message": "Add terminal period to edition statement when final."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply edition punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "2nd ed", "after": "2nd ed." },
+        { "before": "2nd ed.", "after": "2nd ed.", "note": "Correct: abbreviation period retained per ISBD A.3.2.7." },
+        { "before": "Revised version", "after": "Revised version." }
+      ]
+    },
+    {
+      "id": "ISBD_EDITION_250B_001",
+      "tag": "250",
+      "subfields": ["b"],
+      "severity": "WARNING",
+      "rationale": "ISBD 2E: Additional edition statement preceded by comma-space (, ). ISBD 2B: Parallel edition preceded by space-equals-space ( = ). Use parallel_prefix for values starting with '='. Prefix is interdependent with $a: comma-space is the suffix of $a or prefix of $b (MARC21 subfield break). Strip redundant leading comma. Ends with period when final. Per ISBD A.3.2.7, if the element ends with a period (e.g. abbreviation) and the next prescribed punctuation begins with a period, both are given.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "strip_prefixes": ["=", ","],
+          "prefix_mode": "conditional_preceding",
+          "when_preceding_subfields": ["a"],
+          "prefix_if_preceding": "",
+          "parallel_prefix": " = ",
+          "end_not_in": [" .", ".", " ,", ","],
+          "suffix_mode": "when_last",
+          "suffix_if_last": ".",
+          "end_in": [".", "?", "!"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Additional/parallel edition: strip redundant prefix (interdependent with $a), terminal period."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply edition remainder punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "rev. and expanded", "after": "rev. and expanded." },
+        { "before": "= éd. rév.", "after": "= éd. rév." }
+      ]
+    },
+    {
+      "id": "ISBD_MUSICAL_254A_001",
+      "tag": "254",
+      "subfields": ["a"],
+      "severity": "INFO",
+      "rationale": "ISBD 3.2.1: Music format statement. Transcribed as appears on resource. Ends with period. Parallel music format statements use equals prefix per ISBD 3.2B.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "INFO",
+          "message": "Add terminal period to music format statement."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply music format punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Miniature score", "after": "Miniature score." },
+        { "before": "Full score", "after": "Full score." },
+        { "before": "Score and set of parts", "after": "Score and set of parts." }
+      ]
+    },
+    {
+      "id": "ISBD_CARTO_255A_001",
+      "tag": "255",
+      "subfields": ["a"],
+      "severity": "INFO",
+      "rationale": "ISBD 3.1.1: Statement of scale. Ratio colons (e.g. 1:25000) are NOT prescribed punctuation — there is no space before or after the colon in a ratio (ISBD 3.1.1.1). These must not be altered. Ends with period when final; no suffix when $b, $c, or $d follow (semicolon on $b per ISBD 3.1B).",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix_mode": "conditional_following",
+          "when_following_subfields": ["b", "c", "d", "e"],
+          "suffix_if_following": "",
+          "suffix_if_last": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "INFO",
+          "message": "Add terminal period to scale statement when final."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply scale punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Scale 1:25000", "after": "Scale 1:25000." },
+        { "before": "Scale 1:25000", "after": "Scale 1:25000", "note": "When $b follows, no suffix on $a." },
+        { "before": "Escala 1:100 000", "after": "Escala 1:100 000." }
+      ]
+    },
+    {
+      "id": "ISBD_CARTO_255_HANDSOFF_001",
+      "tag": "255",
+      "subfields": ["b", "c", "d", "e", "f", "g"],
+      "severity": "INFO",
+      "rationale": "ISBD 3.1: Cartographic projection ($b), coordinates ($c), celestial hemisphere, epoch/equinox ($d), and magnitude ($e) have complex internal punctuation (parentheses, semicolons, slashes, degree signs). Avoid automatic normalization. MARC21 subfield encoding handles element separation.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Cartographic detail subfield; no automatic punctuation enforced." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "(E 79°–E 86°/N 20°–N 12°)", "after": "(E 79°–E 86°/N 20°–N 12°)" },
+        { "before": "Conic proj. (W 131°–W 59°/N 53°–N 38°)", "after": "Conic proj. (W 131°–W 59°/N 53°–N 38°)" }
+      ]
+    },
+    {
+      "id": "ISBD_CARTO_255_ALONE_001",
+      "tag": "255",
+      "subfields": ["a"],
+      "forbids_subfields": ["b", "c", "d", "e"],
+      "severity": "WARNING",
+      "rationale": "ISBD 3.1: When 255$a is the only cartographic subfield, the area ends with period.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "WARNING",
+          "message": "Add terminal period to cartographic mathematical data."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply cartographic punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Scale 1:25000", "after": "Scale 1:25000." }
+      ]
+    },
+
+    {
+      "id": "ISBD_PUBL_260A_HAS_B",
+      "tag_pattern": "^(260|264)$",
+      "subfields": ["a"],
+      "requires_following_subfields": ["b"],
+      "severity": "WARNING",
+      "rationale": "ISBD 4C: Name of publisher/producer is preceded by space-colon-space ( : ). Interdependent: the colon is the suffix of $a and the prefix of $b. In MARC21, the subfield break implies this relationship — do not double the colon. Suffix on $a is ' : ' when $b follows. Applies to 260 (all) and 264 ind2=0 (production), 1 (publication), 2 (distribution), 3 (manufacture).",
+      "checks": [
+        {
+          "type": "punctuation",
+          "end_not_in": [" :", ":", " ;", ";", " ,", ","],
+          "suffix_mode": "conditional_following",
+          "when_following_subfields": ["b"],
+          "suffix_if_following": " : ",
+          "end_in": [":"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Use space-colon-space after place when publisher follows."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply publication place punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "New York", "after": "New York :" },
+        { "before": "[S.l.]", "after": "[S.l.] :" }
+      ]
+    },
+    {
+      "id": "ISBD_PUBL_260A_NO_B_HAS_C",
+      "tag_pattern": "^(260|264)$",
+      "subfields": ["a"],
+      "requires_following_subfields": ["c"],
+      "forbids_following_subfields": ["b"],
+      "severity": "WARNING",
+      "rationale": "ISBD 4E: When publisher ($b) is absent but date ($c) follows, place ($a) ends with comma-space (, ). Interdependent: comma is suffix of $a, not prefix of $c.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "end_not_in": [" ,", ",", " :", ":", " ;", ";"],
+          "suffix": ", ",
+          "end_in": [","],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Use comma-space after place when only date follows (no publisher)."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply publication place punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "New York", "after": "New York," }
+      ]
+    },
+    {
+      "id": "ISBD_PUBL_260A_ALONE",
+      "tag_pattern": "^(260|264)$",
+      "subfields": ["a"],
+      "forbids_following_subfields": ["b", "c"],
+      "severity": "WARNING",
+      "rationale": "When neither publisher ($b) nor date ($c) follows, place ($a) ends with period.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "end_not_in": [" .", ".", " ,", ",", " :", ":"],
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Add terminal period when place is final."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply publication place punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "New York", "after": "New York." }
+      ]
+    },
+    {
+      "id": "ISBD_PUBL_260A_SUBSEQUENT",
+      "tag_pattern": "^(260|264)$",
+      "subfields": ["a"],
+      "requires_preceding_subfields": ["a"],
+      "requires_following_subfields": ["c"],
+      "forbids_following_subfields": ["b"],
+      "severity": "INFO",
+      "rationale": "ISBD 4B: Second or subsequent place preceded by space-semicolon-space ( ; ). MARC21 uses repeated $a for subsequent places. The semicolon is the separator between repeated $a values. When publisher ($b) follows the second place, ends with ' : '; otherwise period.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "prefix_mode": "conditional_preceding",
+          "when_preceding_subfields": ["a"],
+          "prefix_if_preceding": " ; ",
+          "suffix_mode": "conditional_following",
+          "when_following_subfields": ["c"],
+          "suffix_if_following": ", ",
+          "suffix_if_last": ".",
+          "end_in": [","],
+          "normalize_punctuation": true,
+          "severity": "INFO",
+          "message": "Subsequent place: semicolon prefix."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply subsequent place punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Chicago", "after": " ; Chicago", "note": "When second place in repeated $a." }
+      ]
+    },
+    {
+      "id": "ISBD_PUBL_260B_HAS_C",
+      "tag_pattern": "^(260|264)$",
+      "subfields": ["b"],
+      "requires_following_subfields": ["c"],
+      "severity": "WARNING",
+      "rationale": "ISBD 4C: Publisher ($b) gets no prefix when $a exists (colon is on $a). ISBD 4E: When date ($c) follows, $b ends with comma-space (, ). Interdependent: $b prefix is empty (colon on $a suffix), $b suffix is comma-space (interdependent with $c prefix).",
+      "checks": [
+        {
+          "type": "punctuation",
+          "strip_prefixes": [" : ", ":", " ;", ";"],
+          "end_not_in": [" ,", ",", " ;", ";", " : ", ":"],
+          "suffix_mode": "conditional_following",
+          "when_following_subfields": ["c"],
+          "suffix_if_following": ", ",
+          "suffix_if_last": ".",
+          "end_in": [","],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Strip redundant colon prefix (interdependent with $a), comma before date, period when final."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply publisher punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": ": Scribner,", "after": "Scribner," },
+        { "before": "Scribner", "after": "Scribner," }
+      ]
+    },
+    {
+      "id": "ISBD_PUBL_260B_ALONE",
+      "tag_pattern": "^(260|264)$",
+      "subfields": ["b"],
+      "forbids_following_subfields": ["c"],
+      "severity": "WARNING",
+      "rationale": "When publisher ($b) is final (no date follows), ends with period.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "strip_prefixes": [" : ", ":", " ;", ";"],
+          "end_not_in": [" .", ".", " ;", ";", " ,", ","],
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Add terminal period to publisher name when final."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply publisher punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Scribner", "after": "Scribner." }
+      ]
+    },
+    {
+      "id": "ISBD_PUBL_260C",
+      "tag_pattern": "^(260|264)$",
+      "subfields": ["c"],
+      "severity": "WARNING",
+      "rationale": "ISBD 4E: Date of publication/production/distribution is preceded by comma-space (, ) on $b (or directly on $a if $b absent). ISBD 4G: Printing/manufacturing info follows in parentheses — MARC21 uses separate subfields ($e/$f/$g) for this in 260. Per ISBD, $c is the terminal element of the publication area and ends with period. Continuing resources use hyphen after date (ISBD 4F). Interdependent: $c prefix is empty (comma on $b suffix or $a suffix). Applies to 260 (all) and 264 ind2=0, 1, 2, 3. For 264 ind2=4 (copyright), see ISBD_PUBL_264_COPYRIGHT_C.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "strip_prefixes": [",", " ,"],
+          "end_not_in": [" .", ".", " ;", ";", " ,", ","],
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Strip redundant comma prefix (interdependent with $b/$a suffix), add terminal period."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply date punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "1925", "after": "1925." },
+        { "before": "c1972", "after": "c1972." },
+        { "before": "1971-1975", "after": "1971-1975." },
+        { "before": "2020-", "after": "2020-", "note": "Continuing resource: hyphen indicates open-ended, no terminal period." }
+      ]
+    },
+    {
+      "id": "ISBD_PUBL_260EFG",
+      "tag_pattern": "^(260|264)$",
+      "subfields": ["e", "f", "g"],
+      "severity": "INFO",
+      "rationale": "ISBD 4G: Printing/manufacturing info enclosed in parentheses. MARC21 uses $e (place), $f (manufacturer), $g (date) within 260 for this. Within parentheses, same punctuation applies: $e gets ' : ' before $f, $f gets ', ' before $g. The parentheses and their internal punctuation are handled by MARC21 encoding. Do not auto-normalize inside these subfields.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Printing/manufacturing subfield; MARC21 encoding handles parentheses and internal punctuation." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "London", "after": "London", "note": "$e: place of printing" },
+        { "before": "Clowes", "after": "Clowes", "note": "$f: printer" },
+        { "before": "1926", "after": "1926", "note": "$g: date of printing" }
+      ]
+    },
+    {
+      "id": "ISBD_PUBL_264_COPYRIGHT_C",
+      "tag": "264",
+      "ind2": "4",
+      "subfields": ["c"],
+      "severity": "WARNING",
+      "rationale": "ISBD 4.3 / MARC21 264 ind2=4: Copyright date. The copyright date is preceded by area separator in ISBD display, but MARC21 subfield break handles this. Ends with period. May include copyright symbol (©, ℗) which should be preserved. No prefix needed (area separator handled by MARC21 encoding).",
+      "checks": [
+        {
+          "type": "punctuation",
+          "strip_prefixes": [",", " ,"],
+          "end_not_in": [" .", ".", " ,", ","],
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Copyright date: add terminal period."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply copyright date punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "©2020", "after": "©2020." },
+        { "before": "℗2019", "after": "℗2019." },
+        { "before": "c2015", "after": "c2015." },
+        { "before": "2023", "after": "2023." }
+      ]
+    },
+    {
+      "id": "ISBD_PUBL_264_COPYRIGHT_NO_PUNCT",
+      "tag": "264",
+      "ind2": "4",
+      "subfields": ["a", "b"],
+      "severity": "INFO",
+      "rationale": "MARC21 264 ind2=4 (copyright): $a and $b are uncommon in copyright statements. If present, treat as hands-off — MARC21 encoding handles display.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Copyright field subfield; no automatic punctuation enforced." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "©2020", "after": "©2020" }
+      ]
+    },
+    {
+      "id": "ISBD_PUBL_264_MANUFACTURE_HANDSOFF",
+      "tag": "264",
+      "ind2": "3",
+      "subfields": ["e", "f", "g"],
+      "severity": "INFO",
+      "rationale": "ISBD 4.4-4.6 / MARC21 264 ind2=3 (manufacture): $e/$f/$g subfields for printing/manufacturing are uncommon in 264 and may contain complex data. Hands-off per MARC21 encoding.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Manufacturing subfield in 264 ind2=3; no automatic punctuation enforced." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "1976 printing", "after": "1976 printing" }
+      ]
+    },
+
+    {
+      "id": "ISBD_PHYS_300A_HAS_B",
+      "tag": "300",
+      "subfields": ["a"],
+      "requires_following_subfields": ["b"],
+      "severity": "WARNING",
+      "rationale": "ISBD 5B: Other physical details are preceded by space-colon-space ( : ). Interdependent: colon is suffix of $a, not prefix of $b. When $b follows, $a ends with ' : '.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "end_not_in": [" :", ":", " ;", ";", " ,", ","],
+          "suffix_mode": "conditional_following",
+          "when_following_subfields": ["b"],
+          "suffix_if_following": " : ",
+          "end_in": [":"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "End extent with space-colon-space before other details ($b)."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply extent punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "xii, 180 p", "after": "xii, 180 p :" },
+        { "before": "1 atlas (v, 120 p.)", "after": "1 atlas (v, 120 p.) :" }
+      ]
+    },
+    {
+      "id": "ISBD_PHYS_300A_HAS_C_NO_B",
+      "tag": "300",
+      "subfields": ["a"],
+      "requires_following_subfields": ["c"],
+      "forbids_following_subfields": ["b"],
+      "severity": "WARNING",
+      "rationale": "ISBD 5C: When $b is absent but dimensions ($c) follow, extent ($a) ends with space-semicolon-space ( ; ). Interdependent: semicolon is suffix of $a, not prefix of $c.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "end_not_in": [" ;", ";", " :", ":", " ,", ","],
+          "suffix_mode": "conditional_following",
+          "when_following_subfields": ["c"],
+          "suffix_if_following": " ; ",
+          "suffix_if_last": ".",
+          "end_in": [";"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "End extent with space-semicolon-space before dimensions."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply extent punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "xii, 180 p", "after": "xii, 180 p ;" }
+      ]
+    },
+    {
+      "id": "ISBD_PHYS_300A_HAS_E_NO_BC",
+      "tag": "300",
+      "subfields": ["a"],
+      "requires_following_subfields": ["e"],
+      "forbids_following_subfields": ["b", "c"],
+      "severity": "WARNING",
+      "rationale": "ISBD 5D: When accompanying material ($e) follows and $b/$c are absent, extent ($a) ends with space-plus-space ( + ). Interdependent: plus is suffix of $a, not prefix of $e.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "end_not_in": [" +", "+", " :", ":", " ;", ";", " ,", ","],
+          "suffix_mode": "conditional_following",
+          "when_following_subfields": ["e"],
+          "suffix_if_following": " + ",
+          "suffix_if_last": ".",
+          "end_in": ["+"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "End extent with plus before accompanying material."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply extent punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "1 volume", "after": "1 volume +" }
+      ]
+    },
+    {
+      "id": "ISBD_PHYS_300A_ALONE",
+      "tag": "300",
+      "subfields": ["a"],
+      "forbids_following_subfields": ["b", "c", "e"],
+      "severity": "WARNING",
+      "rationale": "When no other subfields follow, extent ($a) ends with period.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "end_not_in": [" .", ".", " ;", ";", " ,", ",", " :", ":"],
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "End extent with period."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply extent punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "xii, 180 p", "after": "xii, 180 p." }
+      ]
+    },
+    {
+      "id": "ISBD_PHYS_300B_HAS_C",
+      "tag": "300",
+      "subfields": ["b"],
+      "requires_following_subfields": ["c"],
+      "severity": "WARNING",
+      "rationale": "ISBD 5B: Other physical details preceded by space-colon-space ( : ) when $a precedes. ISBD 5C: When $c follows, $b ends with space-semicolon-space ( ; ). Prefix is interdependent with $a: strip redundant colon. Suffix is interdependent with $c: strip redundant semicolon if $c already has it.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "strip_prefixes": [" : ", ":", " ;", ";"],
+          "end_not_in": [" :", ":", " ;", ";", " ,", ","],
+          "prefix_mode": "conditional_preceding",
+          "when_preceding_subfields": ["a"],
+          "prefix_if_preceding": "",
+          "suffix_mode": "conditional_following",
+          "when_following_subfields": ["c"],
+          "suffix_if_following": " ; ",
+          "suffix_if_last": ".",
+          "end_in": [";"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Strip redundant colon prefix (interdependent with $a), semicolon before $c, period when final."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply physical detail punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "ill", "after": "ill ;" },
+        { "before": "ill.", "after": "ill. ;", "note": "Period retained per ISBD A.3.2.7 double punctuation rule." }
+      ]
+    },
+    {
+      "id": "ISBD_PHYS_300B_HAS_E_NO_C",
+      "tag": "300",
+      "subfields": ["b"],
+      "requires_following_subfields": ["e"],
+      "forbids_following_subfields": ["c"],
+      "severity": "WARNING",
+      "rationale": "ISBD 5D: When accompanying material ($e) follows and $c is absent, $b gets colon prefix (if $a precedes) and plus suffix ( + ). Prefix is interdependent with $a.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "strip_prefixes": [" : ", ":", " ;", ";"],
+          "end_not_in": [" :", ":", " +", "+", " ;", ";", " ,", ","],
+          "prefix_mode": "conditional_preceding",
+          "when_preceding_subfields": ["a"],
+          "prefix_if_preceding": "",
+          "suffix_mode": "conditional_following",
+          "when_following_subfields": ["e"],
+          "suffix_if_following": " + ",
+          "suffix_if_last": ".",
+          "end_in": ["+"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Strip redundant colon prefix (interdependent with $a), plus suffix before accompanying material."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply physical detail punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "ill.", "after": "ill. +" }
+      ]
+    },
+    {
+      "id": "ISBD_PHYS_300B_ALONE",
+      "tag": "300",
+      "subfields": ["b"],
+      "forbids_following_subfields": ["c", "e"],
+      "severity": "WARNING",
+      "rationale": "ISBD 5B: When $b is final, it gets colon prefix (if $a precedes) and ends with period. Prefix is interdependent with $a.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "strip_prefixes": [" : ", ":", " ;", ";"],
+          "end_not_in": [" :", ":", " ;", ";", " ,", ","],
+          "prefix_mode": "conditional_preceding",
+          "when_preceding_subfields": ["a"],
+          "prefix_if_preceding": "",
+          "suffix_mode": "when_last",
+          "suffix_if_last": ".",
+          "end_in": [".", "?", "!"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Strip redundant colon prefix (interdependent with $a), end with period when final."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply physical detail punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "ill", "after": "ill." }
+      ]
+    },
+    {
+      "id": "ISBD_PHYS_300C_HAS_E",
+      "tag": "300",
+      "subfields": ["c"],
+      "requires_following_subfields": ["e"],
+      "severity": "WARNING",
+      "rationale": "ISBD 5C: Dimensions preceded by space-semicolon-space ( ; ). ISBD 5D: When $e follows, dimensions end with space-plus-space ( + ). Prefix is interdependent with $b or $a.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "strip_prefixes": [" ; ", ";", " : ", ":"],
+          "end_not_in": [" .", ".", " +", "+", " ;", ";", " ,", ","],
+          "prefix_mode": "conditional_preceding",
+          "when_preceding_subfields": ["a", "b"],
+          "prefix_if_preceding": "",
+          "suffix_mode": "conditional_following",
+          "when_following_subfields": ["e"],
+          "suffix_if_following": " + ",
+          "suffix_if_last": ".",
+          "end_in": [".", "?", "!", "+"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Strip redundant semicolon prefix (interdependent with $b/$a), plus before $e, period when final."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply dimensions punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "23 cm", "after": "23 cm." },
+        { "before": "18 x 57 cm", "after": "18 x 57 cm." }
+      ]
+    },
+    {
+      "id": "ISBD_PHYS_300C_ALONE",
+      "tag": "300",
+      "subfields": ["c"],
+      "forbids_following_subfields": ["e"],
+      "severity": "WARNING",
+      "rationale": "ISBD 5C: Dimensions preceded by space-semicolon-space ( ; ) when $a or $b precedes. Ends with period when final. Prefix is interdependent with $b or $a.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "strip_prefixes": [" ; ", ";", " : ", ":"],
+          "prefix_mode": "conditional_preceding",
+          "when_preceding_subfields": ["a", "b"],
+          "prefix_if_preceding": "",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Strip redundant prefix (interdependent), add terminal period to dimensions."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply dimensions punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "23 cm", "after": "23 cm." }
+      ]
+    },
+    {
+      "id": "ISBD_PHYS_300E",
+      "tag": "300",
+      "subfields": ["e"],
+      "severity": "WARNING",
+      "rationale": "ISBD 5D: Each accompanying material statement is preceded by space-plus-sign-space ( + ). Prefix is interdependent with $a/$b/$c suffix. Strip redundant leading plus. Ends with period when final.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "strip_prefixes": [" + ", "+"],
+          "end_not_in": [" .", ".", " ;", ";", " ,", ","],
+          "prefix_mode": "conditional_preceding",
+          "when_preceding_subfields": ["a", "b", "c"],
+          "prefix_if_preceding": "",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Strip redundant plus prefix (interdependent with $a/$b/$c), end with period."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply accompanying material punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "1 booklet", "after": "1 booklet." },
+        { "before": "1 CD-ROM", "after": "1 CD-ROM." }
+      ]
+    },
+    {
+      "id": "ISBD_PHYS_300F",
+      "tag": "300",
+      "subfields": ["f"],
+      "severity": "INFO",
+      "rationale": "ISBD 5.1.2: Type of unit. Enclosed in parentheses following extent per ISBD pattern. MARC21 encoding handles display.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "end_not_in": [" .", ".", " ;", ";", " ,", ","],
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "INFO",
+          "message": "End type of unit with period when final."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply type of unit punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "sheets", "after": "sheets." }
+      ]
+    },
+    {
+      "id": "ISBD_PHYS_300G",
+      "tag": "300",
+      "subfields": ["g"],
+      "severity": "INFO",
+      "rationale": "ISBD 5.1.2: Size of unit. MARC21 encoding handles display.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "end_not_in": [" .", ".", " ;", ";", " ,", ","],
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "INFO",
+          "message": "End size of unit with period when final."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply size of unit punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "9 x 12 in.", "after": "9 x 12 in." }
+      ]
+    },
+
+    {
+      "id": "ISBD_SERIES_490A",
+      "tag_pattern": "^(440|490)$",
+      "subfields": ["a"],
+      "severity": "WARNING",
+      "rationale": "ISBD 6.1: Title proper of series. ISBD 6I: Numbering within series preceded by space-semicolon-space ( ; ). ISBD 6J: Section/subseries designation preceded by period-space (. ). ISBD 6K: Dependent title following section/subseries designation preceded by comma-space (, ). ISBD 6.5: ISSN preceded by comma-space (, ). Ends with semicolon when $v/$x follow, period when final. Parallel series titles use equals prefix per ISBD 6D. Within parentheses per ISBD 6B.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "strip_prefixes": ["=", ";"],
+          "parallel_prefix": " = ",
+          "suffix_mode": "conditional_following",
+          "when_following_subfields": ["v", "x"],
+          "suffix_if_following": " ; ",
+          "suffix_if_last": ".",
+          "end_in": [";", ".", "?", "!"],
+          "normalize_punctuation": true,
+          "severity": "WARNING",
+          "message": "Series title: semicolon before numbering ($v), equals for parallel, period when final."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply series punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Cambridge studies", "after": "Cambridge studies ;" },
+        { "before": "Cambridge studies", "after": "Cambridge studies." },
+        { "before": "Acta Universitatis Carolinae. Philologica", "after": "Acta Universitatis Carolinae. Philologica." }
+      ]
+    },
+    {
+      "id": "ISBD_SERIES_490A_SUBSERIES",
+      "tag_pattern": "^(440|490)$",
+      "subfields": ["a"],
+      "severity": "INFO",
+      "rationale": "ISBD 6J: Section or subseries designation or dependent title following a common title is preceded by period-space (. ). ISBD 6K: Dependent title following section/subseries designation preceded by comma-space (, ). Detects common title + subseries patterns within $a.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "normalize_punctuation": true,
+          "severity": "INFO",
+          "message": "Ensure period-space (. ) separates common title from subseries/section designation."
+        }
+      ],
+      "fixes": [
+        { "label": "Normalize series subseries separators", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Acta Universitatis Carolinae-Philologica", "after": "Acta Universitatis Carolinae. Philologica" },
+        { "before": "Bibliothèque française et romane. Série B, Éditions critiques de textes", "after": "Bibliothèque française et romane. Série B, Éditions critiques de textes" }
+      ]
+    },
+    {
+      "id": "ISBD_SERIES_490V",
+      "tag_pattern": "^(440|490)$",
+      "subfields": ["v"],
+      "severity": "WARNING",
+      "rationale": "ISBD 6.6: Numbering within a series. Terminal period when final. Prefix is interdependent with $a suffix: semicolon-space precedes numbering. Strip redundant leading semicolon.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "strip_prefixes": [" ; ", ";"],
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "WARNING",
+          "message": "Strip redundant semicolon prefix (interdependent with $a), add terminal period to series numbering."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply series numbering punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "v. 12", "after": "v. 12." },
+        { "before": "no. 5", "after": "no. 5." }
+      ]
+    },
+    {
+      "id": "ISBD_SERIES_490X",
+      "tag_pattern": "^(440|490)$",
+      "subfields": ["x"],
+      "severity": "INFO",
+      "rationale": "ISBD 6.5: International standard number of a series is preceded by comma-space (, ). MARC21 encoding handles this. No terminal punctuation needed.",
+      "checks": [
+        {
+          "type": "no_terminal_punctuation",
+          "severity": "INFO",
+          "message": "Remove trailing punctuation from series ISSN."
+        }
+      ],
+      "fixes": [
+        { "label": "Remove trailing punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "0080-2258.", "after": "0080-2258" }
+      ]
+    },
+    {
+      "id": "ISBD_SERIES_8XX_HANDSOFF",
+      "tag_pattern": "^(800|810|811|830)$",
+      "subfield_pattern": "^[a-z0-9]$",
+      "severity": "INFO",
+      "rationale": "ISBD 6: Series tracing fields are controlled headings per MARC21. No automatic punctuation applied.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Series tracing/heading field; no automatic punctuation enforced." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "Cambridge studies in international relations ; 42", "after": "Cambridge studies in international relations ; 42" }
+      ]
+    },
+
+    {
+      "id": "ISBD_SERIAL_362A_001",
+      "tag": "362",
+      "subfields": ["a"],
+      "severity": "INFO",
+      "rationale": "ISBD 3.3: Numeric and/or chronological designation of serials. Hyphen (-) links first to last issue or indicates continuation (ISBD 3.3B). Ends with period. Do not add period if the designation already ends with a hyphen (continuing) per ISBD 3.3.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "-", "?", "!"],
+          "severity": "INFO",
+          "message": "Add terminal period to serial numbering."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply serial numbering punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Vol. 1, no. 1 (Jan. 1971)-", "after": "Vol. 1, no. 1 (Jan. 1971)-" },
+        { "before": "Vol. 1, no. 1 (Jan. 1971)-vol. 5, no. 12 (Dec. 1975)", "after": "Vol. 1, no. 1 (Jan. 1971)-vol. 5, no. 12 (Dec. 1975)." }
+      ]
+    },
+
+    {
+      "id": "ISBD_DISS_502A_001",
+      "tag": "502",
+      "subfields": ["a"],
+      "severity": "INFO",
+      "rationale": "ISBD 7.2: Dissertation/thesis notes. Ends with period.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "INFO",
+          "message": "Add terminal period to dissertation note."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply dissertation note punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Thesis (Ph.D.)--University of London, 1998", "after": "Thesis (Ph.D.)--University of London, 1998." }
+      ]
+    },
+
+    {
+      "id": "ISBD_NOTES_500A_001",
+      "tag": "500",
+      "subfields": ["a"],
+      "severity": "WARNING",
+      "rationale": "ISBD 7: General notes end with a period. Per ISBD 7, each note is separated from the next by period-space-dash-space (. — ) or given in separate paragraphs.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "WARNING",
+          "message": "Add terminal period to note."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply note punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Includes bibliographical references", "after": "Includes bibliographical references." }
+      ]
+    },
+    {
+      "id": "ISBD_NOTES_504_BIBLIO",
+      "tag": "504",
+      "subfields": ["a"],
+      "severity": "WARNING",
+      "rationale": "ISBD 7.0.2: Bibliography/index notes end with a period.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "WARNING",
+          "message": "Add terminal period to bibliography note."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply note punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Includes bibliographical references (p. 245-260)", "after": "Includes bibliographical references (p. 245-260)." }
+      ]
+    },
+    {
+      "id": "ISBD_NOTES_520_SUMMARY",
+      "tag_pattern": "^(520|521)$",
+      "subfields": ["a"],
+      "severity": "WARNING",
+      "rationale": "ISBD 7.10.2: Summary notes end with a period. ISBD 7.10.3: Audience notes end with a period.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "WARNING",
+          "message": "Add terminal period to summary/audience note."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply note punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "A story of love and loss", "after": "A story of love and loss." }
+      ]
+    },
+    {
+      "id": "ISBD_NOTES_530_532_534",
+      "tag_pattern": "^(530|532|534)$",
+      "subfields": ["a"],
+      "severity": "WARNING",
+      "rationale": "ISBD 7.2.4: Notes on relationship to other resources (additional physical form, reproduction). End with period.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "WARNING",
+          "message": "Add terminal period to note."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply note punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Also available online", "after": "Also available online." }
+      ]
+    },
+    {
+      "id": "ISBD_NOTES_505A_001",
+      "tag": "505",
+      "subfields": ["a"],
+      "severity": "INFO",
+      "rationale": "ISBD 7.7: Formatted contents note. Basic form ends with period. Internal item entries separated by ' -- ' (space-dash-dash-space) per ISBD/MARC21 convention; do not alter internal separator punctuation. Period-space-dash-space (. — ) also used as separator within notes per ISBD A.3.2.3. MARC21 encoding uses subfield breaks for structured notes.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "-", "?", "!"],
+          "severity": "INFO",
+          "message": "Add terminal period to contents note."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply contents note punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "pt. 1. Origins -- pt. 2. Methods", "after": "pt. 1. Origins -- pt. 2. Methods." },
+        { "before": "Chapter 1. Introduction. — Chapter 2. Background", "after": "Chapter 1. Introduction. — Chapter 2. Background." }
+      ]
+    },
+    {
+      "id": "ISBD_NOTES_300_PLUS_FIELD",
+      "tag_pattern": "^3[0-2][0-9]$",
+      "subfield_pattern": "^[a-z0-9]$",
+      "severity": "INFO",
+      "rationale": "ISBD Area 3 notes/material-specific fields. MARC21 encoding handles display. No forced terminal punctuation on non-note Area 3 fields.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Area 3 material-specific field; MARC21 encoding handles punctuation." }
+      ],
+      "fixes": [],
+      "examples": []
+    },
+    {
+      "id": "ISBD_NOTES_GENERAL_5XX_A",
+      "tag_pattern": "^5\\d\\d$",
+      "subfields": ["a"],
+      "only_when_no_other_rule": true,
+      "severity": "WARNING",
+      "rationale": "ISBD 7: General note fields end with a period. Includes notes on frequency (310), former frequency (321), system requirements (538), etc.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "WARNING",
+          "message": "Add terminal period to note."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply note punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Also available on microfilm", "after": "Also available on microfilm." }
+      ]
+    },
+    {
+      "id": "ISBD_NOTES_GENERAL_5XX_B",
+      "tag_pattern": "^$",
+      "subfields": ["a"],
+      "severity": "WARNING",
+      "rationale": "ISBD 7: General note fields end with a period.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "WARNING",
+          "message": "Add terminal period to note."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply note punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Gift of the author", "after": "Gift of the author." }
+      ]
+    },
+    {
+      "id": "ISBD_NOTES_FREQ_310",
+      "tag": "310",
+      "subfields": ["a"],
+      "severity": "WARNING",
+      "rationale": "ISBD 7.0.2: Frequency statement for continuing resources. Ends with period.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "WARNING",
+          "message": "Add terminal period to frequency statement."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply frequency punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Bimonthly", "after": "Bimonthly." },
+        { "before": "Monthly (except July-Aug.)", "after": "Monthly (except July-Aug.)." }
+      ]
+    },
+    {
+      "id": "ISBD_NOTES_546_LANG",
+      "tag": "546",
+      "subfields": ["a"],
+      "severity": "WARNING",
+      "rationale": "ISBD 7.1.5: Language note. Ends with period.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "WARNING",
+          "message": "Add terminal period to language note."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply note punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Text in English and French", "after": "Text in English and French." }
+      ]
+    },
+    {
+      "id": "ISBD_NOTES_COMPLEX_HANDSOFF",
+      "tag_pattern": "^(506|510|533|536|538|540|541|544|545|552|555|556|561|563|580|583|584|585|586|590)$",
+      "subfield_pattern": "^[a-z0-9]$",
+      "severity": "INFO",
+      "rationale": "ISBD 7: Structured/complex note fields (restrictions on access/use, citation/reproduction notes, action notes, etc.) have internal punctuation patterns. ISBD 7 recommends following prescribed punctuation of Areas 1-6 within notes, but internal structure varies. Avoid automatic normalization. MARC21 subfield encoding handles element separation.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Complex note field; no automatic punctuation enforced." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "pt. 1. Origins -- pt. 2. Methods", "after": "pt. 1. Origins -- pt. 2. Methods" }
+      ]
+    },
+
+    {
+      "id": "ISBD_SUBJECT_HANDSOFF",
+      "tag_pattern": "^6[0-9][0-9]$",
+      "subfield_pattern": "^[a-z0-9]$",
+      "severity": "INFO",
+      "rationale": "Subject headings are controlled vocabulary (LCSH, MeSH, etc.). MARC21 encoding handles display; subdivisions use ' -- ' (space-dash-dash-space) per MARC21 convention. No automatic punctuation.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Subject heading field; no automatic punctuation enforced." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "Women -- History", "after": "Women -- History" },
+        { "before": "Women -- History -- 20th century", "after": "Women -- History -- 20th century" }
+      ]
+    },
+
+    {
+      "id": "ISBD_ADDED_TITLE_740_HANDSOFF",
+      "tag": "740",
+      "subfields": ["a"],
+      "severity": "INFO",
+      "rationale": "Added entry titles are headings; no automatic punctuation per MARC21 practice.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Heading field; no automatic punctuation enforced." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "Selections", "after": "Selections" }
+      ]
+    },
+    {
+      "id": "ISBD_LINKING_HANDSOFF",
+      "tag_pattern": "^(76|77|78)[0-9]$",
+      "subfield_pattern": "^[a-z0-9]$",
+      "severity": "INFO",
+      "rationale": "ISBD 7.2.4: Linking entry fields relate to bibliographic history. These are structured per ISBD within the note area but MARC21 encoding handles element separation. No automatic punctuation.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Linking entry field; no automatic punctuation enforced." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "Journal of records", "after": "Journal of records" }
+      ]
+    },
+
+    {
+      "id": "ISBD_PHYSICAL_MEDIUM_HANDSOFF",
+      "tag": "340",
+      "subfield_pattern": "^[a-z0-9]$",
+      "severity": "INFO",
+      "rationale": "Physical medium details are format-specific; avoid automatic punctuation.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Physical medium field; no automatic punctuation enforced." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "paper", "after": "paper" }
+      ]
+    },
+    {
+      "id": "ISBD_ELEC_ACCESS_HANDSOFF",
+      "tag": "856",
+      "subfield_pattern": "^[a-z0-9]$",
+      "severity": "INFO",
+      "rationale": "ISBD 8: Electronic access fields contain URLs, labels, and access data. Punctuation changes may break access. No automatic normalization.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Electronic access field; no automatic punctuation enforced." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "https://example.org/resource?id=1", "after": "https://example.org/resource?id=1" }
+      ]
+    },
+    {
+      "id": "ISBD_NON_ISBD_HANDSOFF",
+      "tag_pattern": "^(336|337|338)$",
+      "severity": "INFO",
+      "rationale": "MARC21 336/337/338 are coded RDA-style term fields used as handoff evidence for Area 0 review. 338 is carrier type, not ISBD production process; the plugin does not generate full Area 0 display from these fields.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Area 0 coded-field handoff; no punctuation applied." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "text", "after": "text" }
+      ]
+    },
+
+    {
+      "id": "ISBD_DDC_082",
+      "tag_pattern": "^082$",
+      "subfields": ["a"],
+      "severity": "INFO",
+      "rationale": "DDC numbers should not have terminal punctuation per standard practice.",
+      "checks": [
+        {
+          "type": "no_terminal_punctuation",
+          "severity": "INFO",
+          "message": "Remove trailing punctuation from DDC number."
+        }
+      ],
+      "fixes": [
+        { "label": "Remove trailing punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "813.52.", "after": "813.52" }
+      ]
+    },
+    {
+      "id": "ISBD_NLM_060",
+      "tag": "060",
+      "subfields": ["a"],
+      "severity": "INFO",
+      "rationale": "NLM call numbers should not have terminal punctuation.",
+      "checks": [
+        {
+          "type": "no_terminal_punctuation",
+          "severity": "INFO",
+          "message": "Remove trailing punctuation from NLM call number."
+        }
+      ],
+      "fixes": [
+        { "label": "Remove trailing punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "WZ 290.", "after": "WZ 290" }
+      ]
+    },
+
+    {
+      "id": "ISBD_AREA_SEPARATOR_001",
+      "tag_pattern": "^[1-8][0-9][0-9]$",
+      "subfield_pattern": "^[a-z0-9]$",
+      "always_apply": true,
+      "severity": "INFO",
+      "rationale": "ISBD A.3.2.3: Each area after the first is preceded by period-space-dash-space (. — ). ISBD A.3.2.7: When element ends with a point and prescribed punctuation begins with a point, both are given. MARC21 uses subfield breaks for area separation, but within subfield values that contain area separators, normalize to . — form. Detect em-dash, en-dash, or hyphen used as area separator and normalize.",
+      "checks": [
+        {
+          "type": "normalize_punctuation",
+          "severity": "INFO",
+          "message": "Normalize area separator to period-space-dash-space (. — ) per ISBD A.3.2.3."
+        }
+      ],
+      "fixes": [
+        { "label": "Normalize area separator", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Statement. - Next area", "after": "Statement. — Next area" },
+        { "before": "Statement. —Next area", "after": "Statement. — Next area" },
+        { "before": "3rd ed. — Next area", "after": "3rd ed.. — Next area", "note": "Double period per A.3.2.7: abbreviation period + prescribed period." }
+      ]
+    },
+    {
+      "id": "ISBD_DOUBLE_PUNCT_001",
+      "tag_pattern": "^[1-8][0-9][0-9]$",
+      "subfield_pattern": "^[a-z0-9]$",
+      "always_apply": true,
+      "severity": "INFO",
+      "rationale": "ISBD A.3.2.7: When an element or area ends with a point and the prescribed punctuation for the next element begins with a point, both points are given. E.g. '3rd ed.. — ' is correct, not '3rd ed. — '. This is a critical convention often missed. Preserve double periods where the abbreviation period and prescribed punctuation period coincide.",
+      "checks": [
+        {
+          "type": "normalize_punctuation",
+          "severity": "INFO",
+          "message": "Preserve double punctuation per ISBD A.3.2.7 when abbreviation period meets prescribed punctuation."
+        }
+      ],
+      "fixes": [
+        { "label": "Normalize double punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "3rd ed. — ", "after": "3rd ed.. — ", "note": "Double period: abbreviation + prescribed punctuation per A.3.2.7." },
+        { "before": "by J. Smith, Esq. — ", "after": "by J. Smith, Esq.. — ", "note": "Double period: abbreviation + area separator per A.3.2.7." }
+      ]
+    },
+
+    {
+      "id": "ISBD_CONTENT_TYPE_336",
+      "tag": "336",
+      "subfield_pattern": "^[a-z0-9]$",
+      "severity": "INFO",
+      "rationale": "ISBD 2021 Area 0 partial/handoff: 336 content type may inform content form review, but it is a MARC/RDA coded term field. MARC21 encoding handles display; no ISBD punctuation applied.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Content type field; MARC21 encoding handles display." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "text", "after": "text" },
+        { "before": "still image", "after": "still image" }
+      ]
+    },
+    {
+      "id": "ISBD_MEDIA_TYPE_337",
+      "tag": "337",
+      "subfield_pattern": "^[a-z0-9]$",
+      "severity": "INFO",
+      "rationale": "ISBD 2021 Area 0 partial/handoff: 337 media type may inform media type review, but it is a MARC/RDA coded term field. MARC21 encoding handles display; no ISBD punctuation applied.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Media type field; MARC21 encoding handles display." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "computer", "after": "computer" },
+        { "before": "unmediated", "after": "unmediated" }
+      ]
+    },
+    {
+      "id": "ISBD_CARRIER_TYPE_338",
+      "tag": "338",
+      "subfield_pattern": "^[a-z0-9]$",
+      "severity": "INFO",
+      "rationale": "ISBD 2021 Area 0 partial/handoff: 338 is MARC/RDA carrier type. It is not ISBD production process and is not used by the baseline pack to generate Area 0 punctuation or display.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Carrier type field; MARC21 encoding handles display." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "online resource", "after": "online resource" },
+        { "before": "volume", "after": "volume" }
+      ]
+    },
+
+    {
+      "id": "ISBD_FREQ_321",
+      "tag": "321",
+      "subfields": ["a"],
+      "severity": "WARNING",
+      "rationale": "ISBD 7.0.2: Former frequency statement for continuing resources. Ends with period. Date range in parentheses when applicable.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "WARNING",
+          "message": "Add terminal period to former frequency statement."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply frequency punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Monthly (1990-2005)", "after": "Monthly (1990-2005)." },
+        { "before": "Quarterly", "after": "Quarterly." }
+      ]
+    },
+
+    {
+      "id": "ISBD_REPRODUCTION_533",
+      "tag": "533",
+      "subfields": ["a"],
+      "severity": "WARNING",
+      "rationale": "ISBD 7.2.4: Reproduction note. The note describes the reproduction and includes physical description of the reproduction, series statement, and note about the reproduction. Ends with period. MARC21 subfield encoding handles element separation within this field.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "WARNING",
+          "message": "Add terminal period to reproduction note."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply reproduction note punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Microfilm", "after": "Microfilm." },
+        { "before": "Electronic reproduction", "after": "Electronic reproduction." }
+      ]
+    },
+
+    {
+      "id": "ISBD_ORIGINAL_VERSION_534",
+      "tag": "534",
+      "subfields": ["a"],
+      "severity": "WARNING",
+      "rationale": "ISBD 7.2.4: Original version note. Notes on the original work from which the resource is a reproduction or edition. Ends with period.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "WARNING",
+          "message": "Add terminal period to original version note."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply original version note punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Originally published: London : Macmillan, 1925", "after": "Originally published: London : Macmillan, 1925." }
+      ]
+    },
+
+    {
+      "id": "ISBD_VARIANT_TITLE_246_IND0",
+      "tag": "246",
+      "ind1": "0",
+      "subfields": ["a"],
+      "severity": "INFO",
+      "rationale": "ISBD 7.1.2: Note on variant title. When 246 ind1=0, variant title is a portion of title. MARC21 note formatting handles display; no forced terminal punctuation on note-derived fields.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Variant title note (ind1=0); MARC21 handles display." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "Portion of title", "after": "Portion of title" }
+      ]
+    },
+    {
+      "id": "ISBD_VARIANT_TITLE_246_IND1",
+      "tag": "246",
+      "ind1": "1",
+      "subfields": ["a"],
+      "severity": "INFO",
+      "rationale": "ISBD 7.1.2: Note on variant title. When 246 ind1=1, variant title is a parallel title. MARC21 note formatting handles display.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Variant title note (ind1=1); MARC21 handles display." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "Parallel title variant", "after": "Parallel title variant" }
+      ]
+    },
+    {
+      "id": "ISBD_VARIANT_TITLE_246_IND2",
+      "tag": "246",
+      "ind1": "2",
+      "subfields": ["a"],
+      "severity": "INFO",
+      "rationale": "ISBD 7.1.2: Note on variant title. When 246 ind1=2, variant title is a distinctive portion of title. MARC21 note formatting handles display.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Variant title note (ind1=2); MARC21 handles display." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "Distinctive title portion", "after": "Distinctive title portion" }
+      ]
+    },
+
+    {
+      "id": "ISBD_LOCAL_NOTE_590",
+      "tag": "590",
+      "subfields": ["a"],
+      "severity": "INFO",
+      "rationale": "Local note field. Ends with period per ISBD note conventions. Local notes may contain institution-specific information.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "?", "!"],
+          "severity": "INFO",
+          "message": "Add terminal period to local note."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply local note punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Gift of the author, 2020", "after": "Gift of the author, 2020." }
+      ]
+    },
+
+    {
+      "id": "ISBD_OTHER_ED_NOTE_500",
+      "tag": "500",
+      "subfields": ["a"],
+      "only_when_no_other_rule": true,
+      "severity": "INFO",
+      "rationale": "ISBD 7.2.4: Notes about other editions and related resources. Generic 500 notes include information about other editions, accompanying material, restrictions, etc. All end with period per ISBD note conventions. ISBD A.3.2.3: notes may be separated by period-space-dash-space (. — ) or given in separate fields.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix": ".",
+          "end_in": [".", "?", "!", "-"],
+          "severity": "INFO",
+          "message": "Ensure note ends with period."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply note punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Also issued in paperback", "after": "Also issued in paperback." },
+        { "before": "Includes index", "after": "Includes index." }
+      ]
+    },
+
+    {
+      "id": "ISBD_SUBJECT_SUBDIVISION_HANDSOFF",
+      "tag_pattern": "^6[0-9][0-9]$",
+      "subfields": ["x", "y", "z", "v"],
+      "severity": "INFO",
+      "rationale": "Subject subdivisions ($x topical, $y chronological, $z geographic, $v form) are controlled vocabulary subdivisions. MARC21 encoding uses space-dash-dash-space ( -- ) between subdivisions. No automatic punctuation.",
+      "checks": [
+        { "type": "fixed_field", "severity": "INFO", "message": "Subject subdivision; MARC21 encoding handles display." }
+      ],
+      "fixes": [],
+      "examples": [
+        { "before": "History", "after": "History" },
+        { "before": "20th century", "after": "20th century" }
+      ]
+    },
+
+    {
+      "id": "ISBD_FALLBACK_TERMINAL",
+      "tag_pattern": "^[1-8][0-9][0-9]$",
+      "subfield_pattern": "^[a-z0-9]$",
+      "only_when_no_other_rule": true,
+      "severity": "INFO",
+      "rationale": "ISBD fallback: When no specific rule matches, suggest terminal period for ISBD display areas that typically end with period per ISBD A.3.2.3 (area separator = period-space-dash-space). This is advisory only.",
+      "checks": [
+        {
+          "type": "punctuation",
+          "suffix_mode": "when_last",
+          "suffix_if_last": ".",
+          "severity": "INFO",
+          "message": "Consider terminal punctuation where ISBD practice requires it."
+        }
+      ],
+      "fixes": [
+        { "label": "Apply fallback punctuation", "patch": [{ "op": "replace_subfield", "value_template": "{{expected}}" }] }
+      ],
+      "examples": [
+        { "before": "Statement", "after": "Statement." }
+      ]
+    }
+  ]
+}
