@@ -27,7 +27,7 @@ if [[ ! -f "$PLUGIN_PM" ]]; then
   exit 1
 fi
 
-VERSION="$(perl -ne 'if (/^our \$VERSION = "([^"]+)";/) { print $1; exit }' "$PLUGIN_PM")"
+VERSION="$(perl -ne 'if (/^our\s+\$VERSION\s*=\s*"([^"]+)";/) { print $1; exit }' "$PLUGIN_PM")"
 if [[ -z "$VERSION" ]]; then
   VERSION="dev"
 fi
