@@ -1,4 +1,5 @@
 [% USE raw %]
+[% USE Koha %]
 [% INCLUDE 'doc-head-open.inc' %]
 <title>Koha: Koha_ISBD_Assistant_Plugin Configuration</title>
 [% INCLUDE 'doc-head-close.inc' %]
@@ -655,7 +656,7 @@
                                             <thead>
                                                 <tr>
                                                     <th>
-                                                        <input type="checkbox" id="selectAllGuideUsers" onclick="toggleSelectAll('guide_users', this.checked)"/>
+                                                        <input type="checkbox" id="selectAllGuideUsers"/>
                                                     </th>
                                                     <th class="sortable" data-sort="userid">User ID</th>
                                                     <th class="sortable" data-sort="name">Name</th>
@@ -708,7 +709,7 @@
                                             <thead>
                                                 <tr>
                                                     <th>
-                                                        <input type="checkbox" id="selectAllInternshipUsers" onclick="toggleSelectAll('internship_users', this.checked)"/>
+                                                        <input type="checkbox" id="selectAllInternshipUsers"/>
                                                     </th>
                                                     <th class="sortable" data-sort="userid">User ID</th>
                                                     <th class="sortable" data-sort="name">Name</th>
@@ -869,12 +870,12 @@
                                     </li>
                                     <li>
                                         <label for="ai_timeout">Timeout (seconds):</label>
-                                        <input type="number" name="ai_timeout" id="ai_timeout" value="[% (settings.ai_timeout || 60) | html %]" class="form-control" style="width: 120px;"/>
+                                        <input type="text" inputmode="numeric" pattern="[0-9]*" name="ai_timeout" id="ai_timeout" value="[% (settings.ai_timeout || 60) | html %]" class="form-control" style="width: 120px;"/>
                                         <span class="hint">Request timeout in seconds.</span>
                                     </li>
                                     <li>
                                         <label for="ai_max_output_tokens">Max Output Tokens:</label>
-                                        <input type="number" name="ai_max_output_tokens" id="ai_max_output_tokens" value="[% settings.ai_max_output_tokens | html %]" class="form-control" style="width: 120px;"/>
+                                        <input type="text" inputmode="numeric" pattern="[0-9]*" name="ai_max_output_tokens" id="ai_max_output_tokens" value="[% settings.ai_max_output_tokens | html %]" class="form-control" style="width: 120px;"/>
                                         <span class="hint">Max output tokens per response.</span>
                                     </li>
                                     <li>
@@ -889,37 +890,37 @@
                                     </li>
                                     <li>
                                         <label for="ai_rate_limit_per_minute">Rate Limit (per minute):</label>
-                                        <input type="number" name="ai_rate_limit_per_minute" id="ai_rate_limit_per_minute" value="[% settings.ai_rate_limit_per_minute | html %]" class="form-control" style="width: 120px;"/>
+                                        <input type="text" inputmode="numeric" pattern="[0-9]*" name="ai_rate_limit_per_minute" id="ai_rate_limit_per_minute" value="[% settings.ai_rate_limit_per_minute | html %]" class="form-control" style="width: 120px;"/>
                                         <span class="hint">Per-user AI request limit per minute.</span>
                                     </li>
                                     <li>
                                         <label for="ai_cache_ttl_seconds">Cache TTL (seconds):</label>
-                                        <input type="number" name="ai_cache_ttl_seconds" id="ai_cache_ttl_seconds" value="[% settings.ai_cache_ttl_seconds | html %]" class="form-control" style="width: 120px;"/>
+                                        <input type="text" inputmode="numeric" pattern="[0-9]*" name="ai_cache_ttl_seconds" id="ai_cache_ttl_seconds" value="[% settings.ai_cache_ttl_seconds | html %]" class="form-control" style="width: 120px;"/>
                                         <span class="hint">Cache AI responses for this many seconds.</span>
                                     </li>
                                     <li>
                                         <label for="ai_cache_max_entries">Cache Max Entries:</label>
-                                        <input type="number" name="ai_cache_max_entries" id="ai_cache_max_entries" value="[% settings.ai_cache_max_entries | html %]" class="form-control" style="width: 120px;"/>
+                                        <input type="text" inputmode="numeric" pattern="[0-9]*" name="ai_cache_max_entries" id="ai_cache_max_entries" value="[% settings.ai_cache_max_entries | html %]" class="form-control" style="width: 120px;"/>
                                         <span class="hint">Maximum number of cached AI responses.</span>
                                     </li>
                                     <li>
                                         <label for="ai_retry_count">Retries:</label>
-                                        <input type="number" name="ai_retry_count" id="ai_retry_count" value="[% settings.ai_retry_count | html %]" class="form-control" style="width: 120px;"/>
+                                        <input type="text" inputmode="numeric" pattern="[0-9]*" name="ai_retry_count" id="ai_retry_count" value="[% settings.ai_retry_count | html %]" class="form-control" style="width: 120px;"/>
                                         <span class="hint">Retry count after failed AI requests.</span>
                                     </li>
                                     <li>
                                         <label for="ai_circuit_breaker_threshold">Circuit Breaker Threshold:</label>
-                                        <input type="number" name="ai_circuit_breaker_threshold" id="ai_circuit_breaker_threshold" value="[% settings.ai_circuit_breaker_threshold | html %]" class="form-control" style="width: 120px;"/>
+                                        <input type="text" inputmode="numeric" pattern="[0-9]*" name="ai_circuit_breaker_threshold" id="ai_circuit_breaker_threshold" value="[% settings.ai_circuit_breaker_threshold | html %]" class="form-control" style="width: 120px;"/>
                                         <span class="hint">Open circuit after this many consecutive failures.</span>
                                     </li>
                                     <li>
                                         <label for="ai_circuit_breaker_timeout">Circuit Breaker Timeout (seconds):</label>
-                                        <input type="number" name="ai_circuit_breaker_timeout" id="ai_circuit_breaker_timeout" value="[% settings.ai_circuit_breaker_timeout | html %]" class="form-control" style="width: 120px;"/>
+                                        <input type="text" inputmode="numeric" pattern="[0-9]*" name="ai_circuit_breaker_timeout" id="ai_circuit_breaker_timeout" value="[% settings.ai_circuit_breaker_timeout | html %]" class="form-control" style="width: 120px;"/>
                                         <span class="hint">Circuit open duration in seconds.</span>
                                     </li>
                                     <li>
                                         <label for="ai_circuit_breaker_window_seconds">Circuit Breaker Window (seconds):</label>
-                                        <input type="number" name="ai_circuit_breaker_window_seconds" id="ai_circuit_breaker_window_seconds" value="[% settings.ai_circuit_breaker_window_seconds | html %]" class="form-control" style="width: 120px;"/>
+                                        <input type="text" inputmode="numeric" pattern="[0-9]*" name="ai_circuit_breaker_window_seconds" id="ai_circuit_breaker_window_seconds" value="[% settings.ai_circuit_breaker_window_seconds | html %]" class="form-control" style="width: 120px;"/>
                                         <span class="hint">Failure-rate window in seconds.</span>
                                     </li>
                                     <li>
@@ -929,7 +930,7 @@
                                     </li>
                                     <li>
                                         <label for="ai_circuit_breaker_min_samples">Circuit Breaker Min Samples:</label>
-                                        <input type="number" name="ai_circuit_breaker_min_samples" id="ai_circuit_breaker_min_samples" value="[% settings.ai_circuit_breaker_min_samples | html %]" class="form-control" style="width: 120px;"/>
+                                        <input type="text" inputmode="numeric" pattern="[0-9]*" name="ai_circuit_breaker_min_samples" id="ai_circuit_breaker_min_samples" value="[% settings.ai_circuit_breaker_min_samples | html %]" class="form-control" style="width: 120px;"/>
                                         <span class="hint">Minimum sample size before failure-rate checks apply.</span>
                                     </li>
                                 </ol>
@@ -950,11 +951,11 @@
         </div>
     </div>
 </div>
-<script>[% vendor_js_toastr | $raw %]</script>
-<script>[% vendor_js_select2 | $raw %]</script>
-<script>[% vendor_js_codemirror | $raw %]</script>
-<script>[% vendor_js_cm_js | $raw %]</script>
-<script>
+<script nonce="[% Koha.CSPNonce | $raw %]">[% vendor_js_toastr | $raw %]</script>
+<script nonce="[% Koha.CSPNonce | $raw %]">[% vendor_js_select2 | $raw %]</script>
+<script nonce="[% Koha.CSPNonce | $raw %]">[% vendor_js_codemirror | $raw %]</script>
+<script nonce="[% Koha.CSPNonce | $raw %]">[% vendor_js_cm_js | $raw %]</script>
+<script nonce="[% Koha.CSPNonce | $raw %]">
     if (!window.toastr) {
         window.toastr = {
             success: function(message) { console.log(message); },
@@ -985,6 +986,12 @@
             indentUnit: 2
         });
     }
+    $("#selectAllGuideUsers").on("change", function() {
+        toggleSelectAll("guide_users", this.checked);
+    });
+    $("#selectAllInternshipUsers").on("change", function() {
+        toggleSelectAll("internship_users", this.checked);
+    });
     var draftKey = 'isbd-config-draft-v1';
     var draftState = null;
     var draftTimer = null;
@@ -2765,9 +2772,10 @@
 
     // Auto-format JSON
     $('#custom-rules-editor').next().find('.CodeMirror').after(
-        '<button type="button" class="btn btn-sm btn-default" onclick="formatJSON()" style="margin-top: 5px;">' +
+        '<button type="button" class="btn btn-sm btn-default" id="format-json" style="margin-top: 5px;">' +
         '<i class="fa fa-indent"></i> Format JSON</button>'
     );
+    $("#format-json").on("click", formatJSON);
 
     function formatJSON() {
         try {
