@@ -799,7 +799,7 @@
                     <p><strong>Author:</strong> Duke Chijimaka Jonathan, University of Port Harcourt, Nigeria</p>
                     <p><strong>Email:</strong> djonathan002@uniport.edu.ng</p>
                     <p><strong>LinkedIn:</strong> <a href="https://linkedin.com/in/duke-j-a1a9b0260" target="_blank" rel="noopener">linkedin.com/in/duke-j-a1a9b0260</a></p>
-                    <p><strong>Plugin GitHub:</strong> <a href="https://github.com/Dzechy/Koha_ISBD_Assistant_Plugin/" target="_blank" rel="noopener">github.com/Dzechy/Koha_ISBD_Assistant_Plugin</a></p>
+                    <p><strong>Plugin GitHub:</strong> <a href="https://github.com/build-with-duke/Koha_ISBD_Assistant_Plugin/" target="_blank" rel="noopener">github.com/Dzechy/Koha_ISBD_Assistant_Plugin</a></p>
                     <p><strong>Acknowledgements:</strong></p>
                     <ul class="isbd-ack-list">
                         <li>Prof. Helen Uzoezi Emasealu (helen.emasealu@uniport.edu.ng)</li>
