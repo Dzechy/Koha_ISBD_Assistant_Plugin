@@ -41,9 +41,9 @@ use Koha::Plugin::Cataloging::AutoPunctuation::Api;
 use Koha::Plugin::Cataloging::AutoPunctuation::AI;
 
 our $VERSION         = "1.0.0";
-our $PLUGIN_REPO_URL = "https://github.com/Dzechy/Koha_ISBD_Assistant_Plugin/";
+our $PLUGIN_REPO_URL = "https://github.com/build-with-duke/Koha_ISBD_Assistant_Plugin/";
 our $PLUGIN_RELEASES_API =
-"https://api.github.com/repos/Dzechy/Koha_ISBD_Assistant_Plugin/releases/latest";
+"https://api.github.com/repos/build-with-duke/Koha_ISBD_Assistant_Plugin/releases/latest";
 our $AUTHOR_LINKEDIN   = "https://linkedin.com/in/duke-j-a1a9b0260";
 our $AI_PROMPT_VERSION = "1.0.1";
 
