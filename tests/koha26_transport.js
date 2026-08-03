@@ -32,6 +32,14 @@ if (postJsonSource.includes("'Content-Type': 'application/json'")) {
     throw new Error('Plugin postJson transport regressed to application/json');
 }
 
+const configureTemplate = fs.readFileSync(path.join(root, files[2]), 'utf8');
+if (!configureTemplate.includes('name="op" value="cud-save_configuration"')) {
+    throw new Error('Configure POST operation must use Koha\'s cud- prefix');
+}
+if (configureTemplate.includes('name="op" value="save_configuration"')) {
+    throw new Error('Configure POST operation uses the rejected legacy op value');
+}
+
 const intranetFiles = [
     'rules_engine.js',
     'ai_text_extract.js',

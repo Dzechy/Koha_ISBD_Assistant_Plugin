@@ -361,7 +361,7 @@
                 <form method="post" enctype="multipart/form-data" action="/cgi-bin/koha/plugins/run.pl?class=[% CLASS | uri %]&method=[% METHOD | uri %]" data-plugin-csrf-token="[% csrf_token | html %]">
                     <input type="hidden" name="class" value="[% CLASS | html %]"/>
                     <input type="hidden" name="method" value="[% METHOD | html %]"/>
-                    <input type="hidden" name="op" value="save_configuration"/>
+                    <input type="hidden" name="op" value="cud-save_configuration"/>
                     <input type="hidden" name="save" value="1"/>
                     <input type="hidden" name="csrf_token" id="csrf_token" value="[% csrf_token | html %]"/>
 
