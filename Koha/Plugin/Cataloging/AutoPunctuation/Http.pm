@@ -33,13 +33,33 @@ sub _clone_payload_hash {
 sub _api_response {
     my ( $self, $payload, $status, $extra_headers ) = @_;
     my $body = _clone_payload_hash($payload);
-    if ( defined $status && $status ne '' ) {
-        $body->{__http_status} = "$status";
+    my $cgi  = $self->{'cgi'} || CGI->new;
+
+    $status = '200 OK' unless defined $status && $status ne '';
+    my %header_args = (
+        -status  => $status,
+        -type    => 'application/json',
+        -charset => 'utf-8'
+    );
+
+    if ( $extra_headers && ref $extra_headers eq 'HASH' ) {
+        for my $name ( keys %{$extra_headers} ) {
+            next unless defined $name && $name =~ /\A[A-Za-z0-9-]+\z/;
+            my $value = $extra_headers->{$name};
+            next if !defined $value || ref $value;
+            $value = "$value";
+            next if $value =~ /[\r\n]/;
+            $header_args{"-$name"} = $value;
+        }
     }
-    if ( $extra_headers && ref $extra_headers eq 'HASH' && %{$extra_headers} ) {
-        $body->{__http_headers} = { %{$extra_headers} };
-    }
-    return $body;
+
+    print $cgi->header(%header_args);
+    print to_json($body);
+
+    # Koha's stock plugins/run.pl ignores the return value and expects plugin
+    # methods to emit their own CGI response.  The marker lets the legacy
+    # repository-local run.pl avoid emitting a second response.
+    return { __response_emitted => 1 };
 }
 
 sub _emit_json {
@@ -210,8 +230,10 @@ sub _read_json_payload {
     my $cgi        = $self->{'cgi'} || CGI->new;
     my $max_bytes  = _max_json_payload_bytes( $self, );
     my $json_input = '';
+    my $content_type = lc( $cgi->content_type || $ENV{CONTENT_TYPE} || '' );
+    my $is_json      = $content_type =~ m{application/json};
 
-    if ( $ENV{'psgi.input'} ) {
+    if ( $is_json && $ENV{'psgi.input'} ) {
         my $body_read = _read_psgi_body_limited( $self, $max_bytes );
         return {
             error   => $body_read->{error},

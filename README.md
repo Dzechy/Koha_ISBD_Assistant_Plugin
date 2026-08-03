@@ -13,7 +13,7 @@ The rule engine is the source of truth. AI is optional, advisory, and constraine
 - [ISBD Areas Covered By The Plugin](#isbd-areas-covered-by-the-plugin)
 - [Requirements](#requirements)
 - [Installation From KPZ](#installation-from-kpz)
-- [Local Koha Override Warning](#local-koha-override-warning)
+- [Koha 26 Compatibility](#koha-26-compatibility)
 - [First Run Checklist](#first-run-checklist)
 - [Daily Use](#daily-use)
 - [Configuration Reference](#configuration-reference)
@@ -131,7 +131,7 @@ Area 8, resource identifier and terms of availability, is automated for fields s
 
 ## Requirements
 
-- Koha `25.11` or newer.
+- Koha `25.11` or `26.05` (including the current `26.05.x` maintenance line).
 - Koha plugins enabled.
 - Staff permissions to upload, configure, and run plugins.
 - A MARC21 bibliographic framework.
@@ -156,7 +156,7 @@ bash scripts/build_kpz.sh
 The expected package path is:
 
 ```text
-dist/Koha_ISBD_Cataloging_Assistant-1.0.0.kpz
+dist/Koha_ISBD_Assistant-1.0.2.kpz
 ```
 
 Install it in Koha:
@@ -173,37 +173,20 @@ Install it in Koha:
 
 The normal cataloging interface is `cataloguing/addbiblio.pl`. That is where the side panel appears.
 
-## Local Koha Override Warning
+## Koha 26 Compatibility
 
-The files `Auth.pm`, `Handler.pm`, and `run.pl` at the repository root are not normal plugin files. They are local Koha override references for installations that need dispatch or authentication changes before plugin API calls return predictable JSON responses.
+Plugin version `1.0.2` supports the stock Koha `25.11` and `26.05` plugin controller. Its API methods emit their own CGI status, JSON content type, and JSON body, as required by Koha's `plugins/run.pl`. Plugin POST requests use a form-encoded `payload` and copy `class`, `method`, and `op` into the POST body because Koha `26.05` may not expose URL query parameters through `CGI->param` on POST requests. No Koha core-file override is required.
 
-They map to Koha core paths:
+The root-level `Auth.pm`, `Handler.pm`, and `run.pl` files are retained only as legacy development references and are not included in the KPZ. Do not copy them over Koha `26.05` files. Koha upgrades replace core files, and an override from another release can break authentication or plugin dispatch.
 
-- `Auth.pm` maps to `/usr/share/koha/lib/C4/Auth.pm`.
-- `Handler.pm` maps to `/usr/share/koha/lib/Koha/Plugins/Handler.pm`.
-- `run.pl` maps to `/usr/share/koha/intranet/cgi-bin/plugins/run.pl`.
-
-Use these files only when your Koha deployment needs them. They are risky because Koha upgrades can change login CSRF handling, session handling, permission checks, plugin method dispatch, or request parameter handling. Copying an older override over a newer Koha file can break staff login or plugin dispatch.
-
-The repository includes a helper script for explicit backup, restore, and apply operations:
+If an earlier installation applied those overrides, restore the package-owned Koha files before testing `1.0.2`. The recovery helper intentionally supports backup and restore only:
 
 ```bash
 bash scripts/kohafilesbackup.sh backup
-bash scripts/kohafilesbackup.sh apply
 bash scripts/kohafilesbackup.sh restore
 ```
 
-Safe workflow:
-
-1. Back up the installed Koha files before applying any override.
-2. Compare the repository file with the installed Koha version.
-3. Merge only the minimal dispatch/auth change that is needed.
-4. Test staff login.
-5. Test plugin configuration save.
-6. Test plugin API calls from `cataloguing/addbiblio.pl`.
-7. After every Koha upgrade, compare again before reapplying anything.
-
-Do not overwrite your `.bak` recovery files with repository copies. Those backups are how you recover if an override becomes incompatible with the installed Koha version.
+Only restore a `.bak` file when you know it came from the same installed Koha release. Otherwise reinstall the matching Koha package or recover the files through your normal package-management process.
 
 ## First Run Checklist
 
@@ -531,8 +514,9 @@ Configuration will not save or API calls fail:
 - Confirm staff session is valid.
 - Log out and back in.
 - Check CSRF/session errors in browser and Koha logs.
-- If local overrides are installed, compare `Auth.pm`, `Handler.pm`, and `run.pl` against the current Koha version.
-- Restore backups if staff login or plugin dispatch broke after an override.
+- Confirm plugin version `1.0.2` or newer is installed after upgrading to Koha `26.05`.
+- If the response is an HTML Koha 500 page instead of JSON, reinstall the matching Koha core package files and then reinstall the current KPZ.
+- Remove legacy local overrides; do not copy the repository reference files over Koha `26.05`.
 
 AI is disabled or unavailable:
 
@@ -576,10 +560,10 @@ Suggestion targets the wrong repeated subfield:
 
 Koha upgrade broke the plugin:
 
-- Disable local overrides if staff login or plugin dispatch fails.
-- Restore backups made by `scripts/kohafilesbackup.sh`.
-- Recompare the repository override files with the upgraded Koha files.
-- Reapply only the minimal dispatch/auth change after testing.
+- Install plugin version `1.0.2` or newer.
+- Remove legacy Koha core overrides if staff login or plugin dispatch fails.
+- Restore only backups made from the same Koha release, or reinstall the matching Koha package files.
+- Restart the relevant Plack/Koha services, sign in again, and hard-refresh the staff client.
 
 Useful debug evidence:
 
@@ -599,7 +583,9 @@ Run the documentation and rule checks from the repository root:
 node tests/docs_examples.js
 node tests/guide_consistency.js
 node tests/rules_engine_regression.js
+node tests/koha26_transport.js
 perl tests/rules_backend_regression.pl
+perl tests/http_response_regression.pl
 ```
 
 Build the package:
@@ -611,7 +597,7 @@ bash scripts/build_kpz.sh
 Confirm the artifact exists:
 
 ```text
-dist/Koha_ISBD_Cataloging_Assistant-1.0.0.kpz
+dist/Koha_ISBD_Assistant-1.0.2.kpz
 ```
 
 Some Perl compile checks require Koha modules in `@INC`; run those inside a Koha environment.
@@ -627,7 +613,7 @@ bash scripts/build_kpz.sh
 The build writes the installable plugin package to:
 
 ```text
-dist/Koha_ISBD_Cataloging_Assistant-1.0.0.kpz
+dist/Koha_ISBD_Assistant-1.0.2.kpz
 ```
 
 Before sharing a package with another Koha site, run the tests in the previous section and install the KPZ in a staging Koha instance.

@@ -11,6 +11,10 @@ Use this checklist before publishing a release-candidate KPZ.
   `node tests/rules_engine_regression.js`
 - Run Perl rule regressions:
   `perl tests/rules_backend_regression.pl`
+- Run the stock-Koha CGI response regression:
+  `perl tests/http_response_regression.pl`
+- Run the Koha 26 POST transport regression:
+  `node tests/koha26_transport.js`
 - Confirm guide/rule fixture consistency:
   `node tests/guide_consistency.js`
 - Confirm documentation examples match engine behavior:
@@ -29,16 +33,18 @@ Use this checklist before publishing a release-candidate KPZ.
 - Build the KPZ:
   `./scripts/build_kpz.sh`
 - Inspect the package contents and confirm it contains only plugin source plus release docs/license:
-  `unzip -l /home/anonymous/Downloads/Koha_ISBD_Cataloging_Assistant-1.0.0.kpz`
+  `unzip -l dist/Koha_ISBD_Assistant-1.0.2.kpz`
 - Confirm the KPZ does not contain `PluginGithubPAT`, previous KPZ/ZIP files, `.git`, caches, logs, or local environment files.
 
 ## Koha Smoke Test
 
-- Upload the KPZ in a Koha `25.11+` test instance with plugins enabled.
+- Upload the KPZ in Koha `25.11` and `26.05` test instances with plugins enabled.
 - Open the configure page and save settings with AI disabled.
 - Open the tool page and confirm the guide and coverage views render.
 - On `cataloguing/addbiblio.pl`, confirm live validation appears for representative `245`, `250`, `260/264`, `300`, `490`, `5XX`, and standard-number fields.
 - Confirm save blocking only occurs for configured ERROR guardrails.
 - Confirm AI-disabled mode produces no external network request.
 - With a test API key, confirm AI suggestions remain advisory and punctuation patches are rejected when they conflict with deterministic rules.
-- Confirm dispatch/auth reference files (`Auth.pm`, `Handler.pm`, `run.pl`) are treated as reference deltas only and are not blindly copied over a production Koha install.
+- Confirm the API responses use stock Koha `plugins/run.pl` and return JSON for both successful and failed requests.
+- Confirm POST API calls include `class`, `method`, `op`, and form-encoded JSON `payload` fields in the request body.
+- Confirm legacy dispatch/auth reference files (`Auth.pm`, `Handler.pm`, `run.pl`) have not been copied over the Koha `26.05` package files.

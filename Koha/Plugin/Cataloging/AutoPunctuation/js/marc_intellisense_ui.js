@@ -235,15 +235,18 @@
                 .map(meta => normalizeCsrfToken(meta ? meta.getAttribute('content') : ''))
                 .find(token => isPluginCsrfToken(token)) || '';
         }
+        const queryIndex = url.indexOf('?');
+        const formBody = new URLSearchParams(queryIndex >= 0 ? url.slice(queryIndex + 1) : '');
+        formBody.set('payload', JSON.stringify(payload));
         fetch(url, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                 'Accept': 'application/json',
                 ...(csrfToken ? { 'X-CSRF-Token': csrfToken, 'CSRF-TOKEN': csrfToken } : {})
             },
             credentials: 'include',
-            body: JSON.stringify(payload)
+            body: formBody.toString()
         })
             .then(resp => resp.json())
             .then(data => {

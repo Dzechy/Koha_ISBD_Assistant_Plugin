@@ -18,8 +18,6 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
 KOHA_AUTH="/usr/share/koha/lib/C4/Auth.pm"
 KOHA_AUTH_BAK="${KOHA_AUTH}.bak"
 KOHA_HANDLER="/usr/share/koha/lib/Koha/Plugins/Handler.pm"
@@ -29,26 +27,26 @@ KOHA_RUN_BAK="${KOHA_RUN}.bak"
 
 usage() {
     cat <<'USAGE'
-Usage: scripts/kohafilesbackup.sh backup|restore|apply
+Usage: scripts/kohafilesbackup.sh backup|restore
 
 backup   Create initial .bak files from the installed Koha files.
 restore  Copy Koha .bak files back into the live Koha paths.
-apply    Copy this repository's local override files into Koha.
 
 The .bak files should be pristine Koha files from the installed Koha version.
 Do not overwrite them with repository-local overrides.
+Plugin version 1.0.1 and newer does not require Koha core-file overrides.
 USAGE
 }
 
 case "${1:-}" in
     # -------------------------------------------------------------------------
-    # Create initial backups from the installed Koha files.
-    # Run this before applying repository-local overrides on a fresh Koha install.
+    # Create initial backups from the installed Koha files without replacing
+    # an existing recovery copy.
     # -------------------------------------------------------------------------
     backup)
-        sudo cp "$KOHA_AUTH" "$KOHA_AUTH_BAK"
-        sudo cp "$KOHA_HANDLER" "$KOHA_HANDLER_BAK"
-        sudo cp "$KOHA_RUN" "$KOHA_RUN_BAK"
+        sudo cp -n "$KOHA_AUTH" "$KOHA_AUTH_BAK"
+        sudo cp -n "$KOHA_HANDLER" "$KOHA_HANDLER_BAK"
+        sudo cp -n "$KOHA_RUN" "$KOHA_RUN_BAK"
         ;;
 
     # -------------------------------------------------------------------------
@@ -61,14 +59,10 @@ case "${1:-}" in
         sudo cp "$KOHA_RUN_BAK" "$KOHA_RUN"
         ;;
 
-    # -------------------------------------------------------------------------
-    # Apply this repository's local override files into the Koha installation.
-    # Re-run backup first after every Koha package upgrade.
-    # -------------------------------------------------------------------------
     apply)
-        sudo cp "$ROOT/Auth.pm" "$KOHA_AUTH"
-        sudo cp "$ROOT/Handler.pm" "$KOHA_HANDLER"
-        sudo cp "$ROOT/run.pl" "$KOHA_RUN"
+        echo "The apply action was removed: plugin 1.0.1+ supports stock Koha 25.11/26.05 files." >&2
+        echo "Restore package-owned Koha files and install the current KPZ instead." >&2
+        exit 2
         ;;
     *)
         usage

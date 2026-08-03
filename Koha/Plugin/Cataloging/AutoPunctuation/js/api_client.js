@@ -67,7 +67,10 @@
             finalPayload.csrf_token = csrfToken;
         }
         const opts = options || {};
-        const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+        const headers = {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'Accept': 'application/json'
+        };
         if (csrfToken) {
             headers['X-CSRF-Token'] = csrfToken;
             headers['CSRF-TOKEN'] = csrfToken;
@@ -89,11 +92,15 @@
             }
         }
 
+        const queryIndex = finalUrl.indexOf('?');
+        const formBody = new URLSearchParams(queryIndex >= 0 ? finalUrl.slice(queryIndex + 1) : '');
+        formBody.set('payload', JSON.stringify(finalPayload));
+
         const response = await fetch(finalUrl, {
             method: 'POST',
             headers,
             credentials: 'include',
-            body: JSON.stringify(finalPayload),
+            body: formBody.toString(),
             signal: opts.signal
         });
         const jsonResponse = isJsonResponse(response);

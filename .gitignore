@@ -3,6 +3,8 @@
 *.pat
 *.token
 *.secret
+BWDGithubToken.txt
+BWDGithubToken.txt:Zone.Identifier
 
 # Build and release artifacts
 *.kpz

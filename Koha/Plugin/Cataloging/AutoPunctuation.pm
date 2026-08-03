@@ -40,7 +40,7 @@ use Koha::Plugin::Cataloging::AutoPunctuation::Http;
 use Koha::Plugin::Cataloging::AutoPunctuation::Api;
 use Koha::Plugin::Cataloging::AutoPunctuation::AI;
 
-our $VERSION         = "1.0.0";
+our $VERSION         = "1.0.2";
 our $PLUGIN_REPO_URL = "https://github.com/build-with-duke/Koha_ISBD_Assistant_Plugin/";
 our $PLUGIN_RELEASES_API =
 "https://api.github.com/repos/build-with-duke/Koha_ISBD_Assistant_Plugin/releases/latest";
@@ -51,12 +51,12 @@ our $metadata = {
     name            => 'Koha_ISBD_Cataloging_Assistant',
     author          => 'Duke Chijimaka Jonathan',
     date_authored   => '2025-06-02',
-    date_updated    => '2026-05-07',
+    date_updated    => '2026-08-03',
     minimum_version => '25.11',
     maximum_version => undef,
     version         => $VERSION,
     description     =>
-'ISBD cataloging assistant plugin for Koha with MARC21 guardrails, training guide, and optional AI guidance. Compatible with MARC21 workflows used in AACR2, RDA, and other cataloguing standards.',
+'ISBD cataloging assistant plugin for Koha 25.11 and 26.05 with MARC21 guardrails, training guide, and optional AI guidance. Compatible with MARC21 workflows used in AACR2, RDA, and other cataloguing standards.',
     license => 'GPL-3.0',
 };
 
