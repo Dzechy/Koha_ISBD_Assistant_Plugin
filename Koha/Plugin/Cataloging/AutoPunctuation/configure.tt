@@ -1823,44 +1823,29 @@
         function normalizeToken(value) {
             if (value === undefined || value === null) return '';
             var token = String(value).replace(/[\r\n]/g, '').trim();
-            if (!token) return '';
-            if (token.indexOf(',') !== -1) {
-                token = token.split(',').map(function(item) { return item.trim(); }).filter(Boolean)[0] || '';
-            }
             return token;
-        }
-        function isPluginToken(value) {
-            return /^[a-f0-9]{64}$/i.test(String(value || '').trim());
         }
         var token = '';
         var $pluginForm = $('form[data-plugin-csrf-token]').first();
         if ($pluginForm.length) {
             token = normalizeToken($pluginForm.attr('data-plugin-csrf-token') || '');
-            if (token && !isPluginToken(token)) token = '';
         }
         if (!token) {
             var $pluginField = $('form[data-plugin-csrf-token] input[name="csrf_token"]').first();
             token = normalizeToken($pluginField.length ? ($pluginField.val() || '') : '');
-            if (token && !isPluginToken(token)) token = '';
         }
         if (!token) {
             var $field = $('#csrf_token');
             token = normalizeToken($field.length ? ($field.val() || '') : '');
-            if (token && !isPluginToken(token)) token = '';
         }
         if (!token) {
             var pluginMeta = document.querySelector('meta[name="isbd-plugin-csrf-token"]');
             token = normalizeToken(pluginMeta ? pluginMeta.getAttribute('content') : '');
-            if (token && !isPluginToken(token)) token = '';
         }
         if (!token) {
             var metas = document.querySelectorAll('meta[name="csrf-token"]');
             for (var i = 0; i < metas.length; i += 1) {
                 token = normalizeToken(metas[i] ? metas[i].getAttribute('content') : '');
-                if (token && !isPluginToken(token)) {
-                    token = '';
-                    continue;
-                }
                 if (token) break;
             }
         }
@@ -1961,7 +1946,7 @@
     function postPluginJson(pluginPath, methodName, payload, extraParams) {
         var csrfToken = getCsrfToken();
         var finalPayload = (payload && typeof payload === 'object') ? $.extend({}, payload) : {};
-        var params = $.extend({ op: 'plugin_api' }, extraParams || {});
+        var params = $.extend({ op: 'cud-plugin_api' }, extraParams || {});
         var url = buildPluginMethodUrl(pluginPath, methodName, params);
         var headers = {
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
@@ -1974,6 +1959,7 @@
         if (csrfToken && !finalPayload.csrf_token) finalPayload.csrf_token = csrfToken;
         var queryIndex = url.indexOf('?');
         var formBody = new URLSearchParams(queryIndex >= 0 ? url.substring(queryIndex + 1) : '');
+        if (csrfToken) formBody.set('csrf_token', csrfToken);
         formBody.set('payload', JSON.stringify(finalPayload));
         return fetchJson(url, {
             method: 'POST',

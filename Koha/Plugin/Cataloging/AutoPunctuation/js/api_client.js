@@ -55,7 +55,9 @@
         if (!params.get('class')) {
             throw new Error('Plugin class is required.');
         }
-        if (!params.get('op')) params.set('op', 'plugin_api');
+        if (!(params.get('op') || '').startsWith('cud-')) {
+            params.set('op', 'cud-plugin_api');
+        }
         return `${basePath}?${params.toString()}`;
     }
 
@@ -94,6 +96,7 @@
 
         const queryIndex = finalUrl.indexOf('?');
         const formBody = new URLSearchParams(queryIndex >= 0 ? finalUrl.slice(queryIndex + 1) : '');
+        if (csrfToken) formBody.set('csrf_token', csrfToken);
         formBody.set('payload', JSON.stringify(finalPayload));
 
         const response = await fetch(finalUrl, {

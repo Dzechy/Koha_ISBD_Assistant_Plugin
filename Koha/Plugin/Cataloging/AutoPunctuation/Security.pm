@@ -21,9 +21,10 @@ use Modern::Perl;
 use C4::Auth;
 use C4::Context;
 use Koha::Patrons;
+use Koha::Token;
 use CGI;
 use Try::Tiny;
-use Digest::SHA  qw(sha256 sha256_hex);
+use Digest::SHA  qw(sha256);
 use MIME::Base64 qw(encode_base64 decode_base64);
 use Crypt::Mode::CBC;
 use Crypt::PRNG;
@@ -40,14 +41,7 @@ sub _normalize_csrf_token_value {
     $token =~ s/[\r\n]//g;
     $token =~ s/^\s+|\s+$//g;
     return '' unless $token ne '';
-    my @parts = map {
-        my $part = $_;
-        $part =~ s/^\s+|\s+$//g;
-        $part;
-    } split( /\s*,\s*/, $token );
-    @parts = grep { defined $_ && $_ ne '' } @parts;
-    return '' unless @parts;
-    return $parts[0];
+    return $token;
 }
 
 sub _normalize_session_id_value {
@@ -88,34 +82,20 @@ sub _normalize_identity_value {
     return lc($identity);
 }
 
-sub _csrf_secret {
-    my $secret = C4::Context->config('pass') // '';
-    $secret =~ s/^\s+|\s+$//g if defined $secret;
-    return $secret || '';
-}
-
 sub _plugin_csrf_token {
-    my ( $self, $session_id, $opts ) = @_;
+    my ( $self, $session_id ) = @_;
     $session_id = _normalize_session_id_value($session_id);
-    my $identity_id = '';
-    if ( $opts && ref $opts eq 'HASH' ) {
-        $identity_id = _normalize_identity_value( $opts->{identity_id} );
+    return '' unless $session_id;
+    my $token = '';
+    try {
+        $token =
+          Koha::Token->new->generate_csrf( { session_id => $session_id } )
+          || '';
     }
-    if (  !$identity_id
-        && $self
-        && ref $self
-        && $self->can('_csrf_identity_id') )
-    {
-        $identity_id = _normalize_identity_value( _csrf_identity_id( $self, ) );
-    }
-    return '' unless $session_id || $identity_id;
-    my $secret = _csrf_secret();
-    return '' unless $secret;
-    my @components = ('isbd-plugin-csrf-v2');
-    push @components, "sid:$session_id"  if $session_id;
-    push @components, "uid:$identity_id" if $identity_id;
-    push @components, $secret;
-    return sha256_hex( join( '|', @components ) );
+    catch {
+        $token = '';
+    };
+    return _normalize_csrf_token_value($token);
 }
 
 sub _csrf_token_fingerprint {
@@ -319,53 +299,41 @@ sub _csrf_ok {
     @session_candidates =
       grep { defined $_ && $_ ne '' && !$session_seen{$_}++ }
       @session_candidates;
-    my $identity_id = _normalize_identity_value( _csrf_identity_id( $self, ) );
-    unless ( @session_candidates || $identity_id ne '' ) {
+    unless (@session_candidates) {
         $self->{_csrf_debug_info} = {
-            reason               => 'missing_session_or_identity',
-            token_fingerprint    => _csrf_token_fingerprint($csrf_token),
-            identity_fingerprint => _identity_fingerprint($identity_id),
+            reason            => 'missing_session',
+            token_fingerprint => _csrf_token_fingerprint($csrf_token),
         };
         return 0;
     }
 
     my @checks;
     for my $session_id (@session_candidates) {
-        my $expected = _plugin_csrf_token( $self, $session_id,
-            { identity_id => $identity_id } );
-        my $ok = ( $expected ne '' && $csrf_token eq $expected ) ? 1 : 0;
+        my $ok = 0;
+        try {
+            $ok = Koha::Token->new->check_csrf(
+                {
+                    session_id => $session_id,
+                    token      => $csrf_token,
+                }
+            ) ? 1 : 0;
+        }
+        catch {
+            $ok = 0;
+        };
         push @checks,
           {
-            session_id_fingerprint     => _session_id_fingerprint($session_id),
-            ok                         => $ok,
-            expected_token_fingerprint => _csrf_token_fingerprint($expected),
+            session_id_fingerprint => _session_id_fingerprint($session_id),
+            ok                     => $ok,
           };
         return 1 if $ok;
     }
-    if ( $identity_id ne '' ) {
-        my $expected_identity =
-          _plugin_csrf_token( $self, '', { identity_id => $identity_id } );
-        my $identity_ok =
-          ( $expected_identity ne '' && $csrf_token eq $expected_identity )
-          ? 1
-          : 0;
-        push @checks,
-          {
-            session_id_fingerprint     => 'identity-only',
-            identity_fingerprint       => _identity_fingerprint($identity_id),
-            ok                         => $identity_ok,
-            expected_token_fingerprint =>
-              _csrf_token_fingerprint($expected_identity),
-          };
-        return 1 if $identity_ok;
-    }
     $self->{_csrf_debug_info} = {
-        reason                    => 'plugin_token_mismatch',
+        reason                    => 'koha_token_mismatch',
         token_fingerprint         => _csrf_token_fingerprint($csrf_token),
         header_token_fingerprint  => _csrf_token_fingerprint($header_token),
         payload_token_fingerprint => _csrf_token_fingerprint($payload_token),
         param_token_fingerprint   => _csrf_token_fingerprint($param_token),
-        identity_fingerprint      => _identity_fingerprint($identity_id),
         session_checks            => \@checks,
     };
     return 0;

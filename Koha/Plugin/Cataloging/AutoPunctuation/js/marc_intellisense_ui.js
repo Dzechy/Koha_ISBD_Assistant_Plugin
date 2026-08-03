@@ -183,7 +183,7 @@
             summary: (summary && typeof summary === 'object') ? summary : {}
         };
         const buildGuideProgressUrl = (forceClass) => {
-            const extraParams = { op: 'plugin_api' };
+            const extraParams = { op: 'cud-plugin_api' };
             if (forceClass) extraParams.class = forceClass;
             return buildPluginUrl(settings, 'guide_progress_update', extraParams);
         };
@@ -220,23 +220,18 @@
         const normalizeCsrfToken = (value) => {
             if (value === undefined || value === null) return '';
             let token = String(value).replace(/[\r\n]/g, '').trim();
-            if (!token) return '';
-            if (token.includes(',')) {
-                token = token.split(',').map(item => item.trim()).filter(Boolean)[0] || '';
-            }
             return token;
         };
-        const isPluginCsrfToken = (value) => /^[a-f0-9]{64}$/i.test(String(value || '').trim());
         let csrfToken = normalizeCsrfToken((settings && settings.csrfToken) || '');
-        if (!isPluginCsrfToken(csrfToken)) csrfToken = '';
         if (!csrfToken) {
             const csrfMetas = Array.from(document.querySelectorAll('meta[name="isbd-plugin-csrf-token"], meta[name="csrf-token"]'));
             csrfToken = csrfMetas
                 .map(meta => normalizeCsrfToken(meta ? meta.getAttribute('content') : ''))
-                .find(token => isPluginCsrfToken(token)) || '';
+                .find(Boolean) || '';
         }
         const queryIndex = url.indexOf('?');
         const formBody = new URLSearchParams(queryIndex >= 0 ? url.slice(queryIndex + 1) : '');
+        if (csrfToken) formBody.set('csrf_token', csrfToken);
         formBody.set('payload', JSON.stringify(payload));
         fetch(url, {
             method: 'POST',

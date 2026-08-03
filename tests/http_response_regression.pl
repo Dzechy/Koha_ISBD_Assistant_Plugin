@@ -88,7 +88,7 @@ my $form_cgi = Local::FormCGI->new(
     {
         class   => 'Koha::Plugin::Cataloging::AutoPunctuation',
         method  => 'ai_models',
-        op      => 'plugin_api',
+        op      => 'cud-plugin_api',
         payload => '{"provider":"openrouter","force":1}'
     }
 );

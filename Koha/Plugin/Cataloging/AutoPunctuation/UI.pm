@@ -431,17 +431,8 @@ sub configure {
     my $update_info      = $self->_check_for_updates();
     my $csrf_token       = '';
     try {
-        my $session_id  = $self->_session_id();
-        my $identity_id = $self->_csrf_identity_id();
-        $csrf_token =
-          $self->_plugin_csrf_token( $session_id,
-            { identity_id => $identity_id } )
-          || '';
-        if ( !$csrf_token && $identity_id ) {
-            $csrf_token =
-              $self->_plugin_csrf_token( '', { identity_id => $identity_id } )
-              || '';
-        }
+        my $session_id = $self->_session_id();
+        $csrf_token = $self->_plugin_csrf_token($session_id) || '';
     }
     catch {
         $csrf_token = '';
@@ -597,18 +588,8 @@ sub intranet_js {
           : 0;
         my $csrf_token = '';
         try {
-            my $session_id  = $self->_session_id();
-            my $identity_id = $self->_csrf_identity_id();
-            $csrf_token =
-              $self->_plugin_csrf_token( $session_id,
-                { identity_id => $identity_id } )
-              || '';
-            if ( !$csrf_token && $identity_id ) {
-                $csrf_token =
-                  $self->_plugin_csrf_token( '',
-                    { identity_id => $identity_id } )
-                  || '';
-            }
+            my $session_id = $self->_session_id();
+            $csrf_token = $self->_plugin_csrf_token($session_id) || '';
         }
         catch {
             $csrf_token = '';

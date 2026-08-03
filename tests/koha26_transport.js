@@ -19,12 +19,19 @@ for (const relativePath of files) {
     if (!source.includes("formBody.set('payload', JSON.stringify(")) {
         throw new Error(`${relativePath} does not add its plugin JSON to the payload form field`);
     }
+    if (!source.includes("formBody.set('csrf_token', csrfToken)")) {
+        throw new Error(`${relativePath} does not send CSRF as a Koha form parameter`);
+    }
     if (!source.includes("new URLSearchParams(queryIndex >= 0 ?")) {
         throw new Error(`${relativePath} does not copy URL dispatch parameters into the POST body`);
     }
 }
 
 const apiClient = fs.readFileSync(path.join(root, files[0]), 'utf8');
+const apiClientCore = fs.readFileSync(
+    path.join(root, 'Koha/Plugin/Cataloging/AutoPunctuation/js/api_client_core.js'),
+    'utf8'
+);
 const postJsonStart = apiClient.indexOf('async function postJson(');
 const postJsonEnd = apiClient.indexOf('\n    function buildEndpoint(', postJsonStart);
 const postJsonSource = apiClient.slice(postJsonStart, postJsonEnd);
@@ -38,6 +45,32 @@ if (!configureTemplate.includes('name="op" value="cud-save_configuration"')) {
 }
 if (configureTemplate.includes('name="op" value="save_configuration"')) {
     throw new Error('Configure POST operation uses the rejected legacy op value');
+}
+if (!configureTemplate.includes("op: 'cud-plugin_api'")) {
+    throw new Error('Configure AJAX POST operations must use Koha\'s cud- prefix');
+}
+
+const securityModule = fs.readFileSync(
+    path.join(root, 'Koha/Plugin/Cataloging/AutoPunctuation/Security.pm'),
+    'utf8'
+);
+if (!securityModule.includes('Koha::Token->new->generate_csrf')) {
+    throw new Error('Plugin pages must generate Koha-native CSRF tokens');
+}
+if (!securityModule.includes('Koha::Token->new->check_csrf')) {
+    throw new Error('Plugin endpoints must validate Koha-native CSRF tokens');
+}
+if (securityModule.includes('isbd-plugin-csrf-v2')) {
+    throw new Error('Legacy plugin-only CSRF token generation is still present');
+}
+if (!apiClient.includes("params.set('op', 'cud-plugin_api')")) {
+    throw new Error('Intranet AJAX POST operations must use Koha\'s cud- prefix');
+}
+const csrfNormalizerStart = apiClientCore.indexOf('function normalizeCsrfToken(');
+const csrfNormalizerEnd = apiClientCore.indexOf('\n    function getCsrfToken(', csrfNormalizerStart);
+const csrfNormalizerSource = apiClientCore.slice(csrfNormalizerStart, csrfNormalizerEnd);
+if (csrfNormalizerSource.includes("split(',')")) {
+    throw new Error('Intranet client must not split Koha CSRF tokens on commas');
 }
 
 const intranetFiles = [

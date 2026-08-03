@@ -94,35 +94,27 @@
     function normalizeCsrfToken(raw) {
         if (raw === undefined || raw === null) return '';
         let value = String(raw).replace(/[\r\n]/g, '').trim();
-        if (!value) return '';
-        if (value.includes(',')) {
-            value = value.split(',').map(item => item.trim()).filter(Boolean)[0] || '';
-        }
         return value;
-    }
-
-    function isPluginCsrfToken(value) {
-        return /^[a-f0-9]{64}$/i.test(String(value || '').trim());
     }
 
     function getCsrfToken() {
         const settings = global.AutoPunctuationSettings || {};
         const settingsToken = normalizeCsrfToken(settings.csrfToken || settings.csrf_token || '');
-        if (settingsToken && isPluginCsrfToken(settingsToken)) return settingsToken;
+        if (settingsToken) return settingsToken;
         const hidden = document.getElementById('csrf_token');
         if (hidden) {
             const hiddenToken = normalizeCsrfToken(hidden.value || hidden.getAttribute('value') || '');
-            if (hiddenToken && isPluginCsrfToken(hiddenToken)) return hiddenToken;
+            if (hiddenToken) return hiddenToken;
         }
         const input = document.querySelector('input[name="csrf_token"]');
         if (input) {
             const inputToken = normalizeCsrfToken(input.value || input.getAttribute('value') || '');
-            if (inputToken && isPluginCsrfToken(inputToken)) return inputToken;
+            if (inputToken) return inputToken;
         }
         const metas = Array.from(document.querySelectorAll('meta[name="csrf-token"]'));
         for (const meta of metas) {
             const token = normalizeCsrfToken(meta ? meta.getAttribute('content') : '');
-            if (token && isPluginCsrfToken(token)) return token;
+            if (token) return token;
         }
         return '';
     }
