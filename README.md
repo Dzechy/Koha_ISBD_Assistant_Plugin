@@ -158,7 +158,7 @@ bash scripts/build_kpz.sh
 The expected package path is:
 
 ```text
-dist/Koha_ISBD_Assistant-1.1.1.kpz
+dist/Koha_ISBD_Assistant-1.1.2.kpz
 ```
 
 Install it in Koha:
@@ -177,11 +177,11 @@ The normal cataloging interface is `cataloguing/addbiblio.pl`. That is where the
 
 ## Koha 26 Compatibility
 
-Plugin version `1.0.2` and later, including the current `1.1.1`, supports the stock Koha `25.11` and `26.05` plugin controller. Its API methods emit their own CGI status, JSON content type, and JSON body, as required by Koha's `plugins/run.pl`. Plugin POST requests use a form-encoded `payload` and copy `class`, `method`, and `op` into the POST body because Koha `26.05` may not expose URL query parameters through `CGI->param` on POST requests. No Koha core-file override is required.
+Plugin version `1.0.2` and later, including the current `1.1.2`, supports the stock Koha `25.11` and `26.05` plugin controller. Its API methods emit their own CGI status, JSON content type, and JSON body, as required by Koha's `plugins/run.pl`. Plugin POST requests use a form-encoded `payload` and copy `class`, `method`, and `op` into the POST body because Koha `26.05` may not expose URL query parameters through `CGI->param` on POST requests. No Koha core-file override is required.
 
 The root-level `Auth.pm`, `Handler.pm`, and `run.pl` files are retained only as legacy development references and are not included in the KPZ. Do not copy them over Koha `26.05` files. Koha upgrades replace core files, and an override from another release can break authentication or plugin dispatch.
 
-If an earlier installation applied those overrides, restore the package-owned Koha files before testing `1.1.1`. The recovery helper intentionally supports backup and restore only:
+If an earlier installation applied those overrides, restore the package-owned Koha files before testing `1.1.2`. The recovery helper intentionally supports backup and restore only:
 
 ```bash
 bash scripts/kohafilesbackup.sh backup
@@ -613,7 +613,7 @@ bash scripts/build_kpz.sh
 Confirm the artifact exists:
 
 ```text
-dist/Koha_ISBD_Assistant-1.1.1.kpz
+dist/Koha_ISBD_Assistant-1.1.2.kpz
 ```
 
 Some Perl compile checks require Koha modules in `@INC`; run those inside a Koha environment.
@@ -629,7 +629,7 @@ bash scripts/build_kpz.sh
 The build writes the installable plugin package to:
 
 ```text
-dist/Koha_ISBD_Assistant-1.1.1.kpz
+dist/Koha_ISBD_Assistant-1.1.2.kpz
 ```
 
 Before sharing a package with another Koha site, run the tests in the previous section and install the KPZ in a staging Koha instance.

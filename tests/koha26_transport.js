@@ -37,6 +37,9 @@ if (!apiClient.includes("form.set('payload', JSON.stringify(bodyPayload))")) {
 if (!apiClient.includes("form.set('csrf_token', token)")) {
     throw new Error('API client does not send CSRF as a Koha form parameter');
 }
+if (!apiClient.includes("new URLSearchParams(queryIndex >= 0 ? url.slice(queryIndex + 1) : '')")) {
+    throw new Error('API client does not copy URL dispatch parameters into the POST body');
+}
 const apiClientCore = fs.readFileSync(
     path.join(root, 'Koha/Plugin/Cataloging/AutoPunctuation/js/api_client_core.js'),
     'utf8'

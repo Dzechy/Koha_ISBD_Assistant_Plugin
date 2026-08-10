@@ -136,7 +136,8 @@
         const token = csrfToken();
         const bodyPayload = payload && typeof payload === 'object' ? { ...payload } : {};
         if (token) bodyPayload.csrf_token = token;
-        const form = new URLSearchParams();
+        const queryIndex = url.indexOf('?');
+        const form = new URLSearchParams(queryIndex >= 0 ? url.slice(queryIndex + 1) : '');
         form.set('payload', JSON.stringify(bodyPayload));
         if (token) form.set('csrf_token', token);
         const response = await fetch(url, {

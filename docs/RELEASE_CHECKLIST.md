@@ -39,7 +39,7 @@ Use this checklist before publishing a release-candidate KPZ.
 - Build the KPZ:
   `./scripts/build_kpz.sh`
 - Inspect the package contents and confirm it contains only plugin source plus release docs/license:
-  `unzip -l dist/Koha_ISBD_Assistant-1.1.1.kpz`
+  `unzip -l dist/Koha_ISBD_Assistant-1.1.2.kpz`
 - Confirm the KPZ does not contain `PluginGithubPAT`, previous KPZ/ZIP files, `.git`, caches, logs, or local environment files.
 - Confirm repository-only classification schedules under `docs/LCCS` are not included in the KPZ.
 
