@@ -462,6 +462,7 @@ sub ai_suggest {
 
         my $response_inner;
         eval {
+          AI_REQUEST: {
             my $payload_copy =
               $self->_normalize_ai_request_payload( $payload, $settings );
             $payload = $payload_copy if $payload_copy;
@@ -469,7 +470,7 @@ sub ai_suggest {
             if ( @{$errors} ) {
                 $response_inner =
                   { error => 'Invalid request', details => $errors };
-                return;
+                last AI_REQUEST;
             }
 
             unless ( $settings->{ai_enable}
@@ -479,7 +480,7 @@ sub ai_suggest {
                   { error =>
 'AI features are disabled or missing API key for the selected provider.'
                   };
-                return;
+                last AI_REQUEST;
             }
 
             my $task = $payload->{task} || '';
@@ -501,21 +502,21 @@ sub ai_suggest {
                     $response_inner = _cataloging_insufficient_response(
                         $self, $payload,
                         '245$a is required for cataloging guidance.' );
-                    return;
+                    last AI_REQUEST;
                 }
                 my $source_result = $self->_cataloging_source_from_tag_context(
                     $cataloging_tag_context);
                 if ( $source_result->{error} ) {
                     $response_inner = _cataloging_insufficient_response(
                         $self, $payload, $source_result->{error} );
-                    return;
+                    last AI_REQUEST;
                 }
                 if ( $self->_is_excluded_field( $settings, '245', 'a' ) ) {
                     $response_inner =
                       { error =>
 'AI cataloging guidance is disabled because 245$a is excluded.'
                       };
-                    return;
+                    last AI_REQUEST;
                 }
             }
             else {
@@ -527,7 +528,7 @@ sub ai_suggest {
                 {
                     $response_inner =
                       { error => 'Field is excluded from AI assistance.' };
-                    return;
+                    last AI_REQUEST;
                 }
                 my $covered =
                   $self->_is_field_covered( $pack, $tag, $primary_subfield,
@@ -537,7 +538,7 @@ sub ai_suggest {
                       { error =>
 'No ISBD rule defined for this field; AI assistance disabled.'
                       };
-                    return;
+                    last AI_REQUEST;
                 }
             }
 
@@ -547,7 +548,7 @@ sub ai_suggest {
             {
                 $response_inner =
                   { error => 'Rate limit exceeded. Please try again later.' };
-                return;
+                last AI_REQUEST;
             }
 
             my $model_key = $self->_selected_model($settings);
@@ -556,7 +557,7 @@ sub ai_suggest {
                   { error =>
 'AI model not configured. Select a model in plugin settings.'
                   };
-                return;
+                last AI_REQUEST;
             }
             my $circuit_key = $self->_circuit_key( $provider, $model_key );
             my $capability_key = $self->_canonical_json(
@@ -564,7 +565,7 @@ sub ai_suggest {
             unless ( $self->_circuit_breaker_ok( $settings, $circuit_key ) ) {
                 $response_inner =
                   { error => 'AI circuit breaker open. Please retry later.' };
-                return;
+                last AI_REQUEST;
             }
 
             my $cataloging_source = '';
@@ -577,7 +578,7 @@ sub ai_suggest {
                 if ( $source_result->{error} ) {
                     $response_inner = _cataloging_insufficient_response(
                         $self, $payload, $source_result->{error} );
-                    return;
+                    last AI_REQUEST;
                 }
                 $cataloging_source = $source_result->{source};
                 my $filtered_tag_context =
@@ -618,7 +619,7 @@ sub ai_suggest {
                         { provider => $provider, model => $model_key } );
                     $response_inner = _task_response_for_client(
                         $payload, $no_finding, [] );
-                    return;
+                    last AI_REQUEST;
                 }
                 my $filtered_record =
                   $self->_filter_record_context( $payload->{record_context},
@@ -706,7 +707,7 @@ sub ai_suggest {
                     $cached->{debug}{task}         = $task;
                 }
                 $response_inner = $cached;
-                return;
+                last AI_REQUEST;
             }
 
             my $schema = $self->_ai_task_schema($task);
@@ -727,7 +728,7 @@ sub ai_suggest {
             if ( $provider_result->{error} ) {
                 $self->_record_failure( $settings, $circuit_key );
                 $response_inner = { error => $provider_result->{error} };
-                return;
+                last AI_REQUEST;
             }
 
             my $result = $provider_result->{data};
@@ -793,7 +794,7 @@ sub ai_suggest {
               unless @{$validation_errors};
             $self->_cache_set( $settings, $cache_key, $result );
             $response_inner = $result;
-            return;
+          }
         };
         if ($@) {
             my $message = "$@";

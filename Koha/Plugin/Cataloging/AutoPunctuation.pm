@@ -40,7 +40,7 @@ use Koha::Plugin::Cataloging::AutoPunctuation::Http;
 use Koha::Plugin::Cataloging::AutoPunctuation::Api;
 use Koha::Plugin::Cataloging::AutoPunctuation::AI;
 
-our $VERSION         = "1.1.0";
+our $VERSION         = "1.1.1";
 our $PLUGIN_REPO_URL = "https://github.com/build-with-duke/Koha_ISBD_Assistant_Plugin/";
 our $PLUGIN_RELEASES_API =
 "https://api.github.com/repos/build-with-duke/Koha_ISBD_Assistant_Plugin/releases/latest";
@@ -51,7 +51,7 @@ our $metadata = {
     name            => 'Koha_ISBD_Cataloging_Assistant',
     author          => 'Duke Chijimaka Jonathan',
     date_authored   => '2025-06-02',
-    date_updated    => '2026-08-03',
+    date_updated    => '2026-08-10',
     minimum_version => '25.11',
     maximum_version => undef,
     version         => $VERSION,
