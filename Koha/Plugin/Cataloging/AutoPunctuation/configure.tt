@@ -847,8 +847,8 @@
                                         <label for="ai_context_mode">AI Context Scope:</label>
                                         <select name="ai_context_mode" id="ai_context_mode" class="form-control" style="width: 240px;">
                                             <option value="tag_only" [% IF settings.ai_context_mode == 'tag_only' %]selected[% END %]>Tag only (default)</option>
-                                            <option value="tag_plus_neighbors" [% IF settings.ai_context_mode == 'tag_plus_neighbors' %]selected[% END %]>Tag + neighboring fields</option>
-                                            <option value="full" [% IF settings.ai_context_mode == 'full' %]selected[% END %]>Full record (redacted)</option>
+                                            <option value="tag_plus_related_fields" [% IF settings.ai_context_mode == 'tag_plus_related_fields' || settings.ai_context_mode == 'tag_plus_neighbors' %]selected[% END %]>Tag + semantically related fields</option>
+                                            <option value="full_record" [% IF settings.ai_context_mode == 'full_record' || settings.ai_context_mode == 'full' %]selected[% END %]>Full record (redacted)</option>
                                         </select>
                                         <span class="hint">Choose how much record context is sent to AI.</span>
                                     </li>

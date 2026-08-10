@@ -12,7 +12,17 @@
         "required": ["code", "value"],
         "properties": {
           "code": { "type": "string" },
-          "value": { "type": "string" }
+          "value": { "type": "string" },
+          "punctuation_provenance": {
+            "type": "object",
+            "required": ["source", "value"],
+            "properties": {
+              "source": { "type": "string" },
+              "value": { "type": "string" },
+              "generated_prefix": { "type": "string" },
+              "generated_suffix": { "type": "string" }
+            }
+          }
         }
       }
     }

@@ -1,0 +1,11 @@
+# AI architecture
+
+The AI subsystem is advisory. Browser code sends an explicit task to `ai_suggest`; it never receives provider credentials and never calls OpenAI or OpenRouter. The server normalizes MARC context, selects semantically related fields, builds a bounded prompt, invokes the provider adapter, validates the task schema and semantics, applies deterministic guardrails, and returns a trust-labelled result.
+
+The supported tasks are `punctuation_explanation`, `cataloging_classification`, `subject_heading_suggestion`, `cataloging_review`, and `training_tutor`. Their response contract version is `1.0.0`; the prompt version is `2.0.0`.
+
+`AI::Provider::generate(settings, task, context, schema, options)` is the single provider interface. Options contain the system policy. OpenAI uses Responses; OpenRouter uses Chat Completions. Model parameters are selected by `rules/ai_model_capabilities.json`, not guessed from substrings. Unknown models use strict textual JSON and the validated fallback path until an administrator adds a verified registry entry or supplies `ai_model_capabilities`.
+
+Cache keys include task, schema and prompt versions, rules version, provider/model, tag, indicators, field occurrence, ordered subfields, normalized record context, feature flags, context mode, user scope, redaction settings, prompt length, temperature, reasoning effort, and capability overrides.
+
+Punctuation fixes originate only in the deterministic rules engine. AI may explain a deterministic finding but cannot return an applicable MARC mutation.

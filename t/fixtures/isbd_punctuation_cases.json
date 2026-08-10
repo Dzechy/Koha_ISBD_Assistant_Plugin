@@ -24,8 +24,7 @@
       ]
     },
     "expected": [
-      { "subfield": "a", "value": "180 p. ;" },
-      { "subfield": "c", "value": "23 cm." }
+      { "subfield": "a", "value": "180 p. ;" }
     ]
   },
   {

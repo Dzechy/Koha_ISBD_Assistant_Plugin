@@ -186,8 +186,7 @@ assertExpected({
   ]
 }, {
   '300$a@0': 'xii, 180 pages :',
-  '300$b@1': 'illustrations ;',
-  '300$c@2': '23 cm.'
+  '300$b@1': 'illustrations ;'
 });
 
 assertExpected({
@@ -196,46 +195,46 @@ assertExpected({
     { code: 'a', value: 'xii, 180 pages' },
     { code: 'c', value: '23 cm' }
   ]
-}, { '300$a@0': 'xii, 180 pages ;', '300$c@1': '23 cm.' });
+}, { '300$a@0': 'xii, 180 pages ;' });
 
 assertExpected({
   tag: '300',
   subfields: [{ code: 'a', value: 'xii pages :' }]
-}, { '300$a@0': 'xii pages.' });
+}, { '300$a@0': 'xii pages' });
 assertExpected({
   tag: '300',
   subfields: [{ code: 'a', value: '180 pages ;' }]
-}, { '300$a@0': '180 pages.' });
+}, { '300$a@0': '180 pages' });
 assertExpected({
   tag: '300',
   subfields: [{ code: 'a', value: 'xii, 180 pages :' }]
-}, { '300$a@0': 'xii, 180 pages.' });
+}, { '300$a@0': 'xii, 180 pages' });
 assertExpected({
   tag: '300',
   subfields: [{ code: 'b', value: ': illustrations' }]
-}, { '300$b@0': 'illustrations.' });
+}, { '300$b@0': 'illustrations' });
 assertExpected({
   tag: '300',
   subfields: [{ code: 'c', value: '; 23 cm' }]
-}, { '300$c@0': '23 cm.' });
+}, { '300$c@0': '23 cm' });
 assertExpected({
   tag: '300',
   subfields: [{ code: 'e', value: '+ 1 booklet' }]
-}, { '300$e@0': '1 booklet.' });
+}, { '300$e@0': '1 booklet' });
 assertExpected({
   tag: '300',
   subfields: [
     { code: 'b', value: 'illustrations' },
     { code: 'e', value: '1 booklet' }
   ]
-}, { '300$b@0': 'illustrations + ', '300$e@1': '1 booklet.' });
+}, { '300$b@0': 'illustrations + ' });
 assertExpected({
   tag: '300',
   subfields: [
     { code: 'c', value: '23 cm' },
     { code: 'e', value: '1 booklet' }
   ]
-}, { '300$c@0': '23 cm + ', '300$e@1': '1 booklet.' });
+}, { '300$c@0': '23 cm + ' });
 assertNoSeverity({
   tag: '300',
   subfields: [
@@ -260,7 +259,7 @@ assertExpected({
     { code: 'a', value: 'Chicago' },
     { code: 'c', value: '1925' }
   ]
-}, { '260$a@0': 'New York,', '260$a@1': ' ; Chicago,' });
+}, { '260$a@0': 'New York ;', '260$a@1': 'Chicago,' });
 
 assertExpected({
   tag: '260',
@@ -284,7 +283,7 @@ assertExpected({
     { code: 'a', value: 'New York' },
     { code: 'c', value: '2020' }
   ]
-}, { '264$a@0': 'London,', '264$a@1': ' ; New York,' });
+}, { '264$a@0': 'London ;', '264$a@1': 'New York,' });
 assertNoSeverity({
   tag: '260',
   subfields: [
@@ -309,12 +308,12 @@ assertExpected({
     { code: 'v', value: '1' },
     { code: 'v', value: '2' }
   ]
-}, { '490$a@0': 'Library of America ;', '490$v@1': '1.', '490$v@2': '2.' });
+}, { '490$a@0': 'Library of America ;' });
 
-assertExpected({
+assertNoFinding({
   tag: '490',
   subfields: [{ code: 'x', value: '0080-2258.' }]
-}, { '490$x@0': '0080-2258' });
+}, '490$x@0');
 
 assertExpected({
   tag: '255',
@@ -337,7 +336,7 @@ assertExpected({
     { code: 'a', value: '2nd ed.' },
     { code: 'b', value: 'revised' }
   ]
-}, { '250$b@1': 'revised.' });
+}, { '250$a@0': '2nd ed.,', '250$b@1': 'revised.' });
 
 assertExpected({
   tag: '254',
@@ -353,11 +352,16 @@ assertNoFinding({
   subfields: [{ code: 'a', value: 'Vol. 1, no. 1 (Jan. 1971)-' }]
 }, '362$a@0');
 
-assertExpected({
+assertNoFinding({
   tag: '264',
   ind2: '4',
   subfields: [{ code: 'c', value: '©2020' }]
-}, { '264$c@0': '©2020.' });
+}, '264$c@0');
+assertExpected({
+  tag: '264',
+  ind2: '4',
+  subfields: [{ code: 'c', value: '©2020.' }]
+}, { '264$c@0': '©2020' });
 assertNoSeverity({
   tag: '264',
   ind2: '4',

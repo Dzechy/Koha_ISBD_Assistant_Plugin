@@ -25,6 +25,7 @@ use Koha::Plugin::Cataloging::AutoPunctuation::AI::Provider;
 use Koha::Plugin::Cataloging::AutoPunctuation::AI::Parse;
 use Koha::Plugin::Cataloging::AutoPunctuation::AI::Prompt;
 use Koha::Plugin::Cataloging::AutoPunctuation::AI::Guard;
+use Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract;
 
 # Cache
 sub _cache_backend {
@@ -144,6 +145,14 @@ sub _call_ai_provider {
     return
       Koha::Plugin::Cataloging::AutoPunctuation::AI::Provider::_call_ai_provider(
         @_);
+}
+
+sub _model_capabilities {
+    return Koha::Plugin::Cataloging::AutoPunctuation::AI::Provider::_model_capabilities(@_);
+}
+
+sub _generate_ai {
+    return Koha::Plugin::Cataloging::AutoPunctuation::AI::Provider::generate(@_);
 }
 
 sub _sanitize_ai_response_for_chat {
@@ -274,6 +283,10 @@ sub _build_ai_prompt_cataloging {
         @_);
 }
 
+sub _ai_system_policy {
+    return Koha::Plugin::Cataloging::AutoPunctuation::AI::Prompt::_ai_system_policy(@_);
+}
+
 # Guard
 sub _validate_ai_response_guardrails {
     return
@@ -302,6 +315,27 @@ sub _filter_record_context {
 sub _redact_value {
     return Koha::Plugin::Cataloging::AutoPunctuation::AI::Guard::_redact_value(
         @_);
+}
+
+# Versioned task contracts
+sub _supported_ai_tasks {
+    return Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_supported_ai_tasks(@_);
+}
+
+sub _ai_task_schema_file {
+    return Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_ai_task_schema_file(@_);
+}
+
+sub _ai_task_schema {
+    return Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_ai_task_schema(@_);
+}
+
+sub _validate_ai_task_response {
+    return Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_validate_ai_task_response(@_);
+}
+
+sub _normalize_ai_task_response {
+    return Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_normalize_ai_task_response(@_);
 }
 
 1;

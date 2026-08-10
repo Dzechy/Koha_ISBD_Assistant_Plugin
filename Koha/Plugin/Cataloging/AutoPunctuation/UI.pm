@@ -574,7 +574,6 @@ sub intranet_js {
         my $framework_fields_json = to_json( $framework_fields || [] );
         my $schemas               = {
             ai_request             => $self->_load_schema('ai_request.json'),
-            ai_response            => $self->_load_schema('ai_response.json'),
             validate_field_request =>
               $self->_load_schema('validate_field_request.json'),
             validate_record_request =>

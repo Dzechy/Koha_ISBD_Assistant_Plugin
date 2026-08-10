@@ -239,7 +239,6 @@ assert_expected(
     {
         '300$a@0' => 'xii, 180 pages :',
         '300$b@1' => 'illustrations ;',
-        '300$c@2' => '23 cm.',
     }
 );
 
@@ -249,7 +248,7 @@ assert_expected(
         tag       => '300',
         subfields => [ { code => 'a', value => 'xii pages :' } ],
     },
-    { '300$a@0' => 'xii pages.' }
+    { '300$a@0' => 'xii pages' }
 );
 assert_expected(
     '300 a arabic only',
@@ -257,7 +256,7 @@ assert_expected(
         tag       => '300',
         subfields => [ { code => 'a', value => '180 pages ;' } ],
     },
-    { '300$a@0' => '180 pages.' }
+    { '300$a@0' => '180 pages' }
 );
 assert_expected(
     '300 a mixed only',
@@ -265,7 +264,7 @@ assert_expected(
         tag       => '300',
         subfields => [ { code => 'a', value => 'xii, 180 pages :' } ],
     },
-    { '300$a@0' => 'xii, 180 pages.' }
+    { '300$a@0' => 'xii, 180 pages' }
 );
 assert_expected(
     '300 b only',
@@ -273,7 +272,7 @@ assert_expected(
         tag       => '300',
         subfields => [ { code => 'b', value => ': illustrations' } ],
     },
-    { '300$b@0' => 'illustrations.' }
+    { '300$b@0' => 'illustrations' }
 );
 assert_expected(
     '300 c only',
@@ -281,7 +280,7 @@ assert_expected(
         tag       => '300',
         subfields => [ { code => 'c', value => '; 23 cm' } ],
     },
-    { '300$c@0' => '23 cm.' }
+    { '300$c@0' => '23 cm' }
 );
 assert_expected(
     '300 e only',
@@ -289,7 +288,7 @@ assert_expected(
         tag       => '300',
         subfields => [ { code => 'e', value => '+ 1 booklet' } ],
     },
-    { '300$e@0' => '1 booklet.' }
+    { '300$e@0' => '1 booklet' }
 );
 assert_expected(
     '300 b+e',
@@ -300,7 +299,7 @@ assert_expected(
             { code => 'e', value => '1 booklet' },
         ],
     },
-    { '300$b@0' => 'illustrations + ', '300$e@1' => '1 booklet.' }
+    { '300$b@0' => 'illustrations + ' }
 );
 assert_expected(
     '300 c+e',
@@ -311,7 +310,7 @@ assert_expected(
             { code => 'e', value => '1 booklet' },
         ],
     },
-    { '300$c@0' => '23 cm + ', '300$e@1' => '1 booklet.' }
+    { '300$c@0' => '23 cm + ' }
 );
 assert_no_severity(
     '300 sparse vendor',
@@ -337,8 +336,8 @@ assert_expected(
         ],
     },
     {
-        '260$a@0' => 'New York,',
-        '260$a@1' => ' ; Chicago,',
+        '260$a@0' => 'New York ;',
+        '260$a@1' => 'Chicago,',
     }
 );
 
@@ -369,8 +368,8 @@ assert_expected(
         ],
     },
     {
-        '264$a@0' => 'London,',
-        '264$a@1' => ' ; New York,',
+        '264$a@0' => 'London ;',
+        '264$a@1' => 'New York,',
     }
 );
 assert_no_severity(
@@ -394,7 +393,7 @@ assert_expected(
             { code => 'b', value => 'revised' },
         ],
     },
-    { '250$b@1' => 'revised.' }
+    { '250$a@0' => '2nd ed.,', '250$b@1' => 'revised.' }
 );
 assert_expected(
     '254 score',
@@ -405,14 +404,23 @@ assert_expected(
     { '254$a@0' => 'Full score.' }
 );
 
-assert_expected(
+assert_no_expected(
     '264 copyright date',
     {
         tag       => '264',
         ind2      => '4',
         subfields => [ { code => 'c', value => '©2020' } ],
     },
-    { '264$c@0' => '©2020.' }
+    '264$c@0'
+);
+assert_expected(
+    '264 copyright stale terminal punctuation',
+    {
+        tag       => '264',
+        ind2      => '4',
+        subfields => [ { code => 'c', value => '©2020.' } ],
+    },
+    { '264$c@0' => '©2020' }
 );
 assert_no_severity(
     '264 copyright a/b handoff',
@@ -504,13 +512,13 @@ assert_no_expected(
     '362$a@0'
 );
 
-assert_expected(
+assert_no_expected(
     '490 series issn',
     {
         tag       => '490',
         subfields => [ { code => 'x', value => '0080-2258.' } ],
     },
-    { '490$x@0' => '0080-2258' }
+    '490$x@0'
 );
 
 is(

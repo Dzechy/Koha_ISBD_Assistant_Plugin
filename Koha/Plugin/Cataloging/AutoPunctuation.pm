@@ -40,12 +40,12 @@ use Koha::Plugin::Cataloging::AutoPunctuation::Http;
 use Koha::Plugin::Cataloging::AutoPunctuation::Api;
 use Koha::Plugin::Cataloging::AutoPunctuation::AI;
 
-our $VERSION         = "1.0.2";
+our $VERSION         = "1.1.0";
 our $PLUGIN_REPO_URL = "https://github.com/build-with-duke/Koha_ISBD_Assistant_Plugin/";
 our $PLUGIN_RELEASES_API =
 "https://api.github.com/repos/build-with-duke/Koha_ISBD_Assistant_Plugin/releases/latest";
 our $AUTHOR_LINKEDIN   = "https://linkedin.com/in/duke-j-a1a9b0260";
-our $AI_PROMPT_VERSION = "1.0.1";
+our $AI_PROMPT_VERSION = "2.0.0";
 
 our $metadata = {
     name            => 'Koha_ISBD_Cataloging_Assistant',
@@ -646,6 +646,14 @@ sub _call_ai_provider {
     return Koha::Plugin::Cataloging::AutoPunctuation::AI::_call_ai_provider(@_);
 }
 
+sub _model_capabilities {
+    return Koha::Plugin::Cataloging::AutoPunctuation::AI::_model_capabilities(@_);
+}
+
+sub _generate_ai {
+    return Koha::Plugin::Cataloging::AutoPunctuation::AI::_generate_ai(@_);
+}
+
 sub _sanitize_ai_response_for_chat {
     return
       Koha::Plugin::Cataloging::AutoPunctuation::AI::_sanitize_ai_response_for_chat(
@@ -776,6 +784,22 @@ sub _build_ai_prompt_cataloging {
     return
       Koha::Plugin::Cataloging::AutoPunctuation::AI::_build_ai_prompt_cataloging(
         @_);
+}
+
+sub _ai_system_policy {
+    return Koha::Plugin::Cataloging::AutoPunctuation::AI::_ai_system_policy(@_);
+}
+
+sub _ai_task_schema {
+    return Koha::Plugin::Cataloging::AutoPunctuation::AI::_ai_task_schema(@_);
+}
+
+sub _validate_ai_task_response {
+    return Koha::Plugin::Cataloging::AutoPunctuation::AI::_validate_ai_task_response(@_);
+}
+
+sub _normalize_ai_task_response {
+    return Koha::Plugin::Cataloging::AutoPunctuation::AI::_normalize_ai_task_response(@_);
 }
 
 # AI::Guard

@@ -22,8 +22,114 @@ use LWP::UserAgent;
 use HTTP::Request;
 use JSON qw(to_json from_json);
 use Try::Tiny;
-use Time::HiRes  qw(usleep);
+use Time::HiRes  qw(usleep time);
 use Scalar::Util qw(looks_like_number);
+
+my %MODEL_CAPABILITIES = (
+    openai => {
+        'gpt-4o'       => { structured_output => 1, reasoning => 0, temperature => 1, tools => 1 },
+        'gpt-5'        => { structured_output => 1, reasoning => 1, temperature => 0, tools => 1 },
+        'gpt-5.2'      => { structured_output => 1, reasoning => 1, temperature => 0, tools => 1 },
+        'gpt-5.4'      => { structured_output => 1, reasoning => 1, temperature => 0, tools => 1 },
+        'gpt-5.5'      => { structured_output => 1, reasoning => 1, temperature => 0, tools => 1 },
+        'gpt-5.6-terra' => { structured_output => 1, reasoning => 1, temperature => 0, tools => 1 },
+    },
+    openrouter => {},
+);
+
+sub _model_capabilities {
+    my ( $self, $settings, $provider, $model ) = @_;
+    $provider = lc( $provider || '' );
+    $model    = lc( $model || '' );
+    my $capabilities = $MODEL_CAPABILITIES{$provider}{$model} || {};
+    my %resolved = (
+        supports_structured_output => $capabilities->{structured_output} ? 1 : 0,
+        supports_reasoning         => $capabilities->{reasoning} ? 1 : 0,
+        supports_temperature       => $capabilities->{temperature} ? 1 : 0,
+        supports_tools             => $capabilities->{tools} ? 1 : 0,
+    );
+    my $registry;
+    if ( $self && $self->can('get_plugin_dir') ) {
+        my $path = $self->get_plugin_dir() . '/rules/ai_model_capabilities.json';
+        if ( -e $path && open my $fh, '<:encoding(UTF-8)', $path ) {
+            local $/;
+            my $content = <$fh>;
+            close $fh;
+            try { $registry = from_json($content); }
+            catch { $registry = undef; };
+        }
+    }
+    my $registered = ref $registry eq 'HASH'
+      && ref $registry->{providers} eq 'HASH'
+      && ref $registry->{providers}{$provider} eq 'HASH'
+      ? $registry->{providers}{$provider}{$model}
+      : undef;
+    if ( ref $registered eq 'HASH' ) {
+        for my $key ( keys %resolved ) {
+            $resolved{$key} = $registered->{$key} ? 1 : 0
+              if exists $registered->{$key};
+        }
+    }
+    if ( $settings->{ai_model_capabilities} ) {
+        my $configured;
+        try { $configured = from_json( $settings->{ai_model_capabilities} ); }
+        catch { $configured = undef; };
+        my $entry = ref $configured eq 'HASH' ? $configured->{$model} : undef;
+        if ( ref $entry eq 'HASH' ) {
+            for my $key ( keys %resolved ) {
+                $resolved{$key} = $entry->{$key} ? 1 : 0 if exists $entry->{$key};
+            }
+        }
+    }
+    return \%resolved;
+}
+
+sub _parse_structured_content {
+    my ( $content ) = @_;
+    return undef unless defined $content && $content =~ /\S/;
+    my $text = $content;
+    $text =~ s/^\s+|\s+$//g;
+    $text = $1 if $text =~ /^```(?:json)?\s*(\{.*\})\s*```$/s;
+    my $parsed;
+    my $has_strict_decoder = eval { require Cpanel::JSON::XS; 1 };
+    if ($has_strict_decoder) {
+        try {
+            $parsed = Cpanel::JSON::XS->new->utf8(0)->allow_dupkeys(0)
+              ->decode($text);
+        }
+        catch { $parsed = undef; };
+    }
+    else {
+        # JSON.pm is retained as a portability fallback. Koha deployments
+        # normally provide Cpanel::JSON::XS, which also rejects duplicate keys.
+        try { $parsed = from_json($text); }
+        catch { $parsed = undef; };
+    }
+    return ref $parsed eq 'HASH' ? $parsed : undef;
+}
+
+sub _structured_output_parameter {
+    my ( $provider, $schema, $name ) = @_;
+    return {} unless ref $schema eq 'HASH' && %{$schema};
+    $name ||= 'cataloging_response';
+    return {
+        text => {
+            format => {
+                type => 'json_schema', name => $name,
+                strict => JSON::true, schema => $schema,
+            }
+        }
+      }
+      if lc( $provider || '' ) eq 'openai';
+    return {
+        response_format => {
+            type => 'json_schema',
+            json_schema => {
+                name => $name, strict => JSON::true, schema => $schema,
+            }
+        }
+    };
+}
 
 sub _extract_text_from_message_content {
     my ( $self, $content ) = @_;
@@ -70,26 +176,33 @@ sub _call_openai_responses {
     my $system_prompt =
         $options && $options->{system_prompt}
       ? $options->{system_prompt}
-      : 'You are a MARC21 cataloging assistant. Use ISBD for punctuation guidance and LC controlled vocabularies for classification and subjects. Return plain text only.';
+      : 'You are an advisory MARC21 cataloguing assistant. Return only valid JSON.';
     my $max_output_tokens = _resolved_ai_max_output_tokens( $self, $settings );
     my $payload           = {
         model => $model,
         input => [
             {
                 role    => "system",
-                content => [ { type => "text", text => $system_prompt } ]
+                content => [ { type => "input_text", text => $system_prompt } ]
             },
             {
                 role    => "user",
-                content => [ { type => "text", text => $prompt } ]
+                content => [ { type => "input_text", text => $prompt } ]
             }
         ],
         max_output_tokens => $max_output_tokens,
-        temperature       => $settings->{ai_temperature} + 0
     };
+    my $capabilities = _model_capabilities( $self, $settings, 'openai', $model );
+    $payload->{temperature} = $settings->{ai_temperature} + 0
+      if $capabilities->{supports_temperature};
+    if ( $options->{schema} && $capabilities->{supports_structured_output} ) {
+        my $format = _structured_output_parameter(
+            'openai', $options->{schema}, $options->{schema_name} );
+        $payload->{$_} = $format->{$_} for keys %{$format};
+    }
     my $effort = _normalized_reasoning_effort( $self, $settings );
 
-    if ( $effort ne 'none' && _is_openai_reasoning_model( $self, $model ) ) {
+    if ( $effort ne 'none' && $capabilities->{supports_reasoning} ) {
         $payload->{reasoning} = { effort => $effort };
     }
     warn "ISBD AI request length: " . length($prompt)
@@ -104,7 +217,10 @@ sub _call_openai_responses {
         to_json($payload)
     );
 
-    my $attempts = ( $settings->{ai_retry_count} || 1 ) + 1;
+    my $started  = time;
+    my $retry_count = defined $settings->{ai_retry_count}
+      ? int( $settings->{ai_retry_count} ) : 1;
+    my $attempts = $retry_count + 1;
     my $backoff  = 200_000;
     for my $attempt ( 1 .. $attempts ) {
         my $response = $ua->request($request);
@@ -128,18 +244,27 @@ sub _call_openai_responses {
 'OpenAI response was empty. Retry once. If this persists, reduce reasoning effort or max output tokens for this model.'
               }
               unless $content;
+            my $data = _parse_structured_content($content);
             return {
                 raw_text     => $content,
-                text_mode    => 1,
+                ( $data ? ( data => $data ) : ( parse_error => 'Provider output was not a single valid JSON object.' ) ),
                 raw_response => $raw_body,
-                truncated    => $truncated
+                truncated    => $truncated,
+                capabilities => $capabilities,
+                latency_ms   => int( ( time - $started ) * 1000 ),
+                input_tokens => $result->{usage}{input_tokens},
+                output_tokens => $result->{usage}{output_tokens},
             };
         }
-        if ( $attempt < $attempts ) {
+        my $retryable = $response->code == 408
+          || $response->code == 429
+          || $response->code >= 500;
+        if ( $attempt < $attempts && $retryable ) {
             usleep($backoff);
             $backoff *= 2;
+            next;
         }
-        if ( $attempt == $attempts ) {
+        if ( $attempt == $attempts || !$retryable ) {
             return {
                 error => _format_provider_error( $self, 'OpenAI', $response ) };
         }
@@ -157,7 +282,7 @@ sub _call_openrouter_responses {
     my $system_prompt =
         $options && $options->{system_prompt}
       ? $options->{system_prompt}
-      : 'You are a MARC21 cataloging assistant. Use ISBD for punctuation guidance and LC controlled vocabularies for classification and subjects. Return plain text only.';
+      : 'You are an advisory MARC21 cataloguing assistant. Return only valid JSON.';
     my $max_output_tokens = _resolved_ai_max_output_tokens( $self, $settings );
     my $payload           = {
         input => [
@@ -194,7 +319,9 @@ sub _call_openrouter_responses {
         to_json($payload)
     );
 
-    my $attempts = ( $settings->{ai_retry_count} || 1 ) + 1;
+    my $retry_count = defined $settings->{ai_retry_count}
+      ? int( $settings->{ai_retry_count} ) : 1;
+    my $attempts = $retry_count + 1;
     my $backoff  = 200_000;
     for my $attempt ( 1 .. $attempts ) {
         my $response = $ua->request($request);
@@ -225,11 +352,15 @@ sub _call_openrouter_responses {
                 truncated    => $truncated
             };
         }
-        if ( $attempt < $attempts ) {
+        my $retryable = $response->code == 408
+          || $response->code == 429
+          || $response->code >= 500;
+        if ( $attempt < $attempts && $retryable ) {
             usleep($backoff);
             $backoff *= 2;
+            next;
         }
-        if ( $attempt == $attempts ) {
+        if ( $attempt == $attempts || !$retryable ) {
             return { error =>
                   _format_provider_error( $self, 'OpenRouter', $response ) };
         }
@@ -247,7 +378,7 @@ sub _call_openrouter_chat {
     my $system_prompt =
         $options && $options->{system_prompt}
       ? $options->{system_prompt}
-      : 'You are a MARC21 cataloging assistant. Use ISBD for punctuation guidance and LC controlled vocabularies for classification and subjects. Return plain text only.';
+      : 'You are an advisory MARC21 cataloguing assistant. Return only valid JSON.';
     my $max_output_tokens = _resolved_ai_max_output_tokens( $self, $settings );
     my $payload           = {
         messages => [
@@ -260,9 +391,16 @@ sub _call_openrouter_chat {
                 content => $prompt
             }
         ],
-        max_tokens  => $max_output_tokens,
-        temperature => $settings->{ai_temperature} + 0
+        max_tokens => $max_output_tokens,
     };
+    my $capabilities = _model_capabilities( $self, $settings, 'openrouter', $model );
+    $payload->{temperature} = $settings->{ai_temperature} + 0
+      if $capabilities->{supports_temperature};
+    if ( $options->{schema} && $capabilities->{supports_structured_output} ) {
+        my $format = _structured_output_parameter(
+            'openrouter', $options->{schema}, $options->{schema_name} );
+        $payload->{$_} = $format->{$_} for keys %{$format};
+    }
 
     if ( $model && $model ne 'default' ) {
         $payload->{model} = $model;
@@ -282,7 +420,10 @@ sub _call_openrouter_chat {
         to_json($payload)
     );
 
-    my $attempts = ( $settings->{ai_retry_count} || 1 ) + 1;
+    my $started  = time;
+    my $retry_count = defined $settings->{ai_retry_count}
+      ? int( $settings->{ai_retry_count} ) : 1;
+    my $attempts = $retry_count + 1;
     my $backoff  = 200_000;
     for my $attempt ( 1 .. $attempts ) {
         my $response = $ua->request($request);
@@ -306,18 +447,27 @@ sub _call_openrouter_chat {
 'OpenRouter response was empty. Retry once. If this persists, reduce reasoning effort or max output tokens for this model.'
               }
               unless $content;
+            my $data = _parse_structured_content($content);
             return {
                 raw_text     => $content,
-                text_mode    => 1,
+                ( $data ? ( data => $data ) : ( parse_error => 'Provider output was not a single valid JSON object.' ) ),
                 raw_response => $raw_body,
-                truncated    => $truncated
+                truncated    => $truncated,
+                capabilities => $capabilities,
+                latency_ms   => int( ( time - $started ) * 1000 ),
+                input_tokens => $result->{usage}{prompt_tokens},
+                output_tokens => $result->{usage}{completion_tokens},
             };
         }
-        if ( $attempt < $attempts ) {
+        my $retryable = $response->code == 408
+          || $response->code == 429
+          || $response->code >= 500;
+        if ( $attempt < $attempts && $retryable ) {
             usleep($backoff);
             $backoff *= 2;
+            next;
         }
-        if ( $attempt == $attempts ) {
+        if ( $attempt == $attempts || !$retryable ) {
             return { error =>
                   _format_provider_error( $self, 'OpenRouter', $response ) };
         }
@@ -453,6 +603,14 @@ sub _call_ai_provider {
         return _call_openrouter_chat( $self, $settings, $prompt, $options );
     }
     return _call_openai_responses( $self, $settings, $prompt, $options );
+}
+
+sub generate {
+    my ( $self, $settings, $task, $context, $schema, $options ) = @_;
+    $options ||= {};
+    $options->{task}   = $task;
+    $options->{schema} = $schema;
+    return _call_ai_provider( $self, $settings, $context, $options );
 }
 
 sub _extract_response_text {

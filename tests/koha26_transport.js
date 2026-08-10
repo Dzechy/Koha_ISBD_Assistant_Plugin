@@ -11,7 +11,7 @@ const files = [
     'Koha/Plugin/Cataloging/AutoPunctuation/configure.tt'
 ];
 
-for (const relativePath of files) {
+for (const relativePath of files.slice(1)) {
     const source = fs.readFileSync(path.join(root, relativePath), 'utf8');
     if (!source.includes('application/x-www-form-urlencoded; charset=UTF-8')) {
         throw new Error(`${relativePath} does not use the Koha 26-compatible form transport`);
@@ -28,6 +28,15 @@ for (const relativePath of files) {
 }
 
 const apiClient = fs.readFileSync(path.join(root, files[0]), 'utf8');
+if (!apiClient.includes('application/x-www-form-urlencoded; charset=UTF-8')) {
+    throw new Error('API client does not use the Koha 26-compatible form transport');
+}
+if (!apiClient.includes("form.set('payload', JSON.stringify(bodyPayload))")) {
+    throw new Error('API client does not add plugin JSON to the payload form field');
+}
+if (!apiClient.includes("form.set('csrf_token', token)")) {
+    throw new Error('API client does not send CSRF as a Koha form parameter');
+}
 const apiClientCore = fs.readFileSync(
     path.join(root, 'Koha/Plugin/Cataloging/AutoPunctuation/js/api_client_core.js'),
     'utf8'
@@ -63,7 +72,7 @@ if (!securityModule.includes('Koha::Token->new->check_csrf')) {
 if (securityModule.includes('isbd-plugin-csrf-v2')) {
     throw new Error('Legacy plugin-only CSRF token generation is still present');
 }
-if (!apiClient.includes("params.set('op', 'cud-plugin_api')")) {
+if (!apiClient.includes("url.searchParams.set('op', 'cud-plugin_api')")) {
     throw new Error('Intranet AJAX POST operations must use Koha\'s cud- prefix');
 }
 const csrfNormalizerStart = apiClientCore.indexOf('function normalizeCsrfToken(');

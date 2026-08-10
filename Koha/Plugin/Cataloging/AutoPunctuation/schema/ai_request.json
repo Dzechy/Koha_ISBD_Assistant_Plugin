@@ -1,9 +1,23 @@
 {
   "type": "object",
-  "required": ["request_id", "tag_context"],
+  "required": ["request_id", "task", "tag_context"],
   "additionalProperties": false,
   "properties": {
     "request_id": { "type": "string", "maxLength": 64 },
+    "task": {
+      "type": "string",
+      "enum": [
+        "punctuation_explanation",
+        "cataloging_classification",
+        "subject_heading_suggestion",
+        "cataloging_review",
+        "training_tutor"
+      ]
+    },
+    "context_mode": {
+      "type": "string",
+      "enum": ["tag_only", "tag_plus_related_fields", "full_record"]
+    },
     "tag_context": {
       "type": "object",
       "required": ["tag", "occurrence", "subfields"],
@@ -23,7 +37,18 @@
             "additionalProperties": false,
             "properties": {
               "code": { "type": "string", "maxLength": 1 },
-              "value": { "type": "string", "maxLength": 2000 }
+              "value": { "type": "string", "maxLength": 2000 },
+              "punctuation_provenance": {
+                "type": "object",
+                "required": ["source", "value"],
+                "additionalProperties": false,
+                "properties": {
+                  "source": { "type": "string", "maxLength": 32 },
+                  "value": { "type": "string", "maxLength": 2000 },
+                  "generated_prefix": { "type": "string", "maxLength": 8 },
+                  "generated_suffix": { "type": "string", "maxLength": 8 }
+                }
+              }
             }
           }
         }

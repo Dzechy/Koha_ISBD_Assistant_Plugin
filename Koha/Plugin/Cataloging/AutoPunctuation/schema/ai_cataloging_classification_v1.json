@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "required": ["schema_version", "task", "status", "authority_status", "evidence", "warnings", "requires_human_review"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "enum": ["1.0.0"] },
+    "task": { "type": "string", "enum": ["cataloging_classification"] },
+    "status": { "type": "string", "enum": ["ok", "insufficient_evidence", "incomplete"] },
+    "candidate": {
+      "type": "object",
+      "required": ["value", "confidence", "basis"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "type": "string", "maxLength": 64 },
+        "confidence": { "type": "string", "enum": ["high", "medium", "low", "insufficient_evidence"] },
+        "basis": { "type": "string", "maxLength": 1200 },
+        "model_confidence": { "type": "string", "maxLength": 80 }
+      }
+    },
+    "authority_status": { "type": "string", "enum": ["unverified", "verified", "not_applicable"] },
+    "evidence": { "type": "array", "maxItems": 12, "items": { "type": "string", "maxLength": 400 } },
+    "warnings": { "type": "array", "maxItems": 12, "items": { "type": "string", "maxLength": 400 } },
+    "requires_human_review": { "type": "boolean" }
+  }
+}

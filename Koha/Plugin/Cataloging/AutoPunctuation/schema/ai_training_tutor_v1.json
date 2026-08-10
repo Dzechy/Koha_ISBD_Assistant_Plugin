@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "required": ["schema_version", "task", "status", "explanation", "questions", "warnings", "requires_human_review"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "enum": ["1.0.0"] },
+    "task": { "type": "string", "enum": ["training_tutor"] },
+    "status": { "type": "string", "enum": ["ok", "insufficient_evidence", "incomplete"] },
+    "explanation": { "type": "string", "maxLength": 2000 },
+    "questions": { "type": "array", "maxItems": 8, "items": { "type": "string", "maxLength": 400 } },
+    "warnings": { "type": "array", "maxItems": 12, "items": { "type": "string", "maxLength": 400 } },
+    "requires_human_review": { "type": "boolean" }
+  }
+}

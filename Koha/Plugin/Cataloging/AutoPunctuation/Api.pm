@@ -22,7 +22,45 @@ use Try::Tiny;
 use Digest::SHA qw(sha256_hex);
 use C4::Context;
 use CGI;
+use JSON ();
 use Koha::Plugin::Cataloging::AutoPunctuation::AI::Prompt ();
+
+sub _semantic_subfields {
+    my ( $tag, $subfields, $pack ) = @_;
+    $subfields = [] unless $subfields && ref $subfields eq 'ARRAY';
+    my $model =
+         $pack
+      && ref $pack eq 'HASH'
+      && $pack->{field_relationships}
+      && $pack->{field_relationships}{$tag}
+      && $pack->{field_relationships}{$tag}{subfields}
+      ? $pack->{field_relationships}{$tag}{subfields}
+      : {};
+    my @indexed = map { { sub => $subfields->[$_], index => $_ } }
+      0 .. $#{$subfields};
+    return map { $_->{sub} } sort {
+        my $a_code = lc( $a->{sub}{code} || '' );
+        my $b_code = lc( $b->{sub}{code} || '' );
+        my $a_pos  = exists $model->{$a_code}{canonical_position}
+          ? $model->{$a_code}{canonical_position}
+          : 1_000_000;
+        my $b_pos = exists $model->{$b_code}{canonical_position}
+          ? $model->{$b_code}{canonical_position}
+          : 1_000_000;
+        $a_pos <=> $b_pos
+          || ( $a_code eq $b_code
+            ? $a->{index} <=> $b->{index}
+            : $a_code cmp $b_code )
+    } @indexed;
+}
+
+sub _semantic_primary_subfield {
+    my ( $tag, $subfields, $pack ) = @_;
+    my ($primary) = grep {
+        $_ && $_->{code} && defined $_->{value} && $_->{value} =~ /\S/
+    } _semantic_subfields( $tag, $subfields, $pack );
+    return $primary ? lc( $primary->{code} || '' ) : '';
+}
 
 sub _ai_prompt_cache_component {
     my ( $self, $settings, $mode ) = @_;
@@ -49,9 +87,116 @@ sub _ai_prompt_cache_component {
     );
 }
 
+sub _safe_task_response {
+    my ( $payload, $status, $warning ) = @_;
+    my $task = $payload->{task} || '';
+    my $base = {
+        schema_version        => '1.0.0',
+        task                  => $task,
+        status                => $status || 'insufficient_evidence',
+        warnings              => [ grep { defined $_ && $_ ne '' } ($warning) ],
+        requires_human_review => JSON::true,
+    };
+    if ( $task eq 'punctuation_explanation' ) {
+        $base->{explanation}    = '';
+        $base->{rule_reference} = '';
+        $base->{evidence}       = [];
+    }
+    elsif ( $task eq 'cataloging_classification' ) {
+        $base->{authority_status} = 'unverified';
+        $base->{evidence}         = [];
+    }
+    elsif ( $task eq 'subject_heading_suggestion' ) {
+        $base->{candidates} = [];
+    }
+    elsif ( $task eq 'cataloging_review' ) {
+        $base->{findings} = [];
+    }
+    else {
+        $base->{explanation} = '';
+        $base->{questions}   = [];
+    }
+    return $base;
+}
+
+sub _task_response_for_client {
+    my ( $payload, $result, $deterministic_findings ) = @_;
+    my $task = $payload->{task} || '';
+    $result->{request_id}  = $payload->{request_id};
+    $result->{tag_context} = $payload->{tag_context};
+    $result->{version}     = $result->{schema_version} || '1.0.0';
+    $result->{disclaimer}  = 'AI suggestion; authority verification and cataloguer review required.';
+    $result->{findings}    = [] unless ref $result->{findings} eq 'ARRAY';
+    $result->{errors}      = [];
+    $result->{classification} = '';
+    $result->{subjects}       = [];
+
+    my $candidate = $task eq 'cataloging_classification'
+      ? $result->{candidate}
+      : $result->{classification_candidate};
+    if ( ref $candidate eq 'HASH' && $result->{status} eq 'ok' ) {
+        $result->{classification} = $candidate->{value} || '';
+    }
+    my $subjects = $task eq 'subject_heading_suggestion'
+      ? $result->{candidates}
+      : $result->{subject_candidates};
+    if ( ref $subjects eq 'ARRAY' ) {
+        for my $subject ( @{$subjects} ) {
+            next unless ref $subject eq 'HASH' && $subject->{heading};
+            my %subfields = ( a => $subject->{heading}, x => [], y => [], z => [], v => [] );
+            for my $subdivision ( @{ $subject->{subdivisions} || [] } ) {
+                next unless ref $subdivision eq 'HASH';
+                my $code = $subdivision->{code} || '';
+                push @{ $subfields{$code} }, $subdivision->{value}
+                  if exists $subfields{$code} && $code ne 'a';
+            }
+            push @{ $result->{subjects} },
+              { tag => '650', ind1 => ' ', ind2 => '0', subfields => \%subfields,
+                authority_status => 'unverified', confidence => $subject->{confidence} || 'low' };
+        }
+    }
+    if ( $task eq 'punctuation_explanation' ) {
+        my $first = ref $deterministic_findings eq 'ARRAY'
+          ? $deterministic_findings->[0]
+          : undef;
+        if ( ref $first eq 'HASH' ) {
+            $result->{rule_reference} = $first->{rule_reference}
+              || $first->{rule_basis}
+              || $first->{rationale}
+              || $first->{code}
+              || '';
+            $result->{evidence} = [ $first->{message} || $first->{code} || '' ];
+        }
+        $result->{assistant_message} = $result->{explanation} || '';
+        $result->{findings} = $deterministic_findings || [];
+    }
+    elsif ( $task eq 'training_tutor' ) {
+        $result->{assistant_message} = $result->{explanation} || '';
+    }
+    else {
+        $result->{assistant_message} = join( "\n", grep { $_ ne '' }
+          ( $candidate && ref $candidate eq 'HASH' ? ( $candidate->{basis} || '' ) : '',
+            @{ $result->{warnings} || [] } ) );
+    }
+    return $result;
+}
+
+sub _cataloging_insufficient_response {
+    my ( $self, $payload, $message ) = @_;
+    my $result = _safe_task_response(
+        $payload, 'insufficient_evidence',
+        $message || 'The record does not contain enough evidence for this task.' );
+    $result = $self->_normalize_ai_task_response( $payload, $result, {} );
+    return _task_response_for_client( $payload, $result, [] );
+}
+
 sub _debug_raw_response_enabled {
     my ( $self, $settings ) = @_;
-    return ( $settings && $settings->{ai_debug_include_raw_response} ) ? 1 : 0;
+    return 0 unless $settings && $settings->{ai_debug_include_raw_response};
+    my $userenv = C4::Context->userenv;
+    return 0 unless $userenv && ref $userenv eq 'HASH';
+    my $flags = $userenv->{flags} || 0;
+    return ( $flags & 1 ) ? 1 : 0;
 }
 
 sub _sanitize_debug_text {
@@ -86,6 +231,12 @@ sub _build_ai_debug_payload {
     $provider_result = {}
       unless $provider_result && ref $provider_result eq 'HASH';
     my %debug;
+    if ( $settings->{debug_mode} ) {
+        for my $key (qw(request_id provider model task latency_ms input_tokens output_tokens cache_status parse_status schema_status guardrail_status)) {
+            $debug{$key} = $provider_result->{$key}
+              if defined $provider_result->{$key} && $provider_result->{$key} ne '';
+        }
+    }
     my $parse_error =
       defined $parse_error_override
       ? $parse_error_override
@@ -331,31 +482,32 @@ sub ai_suggest {
                 return;
             }
 
-            my $cataloging_mode  = $self->_is_cataloging_ai_request($payload);
+            my $task = $payload->{task} || '';
+            my $cataloging_mode = $task =~ /^(?:cataloging_classification|subject_heading_suggestion|cataloging_review)$/ ? 1 : 0;
             my $tag_context      = $payload->{tag_context}         || {};
             my $tag              = $tag_context->{tag}             || '';
             my $subfields        = $tag_context->{subfields}       || [];
+            my $pack             = $self->_merge_rules_pack($settings);
             my $primary_subfield = $tag_context->{active_subfield} || '';
             $primary_subfield = lc( $primary_subfield || '' );
-            $primary_subfield = $subfields->[0] ? $subfields->[0]->{code} : ''
+            $primary_subfield =
+              _semantic_primary_subfield( $tag, $subfields, $pack )
               unless $primary_subfield;
 
-            my $pack = $self->_merge_rules_pack($settings);
             if ($cataloging_mode) {
                 my $cataloging_tag_context =
                   $self->_cataloging_tag_context_from_payload($payload);
                 if ( !$cataloging_tag_context || !%{$cataloging_tag_context} ) {
-                    $response_inner =
-                      $self->_build_cataloging_error_response( $payload,
+                    $response_inner = _cataloging_insufficient_response(
+                        $self, $payload,
                         '245$a is required for cataloging guidance.' );
                     return;
                 }
                 my $source_result = $self->_cataloging_source_from_tag_context(
                     $cataloging_tag_context);
                 if ( $source_result->{error} ) {
-                    $response_inner =
-                      $self->_build_cataloging_error_response( $payload,
-                        $source_result->{error} );
+                    $response_inner = _cataloging_insufficient_response(
+                        $self, $payload, $source_result->{error} );
                     return;
                 }
                 if ( $self->_is_excluded_field( $settings, '245', 'a' ) ) {
@@ -407,6 +559,8 @@ sub ai_suggest {
                 return;
             }
             my $circuit_key = $self->_circuit_key( $provider, $model_key );
+            my $capability_key = $self->_canonical_json(
+                $self->_model_capabilities( $settings, $provider, $model_key ) );
             unless ( $self->_circuit_breaker_ok( $settings, $circuit_key ) ) {
                 $response_inner =
                   { error => 'AI circuit breaker open. Please retry later.' };
@@ -414,15 +568,15 @@ sub ai_suggest {
             }
 
             my $cataloging_source = '';
+            my $deterministic_findings = [];
             if ($cataloging_mode) {
                 my $cataloging_tag_context =
                   $self->_cataloging_tag_context_from_payload($payload);
                 my $source_result = $self->_cataloging_source_from_tag_context(
                     $cataloging_tag_context);
                 if ( $source_result->{error} ) {
-                    $response_inner =
-                      $self->_build_cataloging_error_response( $payload,
-                        $source_result->{error} );
+                    $response_inner = _cataloging_insufficient_response(
+                        $self, $payload, $source_result->{error} );
                     return;
                 }
                 $cataloging_source = $source_result->{source};
@@ -430,9 +584,42 @@ sub ai_suggest {
                   $self->_redact_tag_context( $cataloging_tag_context,
                     $settings );
                 $payload->{tag_context} = $filtered_tag_context;
-                delete $payload->{record_context};
+                my $context_settings = { %{$settings} };
+                $context_settings->{ai_context_mode} = $payload->{context_mode}
+                  if $payload->{context_mode};
+                my $filtered_record = $self->_filter_record_context(
+                    $payload->{record_context}, $context_settings,
+                    $cataloging_tag_context );
+                if ( $filtered_record && @{ $filtered_record->{fields} || [] } ) {
+                    $payload->{record_context} = $filtered_record;
+                }
+                else {
+                    delete $payload->{record_context};
+                }
             }
             else {
+                my $field_payload = {
+                    tag       => $tag,
+                    ind1      => $tag_context->{ind1} || '',
+                    ind2      => $tag_context->{ind2} || '',
+                    subfields => $subfields,
+                };
+                my $deterministic = $self->_validate_field_with_rules(
+                    $field_payload, $pack, $settings );
+                $deterministic_findings = $deterministic->{findings} || [];
+                if ( $task eq 'punctuation_explanation'
+                    && !@{$deterministic_findings} )
+                {
+                    my $no_finding = _safe_task_response(
+                        $payload, 'insufficient_evidence',
+                        'No deterministic punctuation finding is available to explain.' );
+                    $no_finding = $self->_normalize_ai_task_response(
+                        $payload, $no_finding,
+                        { provider => $provider, model => $model_key } );
+                    $response_inner = _task_response_for_client(
+                        $payload, $no_finding, [] );
+                    return;
+                }
                 my $filtered_record =
                   $self->_filter_record_context( $payload->{record_context},
                     $settings, $tag_context );
@@ -451,7 +638,8 @@ sub ai_suggest {
                 $settings,
                 {
                     source      => $cataloging_source,
-                    tag_context => $payload->{tag_context}
+                    tag_context => $payload->{tag_context},
+                    deterministic_findings => $deterministic_findings,
                 }
             );
             my $prompt_hash = _ai_prompt_cache_component( $self, $settings,
@@ -461,12 +649,13 @@ sub ai_suggest {
             $subfields        = $tag_context->{subfields}       || [];
             $primary_subfield = $tag_context->{active_subfield} || '';
             $primary_subfield = lc( $primary_subfield || '' );
-            $primary_subfield = $subfields->[0] ? $subfields->[0]->{code} : ''
+            $primary_subfield =
+              _semantic_primary_subfield( $tag, $subfields, $pack )
               unless $primary_subfield;
             my $rules_version = $pack->{version} || '';
-            my $field_text    = join( '|',
+            my $field_text = join( '|',
                 map { ( $_->{code} || '' ) . '=' . ( $_->{value} // '' ) }
-                  @{ $tag_context->{subfields} || [] } );
+                  @{$subfields} );
             my $feature_key =
               $self->_canonical_json( $payload->{features} || {} );
             my $record_context_key = '';
@@ -482,7 +671,12 @@ sub ai_suggest {
             }
             my $cache_key = sha256_hex(
                 join( '|',
+                    $task,
+                    'schema:1.0.0',
                     $tag,
+                    ( $tag_context->{ind1} // '' ),
+                    ( $tag_context->{ind2} // '' ),
+                    $self->_normalize_occurrence( $tag_context->{occurrence} ),
                     $primary_subfield,
                     $field_text,
                     $rules_version,
@@ -492,153 +686,111 @@ sub ai_suggest {
                     $prompt_hash,
                     $user_key,
                     $feature_key,
+                    ( $payload->{context_mode} || 'tag_only' ),
+                    ( $settings->{ai_prompt_max_length} || '' ),
+                    ( $settings->{ai_temperature} // '' ),
+                    ( $settings->{ai_reasoning_effort} || '' ),
+                    ( $settings->{ai_redaction_rules} || '' ),
+                    ( $settings->{ai_redact_856_querystrings} ? 1 : 0 ),
+                    ( $settings->{ai_model_capabilities} || '' ),
+                    $capability_key,
                     $record_context_key )
             );
             if ( my $cached = $self->_cache_get( $settings, $cache_key ) ) {
-                $response_inner =
-                  $self->_sanitize_ai_response_for_chat($cached);
+                if ( $settings->{debug_mode} && ref $cached eq 'HASH' ) {
+                    $cached->{debug} ||= {};
+                    $cached->{debug}{cache_status} = 'hit';
+                    $cached->{debug}{request_id}   = $payload->{request_id};
+                    $cached->{debug}{provider}     = $provider;
+                    $cached->{debug}{model}        = $model_key;
+                    $cached->{debug}{task}         = $task;
+                }
+                $response_inner = $cached;
                 return;
             }
 
-            my $provider_result =
-              $self->_call_ai_provider( $settings, $prompt, {} );
-            my $raw_text      = $provider_result->{raw_text} || '';
-            my $was_truncated = $provider_result->{truncated} ? 1 : 0;
-            my $debug =
-              _build_ai_debug_payload( $self, $settings, $provider_result );
-            my $debug_options = %{$debug} ? { debug => $debug } : {};
-            if ( $provider_result->{text_mode} ) {
-                my $text_response = $self->_build_degraded_ai_response(
-                    $payload,
-                    $raw_text,
-                    $settings,
-                    {
-                        extraction_source => 'plain_text',
-                        degraded_mode     => 0,
-                        %{$debug_options}
-                    }
-                );
-                if ( !$text_response && $raw_text ) {
-                    $text_response =
-                      $self->_build_unstructured_ai_response( $payload,
-                        $raw_text, $settings, { %{$debug_options} } );
-                }
-                unless ($text_response) {
-                    $self->_record_failure( $settings, $circuit_key );
-                    $response_inner = { error => 'AI response was empty.' };
-                    return;
-                }
-                $text_response =
-                  $self->_append_truncation_warning($text_response)
-                  if $was_truncated;
-                $text_response =
-                  $self->_sanitize_ai_response_for_chat($text_response);
-                my $guardrail_error =
-                  $self->_validate_ai_response_guardrails( $payload,
-                    $text_response, $pack, $settings );
-                if ($guardrail_error) {
-                    $self->_record_failure( $settings, $circuit_key );
-                    $response_inner = { error => $guardrail_error };
-                    return;
-                }
-                $self->_record_success( $settings, $circuit_key );
-                $self->_cache_set( $settings, $cache_key, $text_response );
-                $response_inner = $text_response;
-                return;
-            }
+            my $schema = $self->_ai_task_schema($task);
+            my $provider_options = {
+                system_prompt => $self->_ai_system_policy(),
+                schema        => $schema,
+                schema_name   => 'isbd_' . $task . '_v1',
+                task          => $task,
+            };
+            my $provider_result = $self->_generate_ai(
+                $settings, $task, $prompt, $schema, $provider_options );
+            $provider_result->{request_id}  = $payload->{request_id};
+            $provider_result->{provider}    = $provider;
+            $provider_result->{model}       = $model_key;
+            $provider_result->{task}        = $task;
+            $provider_result->{cache_status} = 'miss';
+            $provider_result->{parse_status} = $provider_result->{data} ? 'parsed' : 'invalid';
             if ( $provider_result->{error} ) {
-                my $fallback =
-                  $self->_build_degraded_ai_response( $payload, $raw_text,
-                    $settings, { %{$debug_options} } );
-                if ($fallback) {
-                    $fallback = $self->_append_truncation_warning($fallback)
-                      if $was_truncated;
-                    $self->_record_failure( $settings, $circuit_key );
-                    $self->_cache_set( $settings, $cache_key, $fallback );
-                    $response_inner = $fallback;
-                    return;
-                }
-                if ($raw_text) {
-                    my $unstructured =
-                      $self->_build_unstructured_ai_response( $payload,
-                        $raw_text, $settings, { %{$debug_options} } );
-                    if ($unstructured) {
-                        $unstructured =
-                          $self->_append_truncation_warning($unstructured)
-                          if $was_truncated;
-                        $self->_record_failure( $settings, $circuit_key );
-                        $self->_cache_set( $settings, $cache_key,
-                            $unstructured );
-                        $response_inner = $unstructured;
-                        return;
-                    }
-                }
                 $self->_record_failure( $settings, $circuit_key );
                 $response_inner = { error => $provider_result->{error} };
                 return;
             }
 
             my $result = $provider_result->{data};
-            my $validation_errors =
-              $self->_validate_schema( 'ai_response.json', $result );
-            if ( @{$validation_errors} ) {
-                my $debug_payload =
-                  _build_ai_debug_payload( $self, $settings, $provider_result,
-                    join( '; ', @{$validation_errors} ) );
-                my $debug_payload_options =
-                  %{$debug_payload} ? { debug => $debug_payload } : {};
-                my $fallback =
-                  $self->_build_degraded_ai_response( $payload, $raw_text,
-                    $settings, { %{$debug_payload_options} } );
-                if ($fallback) {
-                    $self->_record_failure( $settings, $circuit_key );
-                    $self->_cache_set( $settings, $cache_key, $fallback );
-                    $response_inner = $fallback;
-                    return;
-                }
-                if ($raw_text) {
-                    my $unstructured =
-                      $self->_build_unstructured_ai_response( $payload,
-                        $raw_text, $settings, { %{$debug_payload_options} } );
-                    if ($unstructured) {
-                        $self->_record_failure( $settings, $circuit_key );
-                        $self->_cache_set( $settings, $cache_key,
-                            $unstructured );
-                        $response_inner = $unstructured;
-                        return;
-                    }
-                }
-                $self->_record_failure( $settings, $circuit_key );
-                $response_inner = {
-                    error   => 'Invalid AI response format',
-                    details => $validation_errors
-                };
-                return;
+            my $validation_errors = $result
+              ? $self->_validate_ai_task_response( $payload, $result )
+              : [ $provider_result->{parse_error} || 'Invalid structured output.' ];
+
+            # One targeted repair is allowed for syntactic/schema failures.
+            if ( @{$validation_errors} && !$provider_result->{truncated} ) {
+                my $repair_settings = { %{$settings}, ai_retry_count => 0 };
+                my $repair_prompt = $prompt
+                  . "\nThe previous response failed validation: "
+                  . join( '; ', @{$validation_errors} )
+                  . "\nReturn a corrected JSON object only. Do not add facts.";
+                $provider_result = $self->_generate_ai(
+                    $repair_settings, $task, $repair_prompt, $schema,
+                    $provider_options );
+                $result = $provider_result->{data};
+                $validation_errors = $result
+                  ? $self->_validate_ai_task_response( $payload, $result )
+                  : [ $provider_result->{parse_error} || $provider_result->{error} || 'Repair failed.' ];
             }
 
-            $result = $self->_augment_cataloging_response( $payload, $result,
-                $raw_text, $settings );
-            $result = $self->_sanitize_ai_response_for_chat($result);
-            $result = $self->_append_truncation_warning($result)
-              if $was_truncated;
-            if (
-                %{$debug}
-                && ( $debug->{parse_error}
-                    || _debug_raw_response_enabled( $self, $settings ) )
-              )
-            {
-                $result->{debug} = $debug;
+            if ( $provider_result->{truncated} ) {
+                $result = _safe_task_response( $payload, 'incomplete',
+                    'Provider output was truncated; no suggestion was accepted.' );
             }
-            my $guardrail_error =
-              $self->_validate_ai_response_guardrails( $payload, $result,
-                $pack, $settings );
-            if ($guardrail_error) {
+            elsif ( @{$validation_errors} ) {
+                # Safe degraded mode is structured and display-only. Arbitrary
+                # prose never becomes a classification, heading, or MARC patch.
+                $result = _safe_task_response( $payload,
+                    'insufficient_evidence',
+                    'The provider response could not be validated; no suggestion was accepted.' );
                 $self->_record_failure( $settings, $circuit_key );
-                $response_inner = { error => $guardrail_error };
-                return;
             }
 
-            $self->_record_success( $settings, $circuit_key );
+            $result = $self->_normalize_ai_task_response(
+                $payload, $result,
+                {
+                    provider  => $provider,
+                    model     => $model_key,
+                    truncated => $provider_result->{truncated} ? 1 : 0,
+                }
+            );
+            $result = _task_response_for_client(
+                $payload, $result, $deterministic_findings );
+
+            $provider_result->{parse_status} = $provider_result->{data}
+              ? 'parsed' : 'invalid';
+            $provider_result->{schema_status} = @{$validation_errors}
+              ? 'invalid' : 'valid';
+            $provider_result->{guardrail_status} = 'passed';
+
+            my $debug = _build_ai_debug_payload(
+                $self, $settings, $provider_result,
+                @{$validation_errors} ? join( '; ', @{$validation_errors} ) : '' );
+            $result->{debug} = $debug
+              if %{$debug}
+              && ( $debug->{parse_error}
+                || _debug_raw_response_enabled( $self, $settings ) );
+
+            $self->_record_success( $settings, $circuit_key )
+              unless @{$validation_errors};
             $self->_cache_set( $settings, $cache_key, $result );
             $response_inner = $result;
             return;

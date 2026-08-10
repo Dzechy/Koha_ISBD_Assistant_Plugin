@@ -40,16 +40,30 @@ sub _normalize_tag_context {
       grep { ref $_ eq 'HASH' } @{ $tag_context->{subfields} || [] };
 
     if ( defined $max_subfields && @subfields > $max_subfields ) {
-        my $primary   = shift @subfields;
+        my $primary_index = 0;
+        if ($active_subfield) {
+            for my $i ( 0 .. $#subfields ) {
+                if ( lc( $subfields[$i]{code} || '' ) eq $active_subfield ) {
+                    $primary_index = $i;
+                    last;
+                }
+            }
+        }
+        my $primary = splice @subfields, $primary_index, 1;
         my $remaining = $max_subfields - 1;
         my @rest = $remaining > 0 ? @subfields[ 0 .. ( $remaining - 1 ) ] : ();
         @subfields = ( $primary, @rest );
     }
     my @normalized = map {
-        {
+        my $sub = {
             code  => $_->{code} // '',
             value => defined $_->{value} ? $_->{value} : ''
-        }
+        };
+        $sub->{punctuation_provenance} = { %{ $_->{punctuation_provenance} } }
+          if $_->{punctuation_provenance}
+          && ref $_->{punctuation_provenance} eq 'HASH'
+          && ( $_->{punctuation_provenance}{value} // '' ) eq $sub->{value};
+        $sub;
     } @subfields;
     my %clone = %{$tag_context};
     $clone{occurrence}      = $occurrence;
@@ -105,6 +119,11 @@ sub _normalize_ai_request_payload {
     my ( $self, $payload, $settings ) = @_;
     return $payload unless $payload && ref $payload eq 'HASH';
     my %clone = %{$payload};
+    $clone{task} = lc( $payload->{task} || '' );
+    my $context_mode = lc( $payload->{context_mode} || $settings->{ai_context_mode} || 'tag_only' );
+    $context_mode = 'tag_plus_related_fields' if $context_mode eq 'tag_plus_neighbors';
+    $context_mode = 'full_record'             if $context_mode eq 'full';
+    $clone{context_mode} = $context_mode;
     $clone{tag_context} =
       _normalize_tag_context( $self, $payload->{tag_context}, 20 );
     if ( $payload->{record_context} ) {
@@ -127,12 +146,10 @@ sub _normalize_record_context_for_cache {
     } @fields;
     my @normalized;
     for my $field (@fields) {
+        # Subfield occurrence order is semantic MARC data. Never sort it for a
+        # cache key: $a First/$a Second is not $a Second/$a First.
         my @subfields =
           grep { ref $_ eq 'HASH' } @{ $field->{subfields} || [] };
-        @subfields = sort {
-                 ( $a->{code} || '' ) cmp( $b->{code} || '' )
-              || ( $a->{value} // '' ) cmp( $b->{value} // '' )
-        } @subfields;
         push @normalized, {
             tag        => $field->{tag}  || '',
             ind1       => $field->{ind1} || '',

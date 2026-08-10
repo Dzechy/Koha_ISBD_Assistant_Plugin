@@ -46,7 +46,14 @@ sub _validate_ai_response_guardrails {
         ind1      => $tag_context->{ind1} || '',
         ind2      => $tag_context->{ind2} || '',
         subfields => [
-            map { { code => $_->{code}, value => $_->{value} } }
+            map {
+                my $sub = { code => $_->{code}, value => $_->{value} };
+                $sub->{punctuation_provenance} =
+                  { %{ $_->{punctuation_provenance} } }
+                  if $_->{punctuation_provenance}
+                  && ref $_->{punctuation_provenance} eq 'HASH';
+                $sub;
+            }
               @{ $tag_context->{subfields} || [] }
         ]
     };
@@ -79,6 +86,7 @@ sub _validate_ai_response_guardrails {
     for my $finding ( @{ $result->{findings} || [] } ) {
         my $fixes = $finding->{proposed_fixes} || [];
         next unless ref $fixes eq 'ARRAY';
+        return 'AI responses may not contain raw MARC mutations.' if @{$fixes};
         for my $fix ( @{$fixes} ) {
             my $patches = $fix->{patch} || [];
             for my $patch ( @{$patches} ) {
@@ -137,7 +145,15 @@ sub _redact_tag_context {
             my $value =
               _redact_value( $self, $settings, $clone{tag}, $sub->{code},
                 $sub->{value} );
-            push @redacted, { code => $sub->{code}, value => $value };
+            my $redacted = { code => $sub->{code}, value => $value };
+            $redacted->{punctuation_provenance} =
+              { %{ $sub->{punctuation_provenance} } }
+              if $sub->{punctuation_provenance}
+              && ref $sub->{punctuation_provenance} eq 'HASH'
+              && $value eq ( $sub->{value} // '' )
+              && ( $sub->{punctuation_provenance}{value} // '' ) eq
+              ( $sub->{value} // '' );
+            push @redacted, $redacted;
         }
         $clone{subfields} = \@redacted;
     }
@@ -173,6 +189,8 @@ sub _filter_record_context {
     my ( $self, $record_context, $settings, $tag_context ) = @_;
     return {} unless $record_context && ref $record_context eq 'HASH';
     my $mode = $settings->{ai_context_mode} || 'tag_only';
+    $mode = 'tag_plus_related_fields' if $mode eq 'tag_plus_neighbors';
+    $mode = 'full_record' if $mode eq 'full';
     return {} if $mode eq 'tag_only';
     my $fields = $record_context->{fields};
     return {} unless $fields && ref $fields eq 'ARRAY' && @{$fields};
@@ -181,34 +199,23 @@ sub _filter_record_context {
     my @list = @{ $normalized->{fields} || [] };
     return {} unless @list;
 
-    if ( $mode eq 'tag_plus_neighbors' ) {
+    if ( $mode eq 'tag_plus_related_fields' ) {
         my $target_tag = $tag_context
           && ref $tag_context eq 'HASH' ? ( $tag_context->{tag} || '' ) : '';
         my $target_occ =
             $tag_context && ref $tag_context eq 'HASH'
           ? $self->_normalize_occurrence( $tag_context->{occurrence} )
           : 0;
-        my $idx = -1;
-        for my $i ( 0 .. $#list ) {
-            my $field = $list[$i];
-            next unless $field && $field->{tag};
-            if (   $field->{tag} eq $target_tag
-                && $self->_normalize_occurrence( $field->{occurrence} ) ==
-                $target_occ )
-            {
-                $idx = $i;
-                last;
-            }
-        }
-        my @subset;
-        if ( $idx >= 0 ) {
-            push @subset, $list[ $idx - 1 ] if $idx > 0;
-            push @subset, $list[$idx];
-            push @subset, $list[ $idx + 1 ] if $idx < $#list;
-        }
-        else {
-            @subset = @list[ 0 .. ( $#list < 2 ? $#list : 2 ) ];
-        }
+        my %related = map { $_ => 1 }
+          qw(020 022 041 100 110 111 130 240 245 246 250 254 255 260 264 300 336 337 338 362 440 490 500 504 505 520 600 610 611 630 648 650 651 655 700 710 711 730 830);
+        my @subset = grep {
+            my $field = $_ || {};
+            my $tag   = $field->{tag} || '';
+            ( $tag eq $target_tag
+                  && $self->_normalize_occurrence( $field->{occurrence} ) == $target_occ )
+              || $related{$tag}
+        } @list;
+        @subset = @subset[ 0 .. 14 ] if @subset > 15;
         return { fields => \@subset };
     }
     my $max = 30;

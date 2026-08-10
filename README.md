@@ -77,7 +77,7 @@ In this example:
 
 ISBD uses prescribed punctuation to show the boundaries between areas and elements. That punctuation matters because it tells readers and systems how to interpret the description. A colon, slash, semicolon, comma, equals sign, or period is not just decoration; it often marks a change from one descriptive element to another.
 
-The most important practical rule is that boundary punctuation must live in one place only. Some boundaries are stored as a prefix on the current subfield. Other boundaries are stored as a suffix on the previous subfield. The plugin follows the baseline rule pack in `Koha/Plugin/Cataloging/AutoPunctuation/rules/isbd_baseline.json`.
+The most important practical rule is that boundary punctuation must live in one place only. Some boundaries are stored as a prefix on the related semantic element. Others are stored as a suffix on the element that bibliographically precedes it. “Precedes” here means the relationship declared in the rule pack, not the order in which Koha happened to create the inputs. The plugin follows `field_relationships` in `Koha/Plugin/Cataloging/AutoPunctuation/rules/isbd_baseline.json`.
 
 Examples:
 
@@ -100,12 +100,14 @@ For publication data, some punctuation is suffix-on-previous. The colon after th
 ```text
 300$a xii, 180 pages :
 300$b illustrations ;
-300$c 23 cm.
+300$c 23 cm
 ```
 
-For physical description, the colon and semicolon mark the boundary between extent, other physical details, and dimensions. The plugin avoids adding the same boundary punctuation twice.
+For physical description, the colon and semicolon mark the boundary between extent, other physical details, and dimensions. The plugin avoids adding the same boundary punctuation twice and does not manufacture a general final period for field 300.
 
-Repeated subfields are targeted with `tag`, field occurrence, subfield code, and `subfield_index`. That is why a suggestion can apply to the second `$a` in a repeated field without changing the first `$a`.
+Repeated subfields are targeted with `tag`, field occurrence, subfield code, and `subfield_index`. Their meaningful occurrence order is preserved even while unlike subfield codes are resolved in canonical bibliographic order. Plugin-generated punctuation also carries in-memory provenance while its recorded value still matches, allowing a later related subfield to remove generated punctuation without treating every period as disposable data.
+
+See `docs/SEMANTIC_PUNCTUATION_MODEL.md` for the rule architecture and test requirements.
 
 ## ISBD Areas Covered By The Plugin
 
@@ -348,14 +350,14 @@ These rules reduce what record data is sent to the provider. Keep local fields r
 `ai_context_mode` defaults to `tag_only`. Available modes are:
 
 - `tag_only`: send only the active tag context.
-- `tag_plus_neighbors`: include neighboring fields for more context.
-- `full`: include the redacted full record.
+- `tag_plus_related_fields`: include bibliographically relevant fields rather than adjacent DOM fields.
+- `full_record`: include the redacted full record.
 
 Start with `tag_only`. Use broader context only when cataloging guidance needs it and local privacy policy allows it.
 
 `ai_payload_preview` defaults to off. It lets administrators inspect the AI payload before sending. Turn it on when validating redaction behavior or debugging provider requests.
 
-AI punctuation patches must use the supported patch operation, target the exact live field and repeated subfield, match the original text, and pass deterministic guardrails before they can be applied.
+AI never supplies an applicable punctuation patch. The deterministic rules engine generates punctuation fixes; AI may only explain those verified findings.
 
 ## AI Tuning And Limits
 

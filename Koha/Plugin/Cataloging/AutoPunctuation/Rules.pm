@@ -275,6 +275,89 @@ sub _rules_match_for_coverage {
 
 # ─── Field/subfield helpers ──────────────────────────────────────────
 
+sub _active_subfield {
+    my ($sub) = @_;
+    return $sub
+      && $sub->{code}
+      && defined $sub->{value}
+      && $sub->{value} =~ /\S/ ? 1 : 0;
+}
+
+sub _semantic_relation_exists {
+    my ( $self, $field, $index, $code, $direction ) = @_;
+    return 0 unless $field && ref $field->{subfields} eq 'ARRAY';
+    my $subs         = $field->{subfields};
+    my $wanted       = lc( $code // '' );
+    my $current      = $subs->[$index] || {};
+    my $current_code = lc( $current->{code} // '' );
+    if ( $wanted ne $current_code ) {
+        my $relationship_model =
+          $field->{_relationship_model}
+          && ref $field->{_relationship_model} eq 'HASH'
+          ? $field->{_relationship_model}
+          : {};
+        my $model =
+          $relationship_model->{subfields}
+          && ref $relationship_model->{subfields} eq 'HASH'
+          ? $relationship_model->{subfields}
+          : {};
+        my $current_meta = $model->{$current_code};
+        my $wanted_meta  = $model->{$wanted};
+        if (   $current_meta
+            && $wanted_meta
+            && defined $current_meta->{canonical_position}
+            && defined $wanted_meta->{canonical_position} )
+        {
+            my $ordered = $direction eq 'preceding'
+              ? $wanted_meta->{canonical_position} <
+              $current_meta->{canonical_position}
+              : $wanted_meta->{canonical_position} >
+              $current_meta->{canonical_position};
+            return 0 unless $ordered;
+            return scalar grep {
+                _active_subfield($_) && lc( $_->{code} ) eq $wanted
+            } @{$subs};
+        }
+        # Custom and legacy rules without a declared relationship model keep
+        # their historical physical-neighbour semantics.
+    }
+    my $start = $direction eq 'preceding' ? $index - 1 : $index + 1;
+    my $step  = $direction eq 'preceding' ? -1         : 1;
+    for ( my $i = $start ; $i >= 0 && $i <= $#$subs ; $i += $step ) {
+        my $sub = $subs->[$i];
+        return 1
+          if _active_subfield($sub) && lc( $sub->{code} ) eq $wanted;
+    }
+    return 0;
+}
+
+sub _select_semantic_relative {
+    my ( $self, $field, $index, $codes, $direction ) = @_;
+    return undef unless $codes && ref $codes eq 'ARRAY';
+    my $selected;
+    my @ordered = $direction eq 'preceding' ? @{$codes} : reverse @{$codes};
+    for my $code (@ordered) {
+        next
+          unless _semantic_relation_exists( $self, $field, $index, $code,
+            $direction );
+        my $wanted       = lc( $code // '' );
+        my $current_code = lc( $field->{subfields}[$index]{code} // '' );
+        my @candidates;
+        for my $i ( 0 .. $#{ $field->{subfields} } ) {
+            my $sub = $field->{subfields}[$i];
+            next unless _active_subfield($sub) && lc( $sub->{code} ) eq $wanted;
+            next
+              if $wanted eq $current_code
+              && ( $direction eq 'preceding' ? $i >= $index : $i <= $index );
+            push @candidates, $sub;
+        }
+        next unless @candidates;
+        $selected =
+          $direction eq 'preceding' ? $candidates[-1] : $candidates[0];
+    }
+    return $selected;
+}
+
 sub _field_has_subfield {
     my ( $self, $field, $code, $start_index ) = @_;
     return 0 unless $field && $field->{subfields} && $code;
@@ -291,43 +374,14 @@ sub _field_has_subfield {
 
 sub _field_has_subfield_after {
     my ( $self, $field, $index, $code ) = @_;
-    return 0 unless defined $index;
-    return _field_has_subfield( $self, $field, $code, $index + 1 );
+    return _semantic_relation_exists( $self, $field, $index, $code,
+        'following' );
 }
 
 sub _field_has_subfield_before {
     my ( $self, $field, $index, $code ) = @_;
-    return 0 unless $field && $field->{subfields} && defined $index && $code;
-    my $subs = $field->{subfields} || [];
-    for ( my $i = $index - 1 ; $i >= 0 ; $i-- ) {
-        my $sub = $subs->[$i];
-        next
-          unless $sub->{code} && defined $sub->{value} && $sub->{value} =~ /\S/;
-        return 1 if lc( $sub->{code} ) eq lc($code);
-    }
-    return 0;
-}
-
-sub _next_subfield_code {
-    my ( $self, $field, $index ) = @_;
-    my $subs = $field->{subfields} || [];
-    for my $i ( $index + 1 .. $#$subs ) {
-        next unless defined $subs->[$i]{value} && $subs->[$i]{value} =~ /\S/;
-        my $code = $subs->[$i]{code};
-        return $code if $code;
-    }
-    return '';
-}
-
-sub _previous_subfield_code {
-    my ( $self, $field, $index ) = @_;
-    my $subs = $field->{subfields} || [];
-    for ( my $i = $index - 1 ; $i >= 0 ; $i-- ) {
-        next unless defined $subs->[$i]{value} && $subs->[$i]{value} =~ /\S/;
-        my $code = $subs->[$i]{code};
-        return $code if $code;
-    }
-    return '';
+    return _semantic_relation_exists( $self, $field, $index, $code,
+        'preceding' );
 }
 
 sub _repeat_policy_allows {
@@ -336,8 +390,10 @@ sub _repeat_policy_allows {
     return 1 if $policy eq 'all';
     my $code = $subfield->{code}   || '';
     my $subs = $field->{subfields} || [];
-    my @indices =
-      grep { lc( ( $subs->[$_]{code} || '' ) ) eq lc($code) } ( 0 .. $#$subs );
+    my @indices = grep {
+        _active_subfield( $subs->[$_] )
+          && lc( ( $subs->[$_]{code} || '' ) ) eq lc($code)
+    } ( 0 .. $#$subs );
     return 1 unless @indices;
     return $index == $indices[0]  if $policy eq 'first_only';
     return $index == $indices[-1] if $policy eq 'last_only';
@@ -448,16 +504,22 @@ sub _rule_applies_to_subfield {
           ref $rule->{next_subfield_is} eq 'ARRAY'
           ? @{ $rule->{next_subfield_is} }
           : ( $rule->{next_subfield_is} );
-        my $next = _next_subfield_code( $self, $field, $index );
-        return 0 unless scalar grep { lc($_) eq lc($next) } @allowed;
+        return 0
+          unless scalar grep {
+            _semantic_relation_exists( $self, $field, $index, $_,
+                'following' )
+          } @allowed;
     }
     if ( $rule->{previous_subfield_is} ) {
         my @allowed =
           ref $rule->{previous_subfield_is} eq 'ARRAY'
           ? @{ $rule->{previous_subfield_is} }
           : ( $rule->{previous_subfield_is} );
-        my $prev = _previous_subfield_code( $self, $field, $index );
-        return 0 unless scalar grep { lc($_) eq lc($prev) } @allowed;
+        return 0
+          unless scalar grep {
+            _semantic_relation_exists( $self, $field, $index, $_,
+                'preceding' )
+          } @allowed;
     }
     return 0
       unless _repeat_policy_allows( $self, $field, $subfield, $index,
@@ -635,8 +697,15 @@ sub _strip_punct_space {
 sub _punctuation_only_change {
     my ( $self, $original, $replacement ) = @_;
     return 0 unless defined $original && defined $replacement;
-    return _strip_punct_space( $self, $original ) eq
-      _strip_punct_space( $self, $replacement );
+    my $allowed = qr/[\s.,:;\/=+\-\x{2013}\x{2014}()\[\]!?]/;
+    my $original_data = join( '', grep { $_ !~ /^$allowed$/ }
+      split( //u, $original ) );
+    my $replacement_data = join( '', grep { $_ !~ /^$allowed$/ }
+      split( //u, $replacement ) );
+    return 0 unless $original_data eq $replacement_data;
+    return 0 if $original =~ /[^\s.,:;\/=+\-\x{2013}\x{2014}()\[\]!?\p{L}\p{N}\p{M}\p{S}]/u
+      && $replacement ne $original;
+    return 1;
 }
 
 sub _normalize_punctuation {
@@ -747,18 +816,15 @@ sub _resolve_suffix {
     my $following_code  = '';
     my $prefix_override = '';
     if ( $following && ref $following eq 'ARRAY' ) {
-        my $subs  = $field->{subfields} || [];
-        my $start = defined $index ? $index + 1 : 0;
-        for my $i ( $start .. $#$subs ) {
-            my $sub = $subs->[$i];
+        for my $wanted_code ( @{$following} ) {
             next
-              unless $sub->{code}
-              && defined $sub->{value}
-              && $sub->{value} =~ /\S/;
-            next if !defined $index && lc( $sub->{code} ) eq lc($code);
-            if ( grep { lc($_) eq lc( $sub->{code} ) } @{$following} ) {
-                $has_following  = 1;
-                $following_code = lc( $sub->{code} );
+              unless _semantic_relation_exists( $self, $field, $index,
+                $wanted_code, 'following' );
+            my $sub = _select_semantic_relative( $self, $field, $index,
+                [$wanted_code], 'following' );
+            $has_following  = 1;
+            $following_code = lc($wanted_code);
+            if ($sub) {
                 if ( $check->{suffix_if_following_prefixes}
                     && ref $check->{suffix_if_following_prefixes} eq 'ARRAY' )
                 {
@@ -782,8 +848,8 @@ sub _resolve_suffix {
                         }
                     }
                 }
-                last;
             }
+            last;
         }
     }
     if ( $mode eq 'conditional_following' ) {
@@ -821,18 +887,12 @@ sub _resolve_prefix {
     my $has_preceding  = 0;
     my $preceding_code = '';
     if ( $preceding && ref $preceding eq 'ARRAY' && defined $index ) {
-        my $subs = $field->{subfields} || [];
-        for my $i ( 0 .. $index - 1 ) {
-            my $sub = $subs->[$i];
+        for my $wanted_code ( @{$preceding} ) {
             next
-              unless $sub
-              && $sub->{code}
-              && defined $sub->{value}
-              && $sub->{value} =~ /\S/;
-            if ( grep { lc($_) eq lc( $sub->{code} ) } @{$preceding} ) {
-                $has_preceding  = 1;
-                $preceding_code = lc( $sub->{code} );
-            }
+              unless _semantic_relation_exists( $self, $field, $index,
+                $wanted_code, 'preceding' );
+            $has_preceding  = 1;
+            $preceding_code = lc($wanted_code);
         }
     }
     if ( $mode eq 'conditional_preceding' ) {
@@ -876,28 +936,15 @@ sub _strip_endings {
     return $text unless $suffixes && ref $suffixes eq 'ARRAY';
     for my $suffix ( @{$suffixes} ) {
         next unless defined $suffix && $suffix ne '';
+        my $suffix_core = $suffix;
+        $suffix_core =~ s/^\s+|\s+$//g;
+        next if $suffix_core eq '.' && $text =~ /\.{2,}$/;
         $text =~ s/\Q$suffix\E$//;
     }
     return $text;
 }
 
 # ─── Expected value computation ──────────────────────────────────────
-
-sub _prev_subfield_value {
-    my ( $self, $field, $index ) = @_;
-    my $subs = $field->{subfields} || [];
-    return '' unless defined $index && $index > 0;
-    my $prev = $subs->[ $index - 1 ];
-    return ( $prev && defined $prev->{value} ) ? $prev->{value} : '';
-}
-
-sub _next_subfield_value {
-    my ( $self, $field, $index ) = @_;
-    my $subs = $field->{subfields} || [];
-    return '' unless defined $index && $index < $#{$subs};
-    my $next = $subs->[ $index + 1 ];
-    return ( $next && defined $next->{value} ) ? $next->{value} : '';
-}
 
 sub _strip_trailing_punct_preserve_double {
     my ( $self, $text, $suffix ) = @_;
@@ -942,25 +989,33 @@ sub _value_ends_with_prefix_core {
     return $text =~ /\Q$prefix_trim\E$/ ? 1 : 0;
 }
 
-sub _suffix_conflicts_with_next_prefix {
-    my ( $self, $suffix, $next_value, $next_check_prefix ) = @_;
-    return 0 unless defined $suffix     && $suffix ne '';
-    return 0 unless defined $next_value && $next_value ne '';
-    my $suffix_trim = $suffix;
-    $suffix_trim =~ s/^\s+//;
-    $suffix_trim =~ s/\s+$//;
-
-    # Check if next value already starts with the same punctuation
-    return 1 if $next_value =~ /^\s*\Q$suffix_trim\E/;
-
-    # Check if the next subfield's prefix would duplicate our suffix
-    if ( defined $next_check_prefix && $next_check_prefix ne '' ) {
-        my $np = $next_check_prefix;
-        $np =~ s/^\s+//;
-        $np =~ s/\s+$//;
-        return 1 if $np eq $suffix_trim;
+sub _trim_terminal_period_for_following {
+    my ( $self, $value, $subfield, $mode ) = @_;
+    my $text = $value // '';
+    $text =~ s/\s+$//;
+    return $text unless $mode && $text =~ /\.$/;
+    my $provenance = $subfield->{punctuation_provenance};
+    if ( $provenance && ref $provenance eq 'HASH' ) {
+        return $text
+          if $provenance->{source}
+          && $provenance->{source} ne 'plugin';
+        if (   ( $provenance->{source} || '' ) eq 'plugin'
+            && ( $provenance->{value} // '' ) eq ( $subfield->{value} // '' )
+            && ( $provenance->{generated_suffix} // '' ) eq '.' )
+        {
+            $text =~ s/\.\s*$//;
+            return $text;
+        }
     }
-    return 0;
+    return $text unless $mode eq 'generated_or_plain_period';
+    return $text if $text =~ /\.{2,}$/;
+    my ($word) = $text =~ /([A-Za-z][A-Za-z'-]*)\.$/;
+    return $text
+      if defined $word
+      && ( $word =~ /^[A-Za-z]$/
+        || $word =~ /^(?:ed|ill|p|v|vol|no|etc|co|inc|ltd|dr|mr|mrs|ms|jr|sr)$/i );
+    $text =~ s/\.\s*$//;
+    return $text;
 }
 
 sub _expected_value_for_check {
@@ -991,16 +1046,37 @@ sub _expected_value_for_check {
 
     my $prefix =
       _resolve_prefix( $self, $check, $field, $subfield->{code}, $index );
+    my $suffix =
+      _resolve_suffix( $self, $check, $field, $subfield->{code}, $index );
+    my $has_following = 0;
+    if ( $check->{when_following_subfields}
+        && ref $check->{when_following_subfields} eq 'ARRAY' )
+    {
+        $has_following = scalar grep {
+            _semantic_relation_exists( $self, $field, $index, $_,
+                'following' )
+        } @{ $check->{when_following_subfields} };
+    }
+    if (   !$suffix
+        && $has_following
+        && $check->{trim_terminal_when_following} )
+    {
+        $value = _trim_terminal_period_for_following( $self, $value, $subfield,
+            $check->{trim_terminal_when_following} );
+    }
     if ( $check->{parallel_prefix} && $value =~ /^\s*=/ ) {
         $value =~ s/^\s*=\s*//;
         $prefix = $check->{parallel_prefix};
     }
 
-# PREFIX-SUFFIX INTERDEPENDENCE: Check if previous subfield already provides our prefix.
-# If the previous subfield's value ends with our prefix text, our prefix is redundant.
+# PREFIX-SUFFIX INTERDEPENDENCE: Check if the related semantic element already
+# provides our prefix. If its value ends with that mark, our prefix is redundant.
 # E.g. if $a ends with " : " and our prefix is " : " for $b, skip our prefix.
-    if ( $prefix && defined $index && $index > 0 ) {
-        my $prev_val = _prev_subfield_value( $self, $field, $index );
+    if ($prefix) {
+        my $prev_sub = _select_semantic_relative( $self, $field, $index,
+            $check->{when_preceding_subfields} || [], 'preceding' );
+        my $prev_val =
+          $prev_sub && defined $prev_sub->{value} ? $prev_sub->{value} : '';
         if ( _value_ends_with_prefix_core( $self, $prev_val, $prefix ) ) {
 
       # Previous subfield's suffix already provides our prefix — don't duplicate
@@ -1010,14 +1086,11 @@ sub _expected_value_for_check {
             }
         }
 
-      # Also check: does the current value itself already start with the prefix?
-        if ( $prefix && _prefix_already_in_value( $self, $value, $prefix ) ) {
-            $prefix = '';
-        }
+    }
+    if ( $prefix && _prefix_already_in_value( $self, $value, $prefix ) ) {
+        $prefix = '';
     }
 
-    my $suffix =
-      _resolve_suffix( $self, $check, $field, $subfield->{code}, $index );
     if (   $check->{end_in}
         && ref $check->{end_in} eq 'ARRAY'
         && _value_ends_with_any( $self, $value, $check->{end_in} ) )
@@ -1025,11 +1098,14 @@ sub _expected_value_for_check {
         $suffix = '';
     }
 
-# PREFIX-SUFFIX INTERDEPENDENCE: Check if our suffix would conflict with next subfield's prefix.
-# If the next subfield's value already starts with our suffix punctuation, skip our suffix.
+# PREFIX-SUFFIX INTERDEPENDENCE: Check whether the related semantic element
+# already starts with our suffix punctuation.
     if ( $suffix && $check->{skip_suffix_if_next_has_prefix} && defined $index )
     {
-        my $next_val = _next_subfield_value( $self, $field, $index );
+        my $next_sub = _select_semantic_relative( $self, $field, $index,
+            $check->{when_following_subfields} || [], 'following' );
+        my $next_val =
+          $next_sub && defined $next_sub->{value} ? $next_sub->{value} : '';
         if ($next_val) {
             my $suffix_core = $suffix;
             $suffix_core =~ s/^\s+//;
@@ -1045,6 +1121,9 @@ sub _expected_value_for_check {
     my $expected = $value;
     $expected =~ s/\s+$//g;
 
+    my $generated_prefix = '';
+    my $generated_suffix = '';
+
     # Apply prefix with interdependence awareness
     if ($prefix) {
         my $prefix_trim = $prefix;
@@ -1053,6 +1132,7 @@ sub _expected_value_for_check {
             && ( $prefix_trim eq '' || $expected !~ /^\Q$prefix_trim\E/ ) )
         {
             $expected = $prefix . $expected;
+            $generated_prefix = $prefix;
         }
         elsif ($prefix_trim
             && $expected =~ /^\Q$prefix_trim\E/
@@ -1071,6 +1151,8 @@ sub _expected_value_for_check {
                 $suffix );
         }
         $expected .= $suffix;
+        $generated_suffix = $suffix;
+        $generated_suffix =~ s/\s+$//;
     }
 
     if ( $check->{normalize_punctuation} ) {
@@ -1084,7 +1166,30 @@ sub _expected_value_for_check {
               && $expected !~ /\s$/;
         }
     }
-    return $expected;
+    my $prior = $subfield->{punctuation_provenance};
+    if ( $prior && ref $prior eq 'HASH'
+        && ( $prior->{source} || '' ) eq 'plugin'
+        && ( $prior->{value} // '' ) eq ( $subfield->{value} // '' ) )
+    {
+        $generated_prefix = $prior->{generated_prefix}
+          if !$generated_prefix
+          && $prior->{generated_prefix}
+          && index( $expected, $prior->{generated_prefix} ) == 0;
+        $generated_suffix = $prior->{generated_suffix}
+          if !$generated_suffix
+          && $prior->{generated_suffix}
+          && $expected =~ /\Q$prior->{generated_suffix}\E$/;
+    }
+    my $provenance =
+      ( $generated_prefix || $generated_suffix )
+      ? {
+        source           => 'plugin',
+        value            => $expected,
+        generated_prefix => $generated_prefix,
+        generated_suffix => $generated_suffix,
+      }
+      : undef;
+    return wantarray ? ( $expected, $provenance ) : $expected;
 }
 
 # ─── Case modes ──────────────────────────────────────────────────────
@@ -1172,11 +1277,12 @@ sub _apply_check_to_subfield {
     my $value = $sub->{value} // '';
     return undef unless $value =~ /\S/;
     my $expected = $value;
+    my $provenance;
 
     my $check_type = $check->{type} || '';
 
     if ( $check_type eq 'punctuation' ) {
-        $expected =
+        ( $expected, $provenance ) =
           _expected_value_for_check( $self, $check, $field, $sub, $index );
     }
     elsif ( $check_type eq 'separator' ) {
@@ -1215,6 +1321,13 @@ sub _apply_check_to_subfield {
     return undef if $expected eq $value;
 
     my $severity = $check->{severity} || $rule->{severity} || 'INFO';
+    my $semantic =
+      $field->{_relationship_model}
+      && ref $field->{_relationship_model} eq 'HASH'
+      && $field->{_relationship_model}{subfields}
+      && ref $field->{_relationship_model}{subfields} eq 'HASH'
+      ? ( $field->{_relationship_model}{subfields}{ $sub->{code} } || {} )
+      : {};
     return {
         severity => $severity,
         code     => $rule->{id} || 'ISBD_RULE',
@@ -1227,6 +1340,9 @@ sub _apply_check_to_subfield {
         subfield_index => $index,
         current_value  => $value,
         expected_value => $expected,
+        semantic_role  => $semantic->{role} || '',
+        canonical_position => $semantic->{canonical_position},
+        punctuation_provenance => $provenance,
         examples       => $rule->{examples} || [],
         proposed_fixes => [
             {
@@ -1241,7 +1357,8 @@ sub _apply_check_to_subfield {
                         occurrence =>
                           _normalize_occurrence( $self, $field->{occurrence} ),
                         subfield_index => $index,
-                        value          => $expected
+                        value          => $expected,
+                        punctuation_provenance => $provenance
                     }
                 ]
             }
@@ -1259,20 +1376,29 @@ sub _validate_field_with_rules {
     my $tag        = $payload->{tag};
     my $occurrence = _normalize_occurrence( $self, $payload->{occurrence} );
     my $subfields  = $payload->{subfields} || [];
+    my %semantic_payload = %{$payload};
+    $semantic_payload{_relationship_model} =
+      $pack->{field_relationships}
+      && ref $pack->{field_relationships} eq 'HASH'
+      ? ( $pack->{field_relationships}{$tag} || {} )
+      : {};
 
     for my $i ( 0 .. $#{$subfields} ) {
         my $sub  = $subfields->[$i];
         my $code = $sub->{code};
         next if _is_excluded_field( $self, $settings, $tag, $code );
         my @matched = _filter_matched_rules( $self,
-            grep { _rule_applies_to_subfield( $self, $_, $payload, $sub, $i ) }
+            grep {
+                _rule_applies_to_subfield( $self, $_, \%semantic_payload,
+                    $sub, $i )
+            }
               @rules );
         $matched_rules{ $_->{id} } = 1 for @matched;
         for my $rule (@matched) {
             for my $check ( @{ $rule->{checks} || [] } ) {
                 my $finding =
-                  _apply_check_to_subfield( $self, $rule, $check, $payload,
-                    $sub, $i );
+                  _apply_check_to_subfield( $self, $rule, $check,
+                    \%semantic_payload, $sub, $i );
                 push @findings, $finding if $finding;
             }
         }
@@ -1299,13 +1425,20 @@ sub _validate_record_with_rules {
         my $tag        = $field->{tag};
         my $occurrence = _normalize_occurrence( $self, $field->{occurrence} );
         my $subfields  = $field->{subfields} || [];
+        my %semantic_field = %{$field};
+        $semantic_field{_relationship_model} =
+          $pack->{field_relationships}
+          && ref $pack->{field_relationships} eq 'HASH'
+          ? ( $pack->{field_relationships}{$tag} || {} )
+          : {};
         for my $i ( 0 .. $#{$subfields} ) {
             my $sub = $subfields->[$i];
             next if _is_excluded_field( $self, $settings, $tag, $sub->{code} );
             my @matched = _filter_matched_rules(
                 $self,
                 grep {
-                    _rule_applies_to_subfield( $self, $_, $field, $sub, $i )
+                    _rule_applies_to_subfield( $self, $_, \%semantic_field,
+                        $sub, $i )
                 } @rules
             );
             if (
@@ -1330,8 +1463,8 @@ sub _validate_record_with_rules {
             for my $rule (@matched) {
                 for my $check ( @{ $rule->{checks} || [] } ) {
                     my $finding =
-                      _apply_check_to_subfield( $self, $rule, $check, $field,
-                        $sub, $i );
+                      _apply_check_to_subfield( $self, $rule, $check,
+                        \%semantic_field, $sub, $i );
                     push @findings, $finding if $finding;
                 }
             }

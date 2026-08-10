@@ -28,9 +28,9 @@ Classification:
 | Area 3 other material-specific fields | `3XX` non-note fields | guardrail | Treated as MARC/material-specific data unless an explicit deterministic rule exists. |
 | Area 4 publication/production/distribution | `260/264$a$b$c` | automated | Handles place, publisher, date, repeated places, and interdependent comma/colon punctuation. MARC21 `264` function values are read from the second indicator. |
 | Area 4 manufacture/printing details | `260/264$e$f$g` | guardrail | Parenthetical grouping and internal punctuation are not safely inferred from separate subfields. |
-| Area 4 copyright | `264` second indicator `4`, `$c` | automated | Adds terminal punctuation to copyright dates while preserving copyright/phonogram symbols. |
-| Area 5 physical description | `300$a$b$c$e$f$g` | automated | Covers extent, other physical details, dimensions, accompanying material, type/size of unit. |
-| Area 6 series and multipart resources | `440/490$a$v$x`, `8XX` | automated/guardrail | Transcribed series fields are normalized; controlled series tracing fields are hands-off. |
+| Area 4 copyright | `264` second indicator `4`, `$c` | automated | Removes manufactured ending punctuation while preserving copyright/phonogram symbols. |
+| Area 5 physical description | `300$a$b$c$e$f$g` | automated/manual | Covers safe element boundaries and preserves data-dependent endings. Record-context terminal exceptions still require review. |
+| Area 6 series and multipart resources | `440/490$a$v$x`, `8XX` | automated/guardrail | Transcribed series boundaries are normalized without manufacturing final `490` punctuation; controlled series tracing fields are hands-off. |
 | Area 7 notes | `500`, `502`, `504`, `505`, `520/521`, `530/532/533/534`, `546`, generic `5XX` | automated/guardrail | Simple terminal note punctuation is automated. Structured notes are hands-off where internal syntax varies. |
 | Area 8 identifiers and terms | `020`, `022`, `024`, `028`, related standard-number fields | automated | Removes terminal punctuation from standard identifiers and terms of availability where deterministic. |
 | Controlled headings/access points | `1XX`, `6XX`, `7XX`, `8XX` | guardrail | Authority and MARC21 heading conventions govern punctuation. |

@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "required": ["schema_version", "task", "status", "explanation", "rule_reference", "evidence", "warnings", "requires_human_review"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "enum": ["1.0.0"] },
+    "task": { "type": "string", "enum": ["punctuation_explanation"] },
+    "status": { "type": "string", "enum": ["ok", "insufficient_evidence", "incomplete"] },
+    "explanation": { "type": "string", "maxLength": 2000 },
+    "rule_reference": { "type": "string", "maxLength": 240 },
+    "evidence": { "type": "array", "maxItems": 12, "items": { "type": "string", "maxLength": 400 } },
+    "warnings": { "type": "array", "maxItems": 12, "items": { "type": "string", "maxLength": 400 } },
+    "requires_human_review": { "type": "boolean" }
+  }
+}

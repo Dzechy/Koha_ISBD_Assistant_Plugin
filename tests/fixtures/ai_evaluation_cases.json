@@ -1,0 +1,32 @@
+[
+  {
+    "id": "punctuation-245-responsibility",
+    "input": { "tag": "245", "ind1": "1", "ind2": "0", "subfields": [{"code":"a","value":"A history"},{"code":"c","value":"Ada Author"}] },
+    "expected_task": "punctuation_explanation",
+    "expected_deterministic_rule": "245 statement of responsibility boundary",
+    "acceptable_ai_interpretation": "Explain the deterministic slash boundary without inventing a patch.",
+    "known_ambiguity": false,
+    "expected_authority_status": "not_applicable",
+    "expected_human_review": true
+  },
+  {
+    "id": "classification-specific-title",
+    "input": { "tag": "245", "ind1": "1", "ind2": "0", "subfields": [{"code":"a","value":"Library cataloguing practice"}] },
+    "expected_task": "cataloging_classification",
+    "expected_deterministic_rule": null,
+    "acceptable_ai_interpretation": "At most one evidence-backed LCC candidate or insufficient evidence.",
+    "known_ambiguity": true,
+    "expected_authority_status": "unverified",
+    "expected_human_review": true
+  },
+  {
+    "id": "subjects-vague-title",
+    "input": { "tag": "245", "ind1": "0", "ind2": "0", "subfields": [{"code":"a","value":"Reflections"}] },
+    "expected_task": "subject_heading_suggestion",
+    "expected_deterministic_rule": null,
+    "acceptable_ai_interpretation": "insufficient_evidence",
+    "known_ambiguity": true,
+    "expected_authority_status": "unverified",
+    "expected_human_review": true
+  }
+]

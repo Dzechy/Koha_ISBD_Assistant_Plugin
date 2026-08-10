@@ -1,0 +1,68 @@
+{
+  "type": "object",
+  "required": ["schema_version", "task", "status", "findings", "warnings", "requires_human_review"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "enum": ["1.0.0"] },
+    "task": { "type": "string", "enum": ["cataloging_review"] },
+    "status": { "type": "string", "enum": ["ok", "insufficient_evidence", "incomplete"] },
+    "classification_candidate": {
+      "type": "object",
+      "required": ["value", "confidence", "basis", "evidence", "authority_status"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "type": "string", "maxLength": 64 },
+        "confidence": { "type": "string", "enum": ["high", "medium", "low", "insufficient_evidence"] },
+        "basis": { "type": "string", "maxLength": 1200 },
+        "evidence": { "type": "array", "maxItems": 12, "items": { "type": "string", "maxLength": 400 } },
+        "authority_status": { "type": "string", "enum": ["unverified", "verified"] }
+      }
+    },
+    "subject_candidates": {
+      "type": "array", "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["heading", "subdivisions", "confidence", "basis", "evidence", "authority_status"],
+        "additionalProperties": false,
+        "properties": {
+          "heading": { "type": "string", "maxLength": 240 },
+          "subdivisions": {
+            "type": "array", "maxItems": 10,
+            "items": {
+              "type": "object",
+              "required": ["code", "value"],
+              "additionalProperties": false,
+              "properties": {
+                "code": { "type": "string", "enum": ["x", "y", "z", "v"] },
+                "value": { "type": "string", "maxLength": 240 }
+              }
+            }
+          },
+          "confidence": { "type": "string", "enum": ["high", "medium", "low", "insufficient_evidence"] },
+          "basis": { "type": "string", "maxLength": 1200 },
+          "evidence": { "type": "array", "maxItems": 12, "items": { "type": "string", "maxLength": 400 } },
+          "authority_status": { "type": "string", "enum": ["unverified", "verified"] }
+        }
+      }
+    },
+    "findings": {
+      "type": "array", "maxItems": 20,
+      "items": {
+        "type": "object",
+        "required": ["finding", "tag", "subfield", "explanation", "confidence", "evidence", "authority_status"],
+        "additionalProperties": false,
+        "properties": {
+          "finding": { "type": "string", "maxLength": 120 },
+          "tag": { "type": "string", "maxLength": 3 },
+          "subfield": { "type": "string", "maxLength": 1 },
+          "explanation": { "type": "string", "maxLength": 1200 },
+          "confidence": { "type": "string", "enum": ["high", "medium", "low", "insufficient_evidence"] },
+          "evidence": { "type": "array", "maxItems": 12, "items": { "type": "string", "maxLength": 400 } },
+          "authority_status": { "type": "string", "enum": ["unverified", "verified", "not_applicable"] }
+        }
+      }
+    },
+    "warnings": { "type": "array", "maxItems": 12, "items": { "type": "string", "maxLength": 400 } },
+    "requires_human_review": { "type": "boolean" }
+  }
+}
