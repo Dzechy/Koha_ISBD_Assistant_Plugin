@@ -5,6 +5,10 @@ Use this checklist before publishing a release-candidate KPZ.
 ## Local Verification
 
 - Confirm `PluginGithubPAT`, KPZ/ZIP artifacts, temp files, logs, caches, and local Koha/environment files are not staged.
+- Install the exact published build dependency: `npm ci`.
+- Run LCCS package and server-adapter regressions:
+  `npm run test:lccs`
+  `perl tests/lccs_evidence_regression.pl`
 - Validate the rule pack JSON:
   `node -e "JSON.parse(require('fs').readFileSync('Koha/Plugin/Cataloging/AutoPunctuation/rules/isbd_baseline.json','utf8'))"`
 - Run JavaScript rule regressions:
@@ -38,10 +42,11 @@ Use this checklist before publishing a release-candidate KPZ.
 
 - Build the KPZ:
   `./scripts/build_kpz.sh`
-- Inspect the package contents and confirm it contains only plugin source plus release docs/license:
-  `unzip -l dist/Koha_ISBD_Assistant-1.1.2.kpz`
+- Inspect the package contents and confirm it contains plugin source, the pinned LCCS runtime dataset, and release docs/license:
+  `unzip -l dist/Koha_ISBD_Assistant-1.2.0.kpz`
 - Confirm the KPZ does not contain `PluginGithubPAT`, previous KPZ/ZIP files, `.git`, caches, logs, or local environment files.
 - Confirm repository-only classification schedules under `docs/LCCS` are not included in the KPZ.
+- Confirm `vendor/node_modules/lccs-2024/package.json` is present and pinned to `1.1.0`.
 
 ## Koha Smoke Test
 

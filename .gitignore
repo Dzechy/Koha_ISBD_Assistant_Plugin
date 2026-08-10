@@ -9,6 +9,7 @@ BWDGithubToken.txt:Zone.Identifier
 # Build and release artifacts
 *.kpz
 *.zip
+*.tgz
 dist/
 build/
 tmp/
@@ -33,6 +34,7 @@ __pycache__/
 # Editor and OS files
 .DS_Store
 Thumbs.db
+*:Zone.Identifier
 *~
 *.swp
 *.swo

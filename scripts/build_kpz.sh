@@ -39,6 +39,14 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 
 mkdir -p "$TMP_DIR/Koha"
 cp -R "$ROOT_DIR/Koha/." "$TMP_DIR/Koha/"
+LCCS_PACKAGE="$ROOT_DIR/node_modules/lccs-2024"
+if [[ ! -d "$LCCS_PACKAGE" ]]; then
+  echo "Missing lccs-2024 dependency. Run npm ci before building." >&2
+  exit 1
+fi
+LCCS_VENDOR="$TMP_DIR/Koha/Plugin/Cataloging/AutoPunctuation/vendor/node_modules/lccs-2024"
+mkdir -p "$(dirname "$LCCS_VENDOR")"
+cp -R "$LCCS_PACKAGE" "$LCCS_VENDOR"
 cp "$ROOT_DIR/LICENSE" "$TMP_DIR/" 2>/dev/null || true
 cp "$ROOT_DIR/README.md" "$TMP_DIR/" 2>/dev/null || true
 cp -R "$ROOT_DIR/docs" "$TMP_DIR/" 2>/dev/null || true

@@ -24,6 +24,7 @@ use C4::Context;
 use CGI;
 use JSON ();
 use Koha::Plugin::Cataloging::AutoPunctuation::AI::Prompt ();
+use Koha::Plugin::Cataloging::AutoPunctuation::AI::LCCS ();
 
 sub _semantic_subfields {
     my ( $tag, $subfields, $pack ) = @_;
@@ -684,6 +685,8 @@ sub ai_suggest {
                     $provider,
                     ( $model_key || '' ),
                     $Koha::Plugin::Cataloging::AutoPunctuation::AI_PROMPT_VERSION,
+                    'lccs-2024:'
+                      . $Koha::Plugin::Cataloging::AutoPunctuation::AI::LCCS::PACKAGE_VERSION,
                     $prompt_hash,
                     $user_key,
                     $feature_key,
@@ -765,12 +768,18 @@ sub ai_suggest {
                 $self->_record_failure( $settings, $circuit_key );
             }
 
+            # LCCS verification enriches a valid model candidate, but it never
+            # gates display. No match or an unavailable package leaves the AI
+            # suggestion intact and explicitly unverified for human review.
+            my $lccs_evidence = $self->_verify_lccs_result( $payload, $result );
+
             $result = $self->_normalize_ai_task_response(
                 $payload, $result,
                 {
                     provider  => $provider,
                     model     => $model_key,
                     truncated => $provider_result->{truncated} ? 1 : 0,
+                    lccs_evidence => $lccs_evidence,
                 }
             );
             $result = _task_response_for_client(

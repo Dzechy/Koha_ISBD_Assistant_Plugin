@@ -52,7 +52,7 @@
             guideCurrentStep: null,
             guideRefresh: null,
             lastFocusedField: null,
-            aiSuggestions: { classification: '', subjects: [], confidence: null, rawText: '', errors: [], authorityStatus: 'unverified', requiresHumanReview: true, status: '' },
+            aiSuggestions: { classification: '', subjects: [], confidence: null, rawText: '', errors: [], authorityStatus: 'unverified', evidenceVerification: null, requiresHumanReview: true, status: '' },
             aiPunctuation: { findings: [], patches: [], summary: '', meta: null },
             lastChangeMeta: null,
             lastChangeAt: 0,
@@ -3251,9 +3251,17 @@
             state.aiSuggestions.subjects = normalizedSubjects;
         }
         renderAiSubjectList($panel, normalizedSubjects);
+        const evidenceVerification = aiSuggestions.evidenceVerification && typeof aiSuggestions.evidenceVerification === 'object'
+            ? aiSuggestions.evidenceVerification
+            : null;
+        const evidenceTrustLabel = evidenceVerification && evidenceVerification.status === 'verified'
+            ? 'LCCS 2024 schedule verified'
+            : (evidenceVerification && evidenceVerification.status === 'no_match'
+                ? 'No exact LCCS schedule match'
+                : (aiSuggestions.authorityStatus === 'verified' ? 'Authority verified' : 'Not authority verified'));
         const trustLabels = [
             '<strong>AI suggestion</strong>',
-            aiSuggestions.authorityStatus === 'verified' ? 'Authority verified' : 'Not authority verified',
+            evidenceTrustLabel,
             aiSuggestions.requiresHumanReview ? 'Review required' : ''
         ].filter(Boolean).join(' · ');
         $panel.find('#isbd-ai-response').html(`${trustLabels}<br>${formatCatalogingResponseHtml(aiSuggestions.rawText || '(none)')}`);
@@ -4041,6 +4049,9 @@
                 rawText: formatCatalogingAssistantText(assistantMessage || result.raw_text_excerpt || ''),
                 errors,
                 authorityStatus: result.authority_status || (candidate && candidate.authority_status) || 'unverified',
+                evidenceVerification: result.evidence_verification && typeof result.evidence_verification === 'object'
+                    ? result.evidence_verification
+                    : null,
                 requiresHumanReview: result.requires_human_review !== false,
                 status: result.status || ''
             };

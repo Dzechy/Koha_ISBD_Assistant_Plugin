@@ -127,6 +127,39 @@ my $valid_class = {
     authority_status => 'unverified', evidence => ['title'], warnings => [], requires_human_review => JSON::true
 };
 is_deeply( Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_validate_ai_task_response($ai, $normalized, $valid_class), [], 'valid classification response passes schema and semantics' );
+my $verified_class = {
+    %{$valid_class},
+    candidate => { %{ $valid_class->{candidate} } },
+    evidence => [], warnings => []
+};
+Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_normalize_ai_task_response(
+    $ai, $normalized, $verified_class,
+    { lccs_evidence => {
+        status => 'verified', source => 'lccs-2024@1.1.0', candidate => 'Z665',
+        validation => { status => 'PASS' },
+        matches => [{ candidate => 'Z665', caption => 'General works',
+            source_pdf => 'LCC_Z2024TEXT.pdf', page => 43 }]
+    } }
+);
+is( $verified_class->{authority_status}, 'verified', 'exact LCCS match promotes only schedule verification' );
+like( $verified_class->{evidence}[0], qr/LCCS 2024 exact schedule match: Z665/, 'LCCS source is attached as evidence' );
+
+my $unverified_class = {
+    %{$valid_class},
+    candidate => { %{ $valid_class->{candidate} } },
+    evidence => [], warnings => []
+};
+Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_normalize_ai_task_response(
+    $ai, $normalized, $unverified_class,
+    { lccs_evidence => {
+        status => 'no_match', source => 'lccs-2024@1.1.0',
+        candidate => 'Z665', matches => []
+    } }
+);
+is( $unverified_class->{status}, 'ok', 'missing verification evidence does not suppress AI output' );
+is( $unverified_class->{candidate}{value}, 'Z665', 'unverified AI candidate still comes through' );
+is( $unverified_class->{authority_status}, 'unverified', 'unmatched candidate remains explicitly unverified' );
+like( $unverified_class->{warnings}[0], qr/still shown for cataloguer review/, 'fallback behavior is explicit to the client' );
 my $range = { %{$valid_class}, candidate => { %{ $valid_class->{candidate} }, value => 'Z665-Z669' } };
 ok( @{ Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_validate_ai_task_response($ai, $normalized, $range) }, 'classification range is rejected' );
 my $punctuated = { %{$valid_class}, candidate => { %{ $valid_class->{candidate} }, value => 'Z665.' } };

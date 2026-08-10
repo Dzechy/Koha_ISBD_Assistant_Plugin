@@ -40,7 +40,7 @@ use Koha::Plugin::Cataloging::AutoPunctuation::Http;
 use Koha::Plugin::Cataloging::AutoPunctuation::Api;
 use Koha::Plugin::Cataloging::AutoPunctuation::AI;
 
-our $VERSION         = "1.1.2";
+our $VERSION         = "1.2.0";
 our $PLUGIN_REPO_URL = "https://github.com/build-with-duke/Koha_ISBD_Assistant_Plugin/";
 our $PLUGIN_RELEASES_API =
 "https://api.github.com/repos/build-with-duke/Koha_ISBD_Assistant_Plugin/releases/latest";
@@ -800,6 +800,10 @@ sub _validate_ai_task_response {
 
 sub _normalize_ai_task_response {
     return Koha::Plugin::Cataloging::AutoPunctuation::AI::_normalize_ai_task_response(@_);
+}
+
+sub _verify_lccs_result {
+    return Koha::Plugin::Cataloging::AutoPunctuation::AI::_verify_lccs_result(@_);
 }
 
 # AI::Guard

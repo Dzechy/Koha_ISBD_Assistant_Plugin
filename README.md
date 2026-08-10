@@ -359,6 +359,10 @@ Start with `tag_only`. Use broader context only when cataloging guidance needs i
 
 AI never supplies an applicable punctuation patch. The deterministic rules engine generates punctuation fixes; AI may only explain those verified findings.
 
+Classification candidates are checked server-side against the exact `lccs-2024@1.1.0` dataset published on npm. An exact schedule/page match is returned as structured `evidence_verification` and labelled `verified`; this verifies that the number exists in the 2024 schedule, not that it is the best number for the work. When the package is unavailable or no exact entry matches, the AI candidate still comes through as `unverified` with a warning and mandatory cataloguer review.
+
+For source builds, run `npm ci` before tests or KPZ packaging. The build bundles the pinned LCCS runtime data into the KPZ, so the Koha host does not need to run npm after plugin installation. The machine-readable dataset complements but does not replace official LC policy, local classification practice, or professional judgment.
+
 ## AI Tuning And Limits
 
 Defaults:

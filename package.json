@@ -1,0 +1,11 @@
+{
+  "name": "koha-isbd-assistant-plugin",
+  "private": true,
+  "description": "Build-time dependencies and verification scripts for the Koha ISBD Assistant plugin.",
+  "scripts": {
+    "test:lccs": "node tests/lccs_evidence.js"
+  },
+  "dependencies": {
+    "lccs-2024": "1.1.0"
+  }
+}

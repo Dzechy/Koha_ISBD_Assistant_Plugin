@@ -71,6 +71,71 @@ sub _validate_ai_task_response {
     return $errors;
 }
 
+sub _lccs_evidence_text {
+    my ($match) = @_;
+    return '' unless $match && ref $match eq 'HASH';
+    my $candidate = $match->{candidate} || '';
+    my $caption   = $match->{caption}   || '';
+    my $source    = $match->{source_pdf} || 'LCC 2024 schedule';
+    my $page      = $match->{page} || '';
+    my $text = 'LCCS 2024 exact schedule match: ' . $candidate;
+    $text .= ' — ' . $caption if $caption ne '';
+    $text .= ' (' . $source . ( $page ne '' ? ", p. $page" : '' ) . ')';
+    return substr( $text, 0, 400 );
+}
+
+sub _apply_lccs_evidence {
+    my ( $task, $result, $verification ) = @_;
+    return unless $verification && ref $verification eq 'HASH';
+    my $status = $verification->{status} || 'unavailable';
+    return if $status eq 'not_applicable';
+
+    my $matches = ref $verification->{matches} eq 'ARRAY'
+      ? $verification->{matches}
+      : [];
+    my @public_matches = @{$matches};
+    splice @public_matches, 3 if @public_matches > 3;
+    $result->{evidence_verification} = {
+        status     => $status,
+        source     => $verification->{source} || 'lccs-2024',
+        candidate  => $verification->{candidate} || '',
+        matches    => \@public_matches,
+        validation => $verification->{validation} || {},
+    };
+
+    my $candidate =
+        $task eq 'cataloging_classification' ? $result->{candidate}
+      : $task eq 'cataloging_review'         ? $result->{classification_candidate}
+      :                                        undef;
+    return unless $candidate && ref $candidate eq 'HASH';
+
+    if ( $status eq 'verified' && @{$matches} ) {
+        my $text = _lccs_evidence_text( $matches->[0] );
+        if ( $task eq 'cataloging_classification' ) {
+            $result->{evidence} = []
+              unless ref $result->{evidence} eq 'ARRAY';
+            push @{ $result->{evidence} }, $text
+              if $text ne '' && !grep { $_ eq $text } @{ $result->{evidence} };
+            $result->{authority_status} = 'verified';
+        }
+        else {
+            $candidate->{evidence} = []
+              unless ref $candidate->{evidence} eq 'ARRAY';
+            push @{ $candidate->{evidence} }, $text
+              if $text ne '' && !grep { $_ eq $text } @{ $candidate->{evidence} };
+            $candidate->{authority_status} = 'verified';
+        }
+        return;
+    }
+
+    my $value = $verification->{candidate} || $candidate->{value} || '';
+    my $warning = $status eq 'no_match'
+      ? "No exact lccs-2024 schedule entry verified $value; the AI suggestion is still shown for cataloguer review."
+      : 'LCCS evidence was unavailable; the AI suggestion is still shown as unverified for cataloguer review.';
+    push @{ $result->{warnings} }, $warning
+      unless grep { $_ eq $warning } @{ $result->{warnings} };
+}
+
 sub _normalize_ai_task_response {
     my ( $self, $payload, $result, $provider_meta ) = @_;
     $provider_meta ||= {};
@@ -84,9 +149,16 @@ sub _normalize_ai_task_response {
       && ref $result->{evidence} ne 'ARRAY';
     $result->{requires_human_review} = JSON::true;
 
-    # No authority connector exists yet. A model cannot promote its own claim.
+    _apply_lccs_evidence(
+        $task, $result,
+        $provider_meta->{lccs_evidence}
+    );
+
+    # A model cannot promote its own claim. Only the server-side LCCS adapter
+    # can verify that a returned classification exists in the 2024 schedule.
     if ( $task eq 'cataloging_classification' ) {
-        $result->{authority_status} = 'unverified';
+        $result->{authority_status} = 'unverified'
+          unless ( $result->{authority_status} || '' ) eq 'verified';
         if ( ref $result->{candidate} eq 'HASH' ) {
             my $evidence_count = scalar @{ $result->{evidence} || [] };
             $result->{candidate}{confidence} =
@@ -106,7 +178,8 @@ sub _normalize_ai_task_response {
     }
     if ( $task eq 'cataloging_review' ) {
         $result->{classification_candidate}{authority_status} = 'unverified'
-          if ref $result->{classification_candidate} eq 'HASH';
+          if ref $result->{classification_candidate} eq 'HASH'
+          && ( $result->{classification_candidate}{authority_status} || '' ) ne 'verified';
         if ( ref $result->{classification_candidate} eq 'HASH' ) {
             my $evidence_count = scalar @{ $result->{classification_candidate}{evidence} || [] };
             $result->{classification_candidate}{confidence} = $evidence_count >= 2 ? 'medium' : 'low';

@@ -26,6 +26,7 @@ use Koha::Plugin::Cataloging::AutoPunctuation::AI::Parse;
 use Koha::Plugin::Cataloging::AutoPunctuation::AI::Prompt;
 use Koha::Plugin::Cataloging::AutoPunctuation::AI::Guard;
 use Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract;
+use Koha::Plugin::Cataloging::AutoPunctuation::AI::LCCS;
 
 # Cache
 sub _cache_backend {
@@ -336,6 +337,11 @@ sub _validate_ai_task_response {
 
 sub _normalize_ai_task_response {
     return Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_normalize_ai_task_response(@_);
+}
+
+# Published Library of Congress Classification schedule evidence
+sub _verify_lccs_result {
+    return Koha::Plugin::Cataloging::AutoPunctuation::AI::LCCS::_verify_lccs_result(@_);
 }
 
 1;
