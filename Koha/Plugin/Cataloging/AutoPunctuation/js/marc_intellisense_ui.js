@@ -3329,6 +3329,7 @@
         const panelStartedAt = performanceNow();
         const evidenceTarget = resolveAiTargetElement(state);
         const evidenceMeta = evidenceTarget ? parseFieldMeta(evidenceTarget) : null;
+        const titleInfo = getTitleWithSubtitle();
         const cutterSource = getPreferredCutterSource();
         const yearInfo = getPublicationYear();
         const aiSuggestions = (state && state.aiSuggestions) ? state.aiSuggestions : { classification: '', subjects: [], confidence: null, errors: [] };

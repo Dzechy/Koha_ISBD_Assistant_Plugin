@@ -60,5 +60,10 @@ assert(source.includes("recordPerformance(state, 'input_handler'"),
     'input performance is instrumented');
 assert(!source.includes('245$a is required for AI cataloging guidance.'),
     'cataloguing UI no longer hard-gates suggestions on 245$a');
+const catalogingProjectionStart = source.indexOf('function updateAiCatalogingContext(');
+const catalogingProjectionEnd = source.indexOf('function getAiCatalogingSelectionState(', catalogingProjectionStart);
+const catalogingProjection = source.slice(catalogingProjectionStart, catalogingProjectionEnd);
+assert(catalogingProjection.includes('const titleInfo = getTitleWithSubtitle();'),
+    'AI cataloguing projection declares titleInfo before returning it');
 
 console.log('ai_cataloging_context_regression: ok');
