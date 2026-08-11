@@ -40,12 +40,12 @@ use Koha::Plugin::Cataloging::AutoPunctuation::Http;
 use Koha::Plugin::Cataloging::AutoPunctuation::Api;
 use Koha::Plugin::Cataloging::AutoPunctuation::AI;
 
-our $VERSION         = "1.2.1";
+our $VERSION         = "1.3.0";
 our $PLUGIN_REPO_URL = "https://github.com/build-with-duke/Koha_ISBD_Assistant_Plugin/";
 our $PLUGIN_RELEASES_API =
 "https://api.github.com/repos/build-with-duke/Koha_ISBD_Assistant_Plugin/releases/latest";
 our $AUTHOR_LINKEDIN   = "https://linkedin.com/in/duke-j-a1a9b0260";
-our $AI_PROMPT_VERSION = "2.1.0";
+our $AI_PROMPT_VERSION = "2.2.0";
 
 our $metadata = {
     name            => 'Koha_ISBD_Cataloging_Assistant',
@@ -93,6 +93,10 @@ sub validate_record {
 
 sub ai_suggest {
     return Koha::Plugin::Cataloging::AutoPunctuation::Api::ai_suggest(@_);
+}
+
+sub ai_authority_retry {
+    return Koha::Plugin::Cataloging::AutoPunctuation::Api::ai_authority_retry(@_);
 }
 
 sub test_connection {
@@ -709,6 +713,12 @@ sub _extract_cataloging_suggestions_from_text {
         @_);
 }
 
+sub _recover_cataloging_task_response {
+    return
+      Koha::Plugin::Cataloging::AutoPunctuation::AI::_recover_cataloging_task_response(
+        @_);
+}
+
 sub _parse_lc_target {
     return Koha::Plugin::Cataloging::AutoPunctuation::AI::_parse_lc_target(@_);
 }
@@ -810,6 +820,15 @@ sub _normalize_ai_task_response {
 
 sub _verify_lccs_result {
     return Koha::Plugin::Cataloging::AutoPunctuation::AI::_verify_lccs_result(@_);
+}
+
+sub _verify_lcsh_candidates {
+    return Koha::Plugin::Cataloging::AutoPunctuation::AI::_verify_lcsh_candidates(
+        @_);
+}
+
+sub _search_lcsh {
+    return Koha::Plugin::Cataloging::AutoPunctuation::AI::_search_lcsh(@_);
 }
 
 sub _canonicalize_ai_provider_response {

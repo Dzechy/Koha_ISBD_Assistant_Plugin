@@ -13,6 +13,8 @@ BWDGithubToken.txt:Zone.Identifier
 /*.pdf
 /*.md
 !/README.md
+/implementations3.md
+/implementatio*.md
 
 # Build and release artifacts
 *.kpz

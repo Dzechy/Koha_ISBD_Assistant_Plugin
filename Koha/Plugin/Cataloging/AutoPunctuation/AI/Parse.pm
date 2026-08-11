@@ -599,6 +599,87 @@ sub _extract_cataloging_suggestions_from_text {
     };
 }
 
+# Deliberate server-side fallback used only after the structured provider
+# contract and one bounded repair attempt have failed. It recognizes explicit
+# cataloguing candidates; it does not infer headings from general prose.
+sub _recover_cataloging_task_response {
+    my ( $self, $payload, $raw_text, $settings ) = @_;
+    return undef unless $payload && ref $payload eq 'HASH';
+    return undef unless defined $raw_text && $raw_text =~ /\S/;
+    my $task = $payload->{task} || '';
+    return undef
+      unless $task =~ /^(?:cataloging_classification|subject_heading_suggestion|cataloging_review)$/;
+    my $extracted = _extract_cataloging_suggestions_from_text(
+        $self, $raw_text, $settings || {} );
+    my $classification = $extracted->{classification} || '';
+    my $subjects = ref $extracted->{subjects} eq 'ARRAY'
+      ? $extracted->{subjects}
+      : [];
+    return undef unless $classification ne '' || @{$subjects};
+
+    my $candidate = $classification ne ''
+      ? {
+        value      => $classification,
+        confidence => 'low',
+        basis      => '',
+        evidence   => [],
+        authority_status => 'unverified',
+      }
+      : undef;
+    my @subject_candidates = map {
+        my $subject = _subject_object_from_text( $self, $_ );
+        my @subdivisions;
+        if ($subject) {
+            for my $code (qw(x y z v)) {
+                push @subdivisions,
+                  map { { code => $code, value => $_ } }
+                  @{ $subject->{subfields}{$code} || [] };
+            }
+        }
+        {
+            heading      => $subject ? ( $subject->{subfields}{a} || $_ ) : $_,
+            subdivisions => \@subdivisions,
+            confidence   => 'low',
+            basis        => '',
+            evidence     => [],
+            authority_status => 'unverified',
+        }
+    } @{$subjects};
+    splice @subject_candidates, 10 if @subject_candidates > 10;
+
+    my $result = {
+        schema_version        => '1.0.0',
+        task                  => $task,
+        status                => 'ok',
+        warnings              => [
+            'Cataloguing candidates were recovered from non-structured AI output and require careful review.'
+        ],
+        requires_human_review => JSON::true,
+        degraded_mode         => JSON::true,
+        extraction_source     => 'raw_text',
+        ai_parse_status       => 'degraded_recovery',
+        rationale_source      => 'system',
+    };
+    if ( $task eq 'cataloging_classification' ) {
+        return undef unless $candidate;
+        delete $candidate->{evidence};
+        delete $candidate->{authority_status};
+        $result->{candidate} = $candidate;
+        $result->{authority_status} = 'unverified';
+        $result->{evidence} = [];
+    }
+    elsif ( $task eq 'subject_heading_suggestion' ) {
+        return undef unless @subject_candidates;
+        $result->{candidates} = \@subject_candidates;
+    }
+    else {
+        $result->{classification_candidate} = $candidate if $candidate;
+        $result->{subject_candidates} = \@subject_candidates;
+        $result->{findings} = [];
+    }
+    return $result;
+}
+
 sub _parse_lc_target {
     my ( $self, $target ) = @_;
     return ( '', '' ) unless defined $target && $target ne '';

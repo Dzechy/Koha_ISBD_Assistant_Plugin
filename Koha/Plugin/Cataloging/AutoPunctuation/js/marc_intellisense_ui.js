@@ -52,7 +52,7 @@
             guideCurrentStep: null,
             guideRefresh: null,
             lastFocusedField: null,
-            aiSuggestions: { classification: '', subjects: [], confidence: null, rawText: '', errors: [], authorityStatus: 'unverified', evidenceVerification: null, requiresHumanReview: true, status: '' },
+            aiSuggestions: { classification: '', subjects: [], confidence: null, rationale: { ai: '', system: '' }, errors: [], authorityStatus: 'unverified', evidenceVerification: null, requiresHumanReview: true, status: '', parseStatus: '', authorityLookupStatus: '' },
             aiPunctuation: { findings: [], patches: [], summary: '', meta: null },
             lastChangeMeta: null,
             lastChangeAt: 0,
@@ -3128,7 +3128,7 @@
 
     function formatCatalogingResponseHtml(text) {
         const raw = (text || '').toString().replace(/\r\n?/g, '\n').trim();
-        if (!raw) return '(none)';
+        if (!raw) return 'No safe cataloguing rationale was available.';
         return raw.split('\n').map(line => {
             const escaped = escapeAttr(line || '');
             return escaped.replace(
@@ -3233,7 +3233,7 @@
         $panel.find('#isbd-ai-year').text(year || '(n/a)');
         const previewText = rangeMessage ? '(range not allowed)' : (callNumber || '(waiting for classification)');
         $panel.find('#isbd-ai-callnumber-preview').text(previewText);
-        $panel.find('#isbd-ai-classification').text(aiSuggestions.classification || '(none)');
+        $panel.find('#isbd-ai-classification').text(aiSuggestions.classification || 'No safe classification suggestion');
         const $classError = $panel.find('#isbd-ai-classification-error');
         if ($classError.length) {
             if (rangeMessage) {
@@ -3258,13 +3258,31 @@
             ? 'LCCS 2024 schedule verified'
             : (evidenceVerification && evidenceVerification.status === 'no_match'
                 ? 'No exact LCCS schedule match'
-                : (aiSuggestions.authorityStatus === 'verified' ? 'Authority verified' : 'Not authority verified'));
+                : (evidenceVerification && evidenceVerification.status === 'unavailable'
+                    ? 'LCCS verification unavailable'
+                    : (normalizedClassification ? 'LCCS not verified' : 'Classification not requested')));
         const trustLabels = [
             '<strong>AI suggestion</strong>',
             evidenceTrustLabel,
             aiSuggestions.requiresHumanReview ? 'Review required' : ''
         ].filter(Boolean).join(' · ');
-        $panel.find('#isbd-ai-response').html(`${trustLabels}<br>${formatCatalogingResponseHtml(aiSuggestions.rawText || '(none)')}`);
+        const rationale = aiSuggestions.rationale && typeof aiSuggestions.rationale === 'object'
+            ? aiSuggestions.rationale
+            : { ai: '', system: aiSuggestions.rawText || '' };
+        const rationaleBlocks = [];
+        if ((rationale.ai || '').toString().trim()) {
+            rationaleBlocks.push(`<strong>AI rationale</strong><br>${formatCatalogingResponseHtml(rationale.ai)}`);
+        }
+        if ((rationale.system || '').toString().trim()) {
+            rationaleBlocks.push(`<strong>System note</strong><br>${formatCatalogingResponseHtml(rationale.system)}`);
+        }
+        if (!rationaleBlocks.length) {
+            rationaleBlocks.push('<strong>System note</strong><br>No safe cataloguing rationale was available.');
+        }
+        $panel.find('#isbd-ai-response').html(`${trustLabels}<br>${rationaleBlocks.join('<br>')}`);
+        const authorityUnavailable = aiSuggestions.authorityLookupStatus === 'service_unavailable'
+            || aiSuggestions.authorityLookupStatus === 'invalid_authority_response';
+        $panel.find('#isbd-ai-retry-authority').toggle(!!authorityUnavailable);
 
         const hasTitle = !!titleInfo.title;
         const selection = getAiCatalogingSelectionState($panel, settings);
@@ -3397,18 +3415,21 @@
                                 <button type="button" class="btn btn-xs btn-primary" id="isbd-ai-run-cataloging">Suggest classification &amp; subjects</button>
                             </div>
                             <div class="isbd-ai-results">
-                                <div class="meta">Classification (LC): <span id="isbd-ai-classification">(none)</span></div>
+                                <div class="meta">Classification (LC): <span id="isbd-ai-classification">No suggestion requested yet</span></div>
                                 <div class="meta">Confidence: <span id="isbd-ai-confidence">(n/a)</span></div>
                                 <div class="meta">Subjects:</div>
-                                <div id="isbd-ai-subjects" class="isbd-ai-text-output">(none)</div>
+                                <div id="isbd-ai-subjects" class="isbd-ai-text-output">No suggestion requested yet</div>
                                 <div class="actions" style="justify-content: flex-start;">
                                     <label style="font-weight: normal;">
                                         <input type="checkbox" id="isbd-ai-subjects-replace"/>
                                         Replace existing subjects
                                     </label>
                                 </div>
-                                <div class="meta" style="margin-top: 6px;">AI response:</div>
-                                <div id="isbd-ai-response" class="isbd-ai-text-output">(none)</div>
+                                <div class="meta" style="margin-top: 6px;">AI rationale:</div>
+                                <div id="isbd-ai-response" class="isbd-ai-text-output">No suggestion requested yet</div>
+                                <div class="actions" style="justify-content:flex-start;">
+                                    <button type="button" class="btn btn-xs btn-default" id="isbd-ai-retry-authority" style="display:none;">Retry authority verification</button>
+                                </div>
                                 <details class="isbd-ai-debug" id="isbd-ai-cataloging-debug" style="display:none;">
                                     <summary>Advanced/Debug</summary>
                                     <pre id="isbd-ai-cataloging-debug-content"></pre>
@@ -3547,6 +3568,17 @@
                         features,
                         onStatus: (message, type) => updateAiCatalogingStatus($panel, message, type)
                     });
+                } finally {
+                    $button.prop('disabled', false);
+                }
+            });
+            $panel.find('#isbd-ai-retry-authority').on('click', async function() {
+                const $button = $(this);
+                $button.prop('disabled', true);
+                updateAiCatalogingStatus($panel, 'Retrying Library of Congress authority verification...', 'info');
+                try {
+                    await retryAiAuthorityVerification(settings, state);
+                    updateAiCatalogingStatus($panel, 'Authority verification retry completed.', 'success');
                 } finally {
                     $button.prop('disabled', false);
                 }
@@ -3941,6 +3973,28 @@
         return 'cataloging_classification';
     }
 
+    function catalogingToastState(result, classification, subjects) {
+        const hasSuggestions = !!classification || (Array.isArray(subjects) && subjects.length > 0);
+        const parseStatus = (result && result.ai_parse_status) || '';
+        const authorityStatus = (result && result.authority_lookup_status) || '';
+        if (parseStatus === 'degraded_recovery' && hasSuggestions) {
+            return { type: 'warning', message: 'Cataloguing suggestions were recovered from non-structured AI output. Review them carefully before applying.' };
+        }
+        if (hasSuggestions && (authorityStatus === 'service_unavailable' || authorityStatus === 'invalid_authority_response')) {
+            return { type: 'warning', message: 'AI suggestions are available, but authority verification is temporarily unavailable.' };
+        }
+        if (parseStatus === 'truncated' || (result && result.status === 'incomplete')) {
+            return { type: 'warning', message: 'The AI response was incomplete; no unsafe cataloguing suggestion was accepted.' };
+        }
+        if (parseStatus === 'malformed') {
+            return { type: 'warning', message: 'The AI response could not be safely parsed into cataloguing suggestions.' };
+        }
+        if (!hasSuggestions) {
+            return { type: 'info', message: 'AI could not produce a safe cataloguing suggestion from the available evidence.' };
+        }
+        return { type: 'success', message: 'Cataloguing suggestions ready.' };
+    }
+
     async function requestAiCatalogingAssist(settings, state, options) {
         const opts = options || {};
         const onStatus = typeof opts.onStatus === 'function' ? opts.onStatus : null;
@@ -4046,14 +4100,18 @@
                 classification,
                 subjects,
                 confidence,
-                rawText: formatCatalogingAssistantText(assistantMessage || result.raw_text_excerpt || ''),
+                rationale: result.rationale && typeof result.rationale === 'object'
+                    ? result.rationale
+                    : { ai: formatCatalogingAssistantText(assistantMessage || ''), system: '' },
                 errors,
                 authorityStatus: result.authority_status || (candidate && candidate.authority_status) || 'unverified',
                 evidenceVerification: result.evidence_verification && typeof result.evidence_verification === 'object'
                     ? result.evidence_verification
                     : null,
                 requiresHumanReview: result.requires_human_review !== false,
-                status: result.status || ''
+                status: result.status || '',
+                parseStatus: result.ai_parse_status || '',
+                authorityLookupStatus: result.authority_lookup_status || ''
             };
             state.aiSubjectHistory = {};
             const $panel = $('#isbd-ai-panel');
@@ -4064,17 +4122,9 @@
             updateAiCatalogingContext($panel, settings, state);
             renderAiDebug($('#isbd-ai-panel'), 'cataloging', result);
             progress.stop();
-            const message = (!classification && !subjects.length)
-                ? 'AI returned no cataloging suggestions.'
-                : 'Cataloging suggestions ready.';
-            toast('info', message);
-            if (result && result.degraded_mode && result.extracted_call_number && result.extraction_source !== 'plain_text') {
-                const fallbackMessage = `AI returned non-structured output; extracted LC candidate: ${result.extracted_call_number}.`;
-                toast('warning', fallbackMessage);
-                setStatus('Done', 'success');
-            } else {
-                setStatus('Done', classification || subjects.length ? 'success' : 'info');
-            }
+            const toastState = catalogingToastState(result, classification, subjects);
+            toast(toastState.type, toastState.message);
+            setStatus('Done', classification || subjects.length ? 'success' : 'info');
         } catch (err) {
             if (!isLatestAiRequest(state, 'cataloging', requestId)) return;
             if (isAbortError(err)) {
@@ -4092,6 +4142,38 @@
             if (isLatestAiRequest(state, 'cataloging', requestId)) {
                 finishAiRequest(state, 'cataloging', requestId);
             }
+        }
+    }
+
+    async function retryAiAuthorityVerification(settings, state) {
+        const subjects = normalizeSubjectObjects(
+            state && state.aiSuggestions ? state.aiSuggestions.subjects || [] : []
+        );
+        if (!subjects.length) {
+            toast('info', 'No subject suggestions are available for authority verification.');
+            return;
+        }
+        try {
+            const result = await global.ISBDApiClient.retryAuthority(settings.pluginPath, {
+                request_id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+                candidates: subjects
+            });
+            const verifiedSubjects = normalizeSubjectObjects(result.subjects || []);
+            state.aiSuggestions.subjects = verifiedSubjects;
+            state.aiSuggestions.authorityLookupStatus = result.authority_lookup_status || '';
+            if (result.rationale && typeof result.rationale === 'object') {
+                state.aiSuggestions.rationale = result.rationale;
+            }
+            updateAiCatalogingContext($('#isbd-ai-panel'), settings, state);
+            renderAiDebug($('#isbd-ai-panel'), 'cataloging', result);
+            const unavailable = result.authority_lookup_status === 'service_unavailable'
+                || result.authority_lookup_status === 'invalid_authority_response';
+            toast(unavailable ? 'warning' : 'success', unavailable
+                ? 'Authority verification is still unavailable; AI suggestions were preserved.'
+                : 'Authority verification refreshed without regenerating AI suggestions.');
+        } catch (err) {
+            toast('error', `Authority verification retry failed: ${humanizeAiError(err.message, settings)}`);
+            throw err;
         }
     }
 
@@ -4272,14 +4354,6 @@
         return raw;
     }
 
-    function extractCatalogingSuggestionsFromText(text) {
-        const extractor = global.ISBDAiTextExtract;
-        if (extractor && typeof extractor.extractCatalogingSuggestionsFromText === 'function') {
-            return extractor.extractCatalogingSuggestionsFromText(text || '');
-        }
-        return { classification: '', subjects: [], confidence_percent: null };
-    }
-
     function summarizeAiFindings(findings) {
         if (!Array.isArray(findings) || !findings.length) return '';
         return findings.map(finding => {
@@ -4299,13 +4373,6 @@
         if (summary) return summary;
         if (result && result.raw_text_excerpt) return String(result.raw_text_excerpt).trim();
         return '';
-    }
-
-    function normalizeSuggestionText(text) {
-        return (text || '')
-            .toString()
-            .replace(/^\s*(subjects?|subject headings?|lcsh)\s*[:\-]\s*/i, '')
-            .trim();
     }
 
     function normalizeClassificationSuggestion(text) {
@@ -4400,45 +4467,6 @@
         });
     }
 
-    function parseAiClassification(findings) {
-        if (!Array.isArray(findings)) return '';
-        const direct = findings.find(f => (f.code || '').toUpperCase() === 'AI_CLASSIFICATION');
-        let text = direct ? (direct.message || '') : '';
-        if (!text) {
-            const fallback = findings.find(f =>
-                /classification/i.test(f.message || '') ||
-                /call number/i.test(f.message || '')
-            );
-            text = fallback ? (fallback.message || '') : '';
-        }
-        const cleaned = (text || '')
-            .toString()
-            .trim()
-            .replace(/^\s*(classification|call number)(?:\s*\([^)]*\))?\s*[:\-]\s*/i, '')
-            .replace(/^\s*(classification|call number)(?:\s*\([^)]*\))?\s+/i, '')
-            .replace(/\s{2,}/g, ' ')
-            .replace(/[\s\.,;:]+$/g, '')
-            .trim();
-        return sanitizeAiClassificationSuggestion(cleaned);
-    }
-
-    function parseAiSubjects(findings) {
-        if (!Array.isArray(findings)) return [];
-        const direct = findings.find(f => (f.code || '').toUpperCase() === 'AI_SUBJECTS');
-        let text = direct ? (direct.message || '') : '';
-        if (!text) {
-            const fallback = findings.find(f => /subjects?/i.test(f.message || ''));
-            text = fallback ? (fallback.message || '') : '';
-        }
-        const cleaned = normalizeSuggestionText(text);
-        if (!cleaned) return [];
-        const parts = cleaned.split(/[;\n|]+/);
-        const normalized = parts
-            .map(item => normalizeSubjectHeading(item))
-            .filter(Boolean);
-        return dedupeCaseInsensitive(normalized);
-    }
-
     function normalizeSubjectObjects(subjects) {
         const extract = global.ISBDAiTextExtract;
         if (extract && typeof extract.subjectsFromHeadingList === 'function') {
@@ -4446,6 +4474,10 @@
             return normalized.map((subject, index) => ({
                 ...subject,
                 authority_status: (subjects[index] && subjects[index].authority_status) || 'unverified',
+                authority: (subjects[index] && subjects[index].authority) || null,
+                rationale: (subjects[index] && subjects[index].rationale) || { ai: '', evidence: [] },
+                heading: (subjects[index] && subjects[index].heading) || (subject.subfields && subject.subfields.a) || '',
+                subdivisions: (subjects[index] && subjects[index].subdivisions) || [],
                 confidence: (subjects[index] && subjects[index].confidence) || 'low'
             }));
         }
@@ -4475,7 +4507,7 @@
         const $list = $panel.find('#isbd-ai-subjects');
         if (!$list.length) return;
         if (!Array.isArray(subjects) || !subjects.length) {
-            $list.text('(none)');
+            $list.text('No safe subject suggestion was produced.');
             return;
         }
         const state = global.ISBDIntellisenseState || {};
@@ -4507,14 +4539,43 @@
             }
             label = (label || '').trim();
             if (!label) return '';
+            const authority = item && item.authority && typeof item.authority === 'object'
+                ? item.authority
+                : { status: 'unverified', match_type: 'no_match' };
+            let authorityLabel = 'No LCSH authority match found';
+            if (authority.match_type === 'exact_authorized' && authority.status === 'verified') authorityLabel = 'LCSH verified';
+            else if (authority.match_type === 'variant_match') authorityLabel = 'Authorized heading found';
+            else if (authority.match_type === 'close_candidate') authorityLabel = 'Possible authority match';
+            else if (authority.status === 'service_unavailable') authorityLabel = 'Authority verification unavailable';
+            else if (authority.status === 'invalid_authority_response') authorityLabel = 'Authority response invalid';
+            else if (authority.status === 'unverified' && !authority.checked) authorityLabel = 'Not authority verified';
+            const authorizedHeading = authority.match_type === 'variant_match' && authority.authorized_heading
+                ? `<div class="meta"><strong>Authorized LCSH:</strong> ${escapeAttr(authority.authorized_heading)}</div>`
+                : '';
+            const authorityUri = /^https:\/\/id\.loc\.gov\/authorities\/subjects\/sh\d+$/i.test(authority.uri || '')
+                ? `<a href="${escapeAttr(authority.uri)}" target="_blank" rel="noopener noreferrer">Open authority record</a>`
+                : '';
+            const evidenceParts = [];
+            if (Array.isArray(authority.variants) && authority.variants.length) evidenceParts.push(`Variants: ${authority.variants.slice(0, 4).join('; ')}`);
+            if (Array.isArray(authority.broader) && authority.broader.length) evidenceParts.push(`Broader: ${authority.broader.slice(0, 4).join('; ')}`);
+            if (Array.isArray(authority.related) && authority.related.length) evidenceParts.push(`Related: ${authority.related.slice(0, 4).join('; ')}`);
+            const authorityEvidence = evidenceParts.length
+                ? `<details><summary>Authority evidence</summary><div class="meta">${escapeAttr(evidenceParts.join('\n')).replace(/\n/g, '<br>')}</div></details>`
+                : '';
+            const rationale = item && item.rationale && typeof item.rationale === 'object'
+                ? (item.rationale.ai || '')
+                : '';
+            const rationaleHtml = rationale
+                ? `<div class="meta"><strong>AI rationale:</strong> ${escapeAttr(rationale)}</div>`
+                : '<div class="meta"><strong>System note:</strong> The AI did not provide a sufficient rationale for this candidate.</div>';
             const entry = history[index] || {};
             const showHistoryButtons = Array.isArray(entry.undoChanges) || Array.isArray(entry.redoChanges);
             const canUndo = !!(Array.isArray(entry.undoChanges) && entry.undoChanges.length);
             const canRedo = !!(Array.isArray(entry.redoChanges) && entry.redoChanges.length);
             return `
                 <div class="isbd-ai-subject-row">
-                    <span class="isbd-ai-subject-label">${escapeAttr(label)} <small>AI suggestion · ${item && item.authority_status === 'verified' ? 'Authority verified' : 'Not authority verified'} · Review required</small></span>
-                    <button type="button" class="btn btn-xs btn-primary isbd-ai-subject-apply" data-index="${index}" ${(readOnly || !allowAiApplyActions) ? 'disabled' : ''}>Apply</button>
+                    <span class="isbd-ai-subject-label">${escapeAttr(label)} <small>AI suggestion · ${authorityLabel} · Review required</small>${authorizedHeading}${rationaleHtml}${authorityEvidence}${authorityUri ? `<div class="meta">${authorityUri}</div>` : ''}</span>
+                    <button type="button" class="btn btn-xs btn-primary isbd-ai-subject-apply" data-index="${index}" ${(readOnly || !allowAiApplyActions) ? 'disabled' : ''}>${authority.match_type === 'variant_match' ? 'Use authorized heading' : 'Apply'}</button>
                     ${showHistoryButtons ? `<button type="button" class="btn btn-xs isbd-btn-yellow isbd-ai-subject-undo" data-index="${index}" ${(readOnly || !allowAiApplyActions || !canUndo) ? 'disabled' : ''}>Undo</button>` : ''}
                     ${showHistoryButtons ? `<button type="button" class="btn btn-xs isbd-btn-yellow isbd-ai-subject-redo" data-index="${index}" ${(readOnly || !allowAiApplyActions || !canRedo) ? 'disabled' : ''}>Redo</button>` : ''}
                 </div>
@@ -5268,10 +5329,20 @@
             toast('info', 'No subject headings to apply.');
             return false;
         }
-        const subject = subjects[index];
+        let subject = subjects[index];
         if (!subject) {
             toast('warning', 'Selected subject suggestion is no longer available.');
             return false;
+        }
+        if (subject.authority && subject.authority.match_type === 'variant_match'
+            && subject.authority.authorized_heading) {
+            subject = {
+                ...subject,
+                subfields: {
+                    ...(subject.subfields || {}),
+                    a: subject.authority.authorized_heading
+                }
+            };
         }
         if (state && state.readOnly) {
             toast('warning', 'Auto-apply disabled for training.');
@@ -7447,8 +7518,6 @@
     global.ISBDIntellisenseTestHooks = {
         buildTitleSourceFromParts,
         filterCatalogingSubfields,
-        parseAiSubjects,
-        parseAiClassification,
         buildPluginUrl
     };
     global.ISBDIntellisenseUI = { init: initUI };

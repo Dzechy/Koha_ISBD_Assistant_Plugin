@@ -27,6 +27,7 @@ use Koha::Plugin::Cataloging::AutoPunctuation::AI::Prompt;
 use Koha::Plugin::Cataloging::AutoPunctuation::AI::Guard;
 use Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract;
 use Koha::Plugin::Cataloging::AutoPunctuation::AI::LCCS;
+use Koha::Plugin::Cataloging::AutoPunctuation::AI::LinkedData::LOC;
 
 # Cache
 sub _cache_backend {
@@ -211,6 +212,12 @@ sub _extract_cataloging_suggestions_from_text {
         @_);
 }
 
+sub _recover_cataloging_task_response {
+    return
+      Koha::Plugin::Cataloging::AutoPunctuation::AI::Parse::_recover_cataloging_task_response(
+        @_);
+}
+
 sub _parse_lc_target {
     return
       Koha::Plugin::Cataloging::AutoPunctuation::AI::Parse::_parse_lc_target(
@@ -348,6 +355,18 @@ sub _normalize_ai_task_response {
 # Published Library of Congress Classification schedule evidence
 sub _verify_lccs_result {
     return Koha::Plugin::Cataloging::AutoPunctuation::AI::LCCS::_verify_lccs_result(@_);
+}
+
+sub _verify_lcsh_candidates {
+    return
+      Koha::Plugin::Cataloging::AutoPunctuation::AI::LinkedData::LOC::verify_subject_candidates(
+        @_);
+}
+
+sub _search_lcsh {
+    return
+      Koha::Plugin::Cataloging::AutoPunctuation::AI::LinkedData::LOC::search_lcsh(
+        @_);
 }
 
 1;

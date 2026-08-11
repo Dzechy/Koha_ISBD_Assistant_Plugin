@@ -3,7 +3,8 @@
 The plugin is deterministic punctuation assistance, not a full cataloging authority.
 
 - Area 0 is partial/handoff. `336` can inform content form and `337` can inform media type, but `338` is carrier type and is not ISBD production process. Production process requires a disabled-by-default local mapping if a library chooses to configure one.
-- Authority headings and access points (`1XX`, `6XX`, `7XX`, controlled `8XX`) are not automatically normalized.
+- AI-generated `650` subject candidates can receive LCSH evidence from the Library of Congress Linked Data Service. This does not replace Koha's authority-linking workflow, does not silently write `$0`/`$2`, and does not verify other `1XX`, `6XX`, `7XX`, or controlled `8XX` access points.
+- LOC availability and rate limits are external dependencies. Cached evidence and authority-only retry reduce repeated requests, but an outage leaves suggestions explicitly unverified.
 - URLs and electronic access fields (`856`) are not punctuation-normalized because edits can break access.
 - Control fields, fixed fields, and coded fields are treated as handoff data.
 - Complex cartographic coordinate/projection subfields remain manual.

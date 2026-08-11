@@ -25,6 +25,9 @@ use CGI;
 use JSON ();
 use Koha::Plugin::Cataloging::AutoPunctuation::AI::Prompt ();
 use Koha::Plugin::Cataloging::AutoPunctuation::AI::LCCS ();
+use Koha::Plugin::Cataloging::AutoPunctuation::AI::LinkedData::LOC ();
+
+our $CLIENT_RESPONSE_VERSION = '2.0.0';
 
 sub _semantic_subfields {
     my ( $tag, $subfields, $pack ) = @_;
@@ -126,17 +129,35 @@ sub _task_response_for_client {
     $result->{request_id}  = $payload->{request_id};
     $result->{tag_context} = $payload->{tag_context};
     $result->{version}     = $result->{schema_version} || '1.0.0';
+    $result->{client_response_version} = $CLIENT_RESPONSE_VERSION;
     $result->{disclaimer}  = 'AI suggestion; authority verification and cataloguer review required.';
     $result->{findings}    = [] unless ref $result->{findings} eq 'ARRAY';
     $result->{errors}      = [];
     $result->{classification} = '';
     $result->{subjects}       = [];
+    $result->{ai_parse_status} ||= $result->{status} eq 'incomplete'
+      ? 'truncated'
+      : $result->{status} eq 'ok'
+      ? 'structured'
+      : 'empty';
 
     my $candidate = $task eq 'cataloging_classification'
       ? $result->{candidate}
       : $result->{classification_candidate};
     if ( ref $candidate eq 'HASH' && $result->{status} eq 'ok' ) {
         $result->{classification} = $candidate->{value} || '';
+        $result->{classification_detail} = {
+            value      => $candidate->{value} || '',
+            confidence => $candidate->{confidence} || 'low',
+            rationale  => {
+                ai       => $candidate->{basis} || '',
+                evidence => $candidate->{evidence} || $result->{evidence} || [],
+            },
+            verification => $result->{evidence_verification} || {
+                type => 'LCCS', status => 'not_applicable'
+            },
+            requires_human_review => JSON::true,
+        };
     }
     my $subjects = $task eq 'subject_heading_suggestion'
       ? $result->{candidates}
@@ -152,8 +173,22 @@ sub _task_response_for_client {
                   if exists $subfields{$code} && $code ne 'a';
             }
             push @{ $result->{subjects} },
-              { tag => '650', ind1 => ' ', ind2 => '0', subfields => \%subfields,
-                authority_status => 'unverified', confidence => $subject->{confidence} || 'low' };
+              {
+                tag => '650', ind1 => ' ', ind2 => '0', subfields => \%subfields,
+                heading => $subject->{heading},
+                subdivisions => $subject->{subdivisions} || [],
+                authority_status => $subject->{authority_status} || 'unverified',
+                authority => $subject->{authority} || {
+                    scheme => 'LCSH', status => 'unverified',
+                    match_type => 'no_match', checked => 0,
+                },
+                confidence => $subject->{confidence} || 'low',
+                rationale => {
+                    ai => $subject->{basis} || '',
+                    evidence => $subject->{evidence} || [],
+                },
+                requires_human_review => JSON::true,
+              };
         }
     }
     if ( $task eq 'punctuation_explanation' ) {
@@ -175,10 +210,47 @@ sub _task_response_for_client {
         $result->{assistant_message} = $result->{explanation} || '';
     }
     else {
-        $result->{assistant_message} = join( "\n", grep { $_ ne '' }
-          ( $candidate && ref $candidate eq 'HASH' ? ( $candidate->{basis} || '' ) : '',
-            @{ $result->{warnings} || [] } ) );
+        my @ai_rationales;
+        push @ai_rationales, $candidate->{basis}
+          if $candidate && ref $candidate eq 'HASH' && ( $candidate->{basis} || '' ) ne '';
+        for my $subject ( @{ $subjects || [] } ) {
+            next unless ref $subject eq 'HASH' && ( $subject->{basis} || '' ) ne '';
+            push @ai_rationales,
+              ( $subject->{heading} || 'Subject' ) . ': ' . $subject->{basis};
+        }
+        for my $finding ( @{ $result->{findings} || [] } ) {
+            next unless ref $finding eq 'HASH';
+            push @ai_rationales, $finding->{explanation}
+              if ( $finding->{explanation} || '' ) ne '';
+        }
+        my $has_suggestions = ( $result->{classification} || '' ) ne ''
+          || @{ $result->{subjects} || [] };
+        my $system_note = '';
+        if ( $has_suggestions && !@ai_rationales ) {
+            $system_note = $result->{degraded_mode}
+              ? 'Cataloguing candidates were recovered from non-structured AI output. The AI did not provide a safe structured rationale.'
+              : 'The AI produced a cataloguing candidate but did not provide sufficient explanatory evidence. Review the candidate against the available verification evidence before applying it.';
+        }
+        elsif ( !$has_suggestions ) {
+            $system_note =
+                $result->{ai_parse_status} eq 'malformed'
+              ? 'The AI responded, but the cataloguing output could not be safely parsed.'
+              : $result->{ai_parse_status} eq 'truncated'
+              ? 'The AI response was incomplete, so no unsafe suggestion was accepted.'
+              : 'No safe cataloguing suggestion was produced from the available evidence.';
+        }
+        $result->{rationale} = {
+            ai     => join( "\n", @ai_rationales ),
+            system => $system_note,
+        };
+        $result->{assistant_message} = join( "\n",
+            grep { defined $_ && $_ ne '' }
+              ( @ai_rationales, $system_note, @{ $result->{warnings} || [] } ) );
     }
+    $result->{cataloguing} = {
+        classification => $result->{classification_detail},
+        subjects       => $result->{subjects},
+    };
     return $result;
 }
 
@@ -227,13 +299,19 @@ sub _strip_internal_payload_fields {
     return $payload;
 }
 
+sub _clone_json_value {
+    my ($value) = @_;
+    return undef unless defined $value;
+    return eval { JSON->new->decode( JSON->new->canonical(1)->encode($value) ) };
+}
+
 sub _build_ai_debug_payload {
     my ( $self, $settings, $provider_result, $parse_error_override ) = @_;
     $provider_result = {}
       unless $provider_result && ref $provider_result eq 'HASH';
     my %debug;
     if ( $settings->{debug_mode} ) {
-        for my $key (qw(request_id provider model task latency_ms input_tokens output_tokens cache_status parse_status schema_status guardrail_status)) {
+        for my $key (qw(request_id provider model task latency_ms input_tokens output_tokens cache_status parse_status schema_status guardrail_status authority_lookup_status verification_status)) {
             $debug{$key} = $provider_result->{$key}
               if defined $provider_result->{$key} && $provider_result->{$key} ne '';
         }
@@ -674,6 +752,7 @@ sub ai_suggest {
             my $cache_key = sha256_hex(
                 join( '|',
                     $task,
+                    'generation-cache:2',
                     'schema:1.0.0',
                     $tag,
                     ( $tag_context->{ind1} // '' ),
@@ -685,8 +764,6 @@ sub ai_suggest {
                     $provider,
                     ( $model_key || '' ),
                     $Koha::Plugin::Cataloging::AutoPunctuation::AI_PROMPT_VERSION,
-                    'lccs-2024:'
-                      . $Koha::Plugin::Cataloging::AutoPunctuation::AI::LCCS::PACKAGE_VERSION,
                     $prompt_hash,
                     $user_key,
                     $feature_key,
@@ -701,16 +778,42 @@ sub ai_suggest {
                     $record_context_key )
             );
             if ( my $cached = $self->_cache_get( $settings, $cache_key ) ) {
-                if ( $settings->{debug_mode} && ref $cached eq 'HASH' ) {
-                    $cached->{debug} ||= {};
-                    $cached->{debug}{cache_status} = 'hit';
-                    $cached->{debug}{request_id}   = $payload->{request_id};
-                    $cached->{debug}{provider}     = $provider;
-                    $cached->{debug}{model}        = $model_key;
-                    $cached->{debug}{task}         = $task;
+                if ( ref $cached eq 'HASH'
+                    && ( $cached->{cache_format} || '' ) eq 'canonical-ai:1'
+                    && ref $cached->{result} eq 'HASH' )
+                {
+                    my $cached_result = _clone_json_value( $cached->{result} );
+                    my $lccs_evidence = $self->_verify_lccs_result(
+                        $payload, $cached_result );
+                    my $lcsh_evidence = $self->_verify_lcsh_candidates(
+                        $payload, $cached_result, $settings, {} );
+                    $cached_result = $self->_normalize_ai_task_response(
+                        $payload, $cached_result,
+                        {
+                            provider => $provider,
+                            model    => $model_key,
+                            lccs_evidence => $lccs_evidence,
+                            lcsh_evidence => $lcsh_evidence,
+                        }
+                    );
+                    $cached_result = _task_response_for_client(
+                        $payload, $cached_result, $deterministic_findings );
+                    if ( $settings->{debug_mode} ) {
+                        $cached_result->{debug} ||= {};
+                        $cached_result->{debug}{cache_status} = 'hit';
+                        $cached_result->{debug}{request_id}   = $payload->{request_id};
+                        $cached_result->{debug}{provider}     = $provider;
+                        $cached_result->{debug}{model}        = $model_key;
+                        $cached_result->{debug}{task}         = $task;
+                        $cached_result->{debug}{parse_status} =
+                          $cached_result->{ai_parse_status} || 'structured';
+                        $cached_result->{debug}{authority_lookup_status} =
+                          $cached_result->{authority_lookup_status} || 'not_applicable';
+                    }
+                    $response_inner = $cached_result;
+                    last AI_REQUEST;
                 }
-                $response_inner = $cached;
-                last AI_REQUEST;
+                # Old projected browser payloads are intentionally ignored.
             }
 
             my $schema = $self->_ai_task_schema($task);
@@ -722,6 +825,7 @@ sub ai_suggest {
             };
             my $provider_result = $self->_generate_ai(
                 $settings, $task, $prompt, $schema, $provider_options );
+            my $initial_raw_text = $provider_result->{raw_text} || '';
             $provider_result->{request_id}  = $payload->{request_id};
             $provider_result->{provider}    = $provider;
             $provider_result->{model}       = $model_key;
@@ -762,20 +866,63 @@ sub ai_suggest {
             if ( $provider_result->{truncated} ) {
                 $result = _safe_task_response( $payload, 'incomplete',
                     'Provider output was truncated; no suggestion was accepted.' );
+                $result->{ai_parse_status} = 'truncated';
             }
             elsif ( @{$validation_errors} ) {
-                # Safe degraded mode is structured and display-only. Arbitrary
-                # prose never becomes a classification, heading, or MARC patch.
-                $result = _safe_task_response( $payload,
-                    'insufficient_evidence',
-                    'The provider response could not be validated; no suggestion was accepted.' );
+                my $repair_raw_text = $provider_result->{raw_text} || '';
+                my $recovered = $cataloging_mode
+                  ? $self->_recover_cataloging_task_response(
+                    $payload, $repair_raw_text, $settings )
+                  : undef;
+                $recovered = $self->_recover_cataloging_task_response(
+                    $payload, $initial_raw_text, $settings )
+                  if !$recovered && $cataloging_mode
+                  && $initial_raw_text ne $repair_raw_text;
+                if ($recovered) {
+                    $result = $recovered;
+                    $provider_result->{parse_status} = 'degraded_recovery';
+                }
+                else {
+                    $result = _safe_task_response( $payload,
+                        'insufficient_evidence',
+                        'The provider response could not be safely parsed into cataloguing suggestions.' );
+                    $result->{ai_parse_status} = 'malformed';
+                }
                 $self->_record_failure( $settings, $circuit_key );
+            }
+            else {
+                my $has_partial = 0;
+                if ( $task eq 'cataloging_review' ) {
+                    $has_partial = 1
+                      if $payload->{features}{call_number_guidance}
+                      && ref $result->{classification_candidate} ne 'HASH';
+                    $has_partial = 1
+                      if $payload->{features}{subject_guidance}
+                      && !@{ $result->{subject_candidates} || [] };
+                }
+                $result->{ai_parse_status} =
+                    $result->{status} eq 'incomplete' ? 'truncated'
+                  : $result->{status} ne 'ok'         ? 'empty'
+                  : $has_partial                      ? 'structured_partial'
+                  :                                     'structured';
+            }
+
+            if ( ( $result->{ai_parse_status} || '' ) =~ /^(?:structured|structured_partial|degraded_recovery)$/ ) {
+                $self->_cache_set(
+                    $settings, $cache_key,
+                    {
+                        cache_format => 'canonical-ai:1',
+                        result       => _clone_json_value($result),
+                    }
+                );
             }
 
             # LCCS verification enriches a valid model candidate, but it never
             # gates display. No match or an unavailable package leaves the AI
             # suggestion intact and explicitly unverified for human review.
             my $lccs_evidence = $self->_verify_lccs_result( $payload, $result );
+            my $lcsh_evidence = $self->_verify_lcsh_candidates(
+                $payload, $result, $settings, {} );
 
             $result = $self->_normalize_ai_task_response(
                 $payload, $result,
@@ -784,16 +931,22 @@ sub ai_suggest {
                     model     => $model_key,
                     truncated => $provider_result->{truncated} ? 1 : 0,
                     lccs_evidence => $lccs_evidence,
+                    lcsh_evidence => $lcsh_evidence,
                 }
             );
             $result = _task_response_for_client(
                 $payload, $result, $deterministic_findings );
 
             $provider_result->{parse_status} = $provider_result->{data}
-              ? 'parsed' : 'invalid';
+              ? ( $result->{ai_parse_status} || 'structured' )
+              : ( $result->{ai_parse_status} || 'malformed' );
             $provider_result->{schema_status} = @{$validation_errors}
               ? 'invalid' : 'valid';
             $provider_result->{guardrail_status} = 'passed';
+            $provider_result->{authority_lookup_status} =
+              $result->{authority_lookup_status} || 'not_applicable';
+            $provider_result->{verification_status} =
+              $result->{verification_status} || 'not_applicable';
 
             my $debug = _build_ai_debug_payload(
                 $self, $settings, $provider_result,
@@ -805,7 +958,6 @@ sub ai_suggest {
 
             $self->_record_success( $settings, $circuit_key )
               unless @{$validation_errors};
-            $self->_cache_set( $settings, $cache_key, $result );
             $response_inner = $result;
           }
         };
@@ -840,6 +992,109 @@ sub ai_suggest {
             ok    => 0,
             error => 'Request failed. Check server logs for details.'
         };
+        $status = '500 Internal Server Error';
+    };
+    return $self->_json_response( $status, $response );
+}
+
+sub ai_authority_retry {
+    my ( $self, $args ) = @_;
+    return $self->_json_error( '405 Method Not Allowed', 'Method not allowed' )
+      unless $self->_require_method('POST');
+    my ( $response, $status );
+    try {
+        unless ( $self->_is_authenticated_staff_session() ) {
+            $response = { ok => 0, error => 'Not authenticated staff session.' };
+            $status = '401 Unauthorized';
+            return;
+        }
+        my $payload = $self->_read_json_payload();
+        if ( $payload->{error} ) {
+            $response = { ok => 0, error => $payload->{error}, details => $payload->{details} };
+            $status = $payload->{status} || '400 Bad Request';
+            return;
+        }
+        unless ( $self->_csrf_ok($payload) ) {
+            $response = { ok => 0, error => 'Invalid CSRF token' };
+            $status = '403 Forbidden';
+            return;
+        }
+        $payload = _strip_internal_payload_fields($payload);
+        my $raw_candidates = ref $payload->{candidates} eq 'ARRAY'
+          ? $payload->{candidates}
+          : [];
+        my @candidates;
+        for my $source ( @{$raw_candidates} ) {
+            last if @candidates >= 8;
+            next unless ref $source eq 'HASH';
+            my $heading = $source->{heading} || '';
+            $heading = $source->{subfields}{a}
+              if $heading eq '' && ref $source->{subfields} eq 'HASH';
+            $heading = substr( "$heading", 0, 240 );
+            $heading =~ s/^\s+|\s+$//g;
+            next if $heading eq '';
+            my @subdivisions;
+            if ( ref $source->{subdivisions} eq 'ARRAY' ) {
+                for my $sub ( @{ $source->{subdivisions} } ) {
+                    next unless ref $sub eq 'HASH';
+                    my $code = lc( $sub->{code} || '' );
+                    my $value = substr( "$sub->{value}", 0, 240 );
+                    push @subdivisions, { code => $code, value => $value }
+                      if $code =~ /^[xyzv]$/ && $value =~ /\S/;
+                }
+            }
+            elsif ( ref $source->{subfields} eq 'HASH' ) {
+                for my $code (qw(x y z v)) {
+                    my $values = $source->{subfields}{$code};
+                    $values = [$values] if defined $values && ref $values ne 'ARRAY';
+                    push @subdivisions,
+                      map { { code => $code, value => substr( "$_", 0, 240 ) } }
+                      grep { defined $_ && "$_" =~ /\S/ } @{ $values || [] };
+                }
+            }
+            push @candidates, {
+                heading => $heading, subdivisions => \@subdivisions,
+                confidence => $source->{confidence} || 'low',
+                basis => ref $source->{rationale} eq 'HASH'
+                  ? ( $source->{rationale}{ai} || '' )
+                  : ( $source->{basis} || '' ),
+                evidence => ref $source->{rationale} eq 'HASH'
+                  ? ( $source->{rationale}{evidence} || [] )
+                  : ( $source->{evidence} || [] ),
+                authority_status => 'unverified',
+            };
+        }
+        if ( !@candidates ) {
+            $response = { ok => 0, error => 'No bounded subject candidates were supplied.' };
+            $status = '422 Unprocessable Entity';
+            return;
+        }
+        my $settings = eval { $self->_load_settings() } || $self->_default_settings();
+        my $task_payload = {
+            request_id => $payload->{request_id} || '',
+            task => 'subject_heading_suggestion',
+            tag_context => {},
+        };
+        my $result = {
+            schema_version => '1.0.0', task => 'subject_heading_suggestion',
+            status => 'ok', candidates => \@candidates, warnings => [],
+            requires_human_review => JSON::true,
+            ai_parse_status => 'structured',
+        };
+        my $lcsh = $self->_verify_lcsh_candidates(
+            $task_payload, $result, $settings, { force => 1 } );
+        $result = $self->_normalize_ai_task_response(
+            $task_payload, $result, { lcsh_evidence => $lcsh } );
+        $response = _task_response_for_client( $task_payload, $result, [] );
+        $response->{authority_retry} = JSON::true;
+        $response->{ok} = 1;
+        $status = '200 OK';
+    }
+    catch {
+        my $message = "$_";
+        $message =~ s/\s+$//;
+        warn "AutoPunctuation authority retry error: $message";
+        $response = { ok => 0, error => 'Authority verification failed. Check server logs for details.' };
         $status = '500 Internal Server Error';
     };
     return $self->_json_response( $status, $response );

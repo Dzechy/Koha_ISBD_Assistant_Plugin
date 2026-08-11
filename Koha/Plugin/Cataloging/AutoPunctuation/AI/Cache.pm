@@ -28,7 +28,6 @@ use Time::HiRes qw(time);
 my %AI_CACHE;
 my @AI_CACHE_LRU;
 my %RATE_LIMIT;
-my %CIRCUIT_BREAKER;
 
 sub _cache_backend {
     my ($self) = @_;

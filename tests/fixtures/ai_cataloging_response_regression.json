@@ -1,0 +1,20 @@
+{
+  "raw_non_structured": "Suggested classification: QA76.73\nSuggested subjects:\nArtificial intelligence\nMachine learning",
+  "structured_subjects": {
+    "schema_version": "1.0.0",
+    "task": "subject_heading_suggestion",
+    "status": "ok",
+    "candidates": [
+      {
+        "heading": "Artificial intelligence",
+        "subdivisions": [],
+        "confidence": "high",
+        "basis": "The title and summary identify artificial intelligence as the central topic.",
+        "evidence": ["245$a", "520$a"],
+        "authority_status": "unverified"
+      }
+    ],
+    "warnings": [],
+    "requires_human_review": true
+  }
+}

@@ -351,12 +351,14 @@ sub _apply_lccs_evidence {
     my @public_matches = @{$matches};
     splice @public_matches, 3 if @public_matches > 3;
     $result->{evidence_verification} = {
+        type       => 'LCCS',
         status     => $status,
         source     => $verification->{source} || 'lccs-2024',
         candidate  => $verification->{candidate} || '',
         matches    => \@public_matches,
         validation => $verification->{validation} || {},
     };
+    $result->{verification_status} = $status;
 
     my $candidate =
         $task eq 'cataloging_classification' ? $result->{candidate}
@@ -391,6 +393,47 @@ sub _apply_lccs_evidence {
       unless grep { $_ eq $warning } @{ $result->{warnings} };
 }
 
+sub _apply_lcsh_evidence {
+    my ( $task, $result, $verification ) = @_;
+    return unless $verification && ref $verification eq 'HASH';
+    my $candidates = $task eq 'subject_heading_suggestion'
+      ? $result->{candidates}
+      : $task eq 'cataloging_review'
+      ? $result->{subject_candidates}
+      : undef;
+    return unless ref $candidates eq 'ARRAY';
+    my $results = ref $verification->{results} eq 'ARRAY'
+      ? $verification->{results}
+      : [];
+    $result->{authority_lookup_status} = $verification->{status} || 'not_applicable';
+    for my $index ( 0 .. $#{$candidates} ) {
+        my $candidate = $candidates->[$index];
+        next unless $candidate && ref $candidate eq 'HASH';
+        my $authority = $results->[$index];
+        next unless $authority && ref $authority eq 'HASH';
+        my %public = map { exists $authority->{$_} ? ( $_ => $authority->{$_} ) : () }
+          qw(scheme status match_type checked authorized submitted_heading heading
+          authorized_heading uri variants broader narrower related scope_notes source
+          checked_at raw_source_version adapter_version construction_status matches
+          error_type http_status cache_status);
+        $candidate->{authority} = \%public;
+        $candidate->{authority_status} =
+          ( $authority->{status} || '' ) eq 'verified' ? 'verified' : 'unverified';
+    }
+    if ( ( $verification->{status} || '' ) eq 'service_unavailable' ) {
+        my $warning =
+          'AI subject suggestions are available, but Library of Congress authority verification is temporarily unavailable.';
+        push @{ $result->{warnings} }, $warning
+          unless grep { $_ eq $warning } @{ $result->{warnings} || [] };
+    }
+    elsif ( ( $verification->{status} || '' ) eq 'invalid_authority_response' ) {
+        my $warning =
+          'The Library of Congress authority service returned an invalid response; subject suggestions remain unverified.';
+        push @{ $result->{warnings} }, $warning
+          unless grep { $_ eq $warning } @{ $result->{warnings} || [] };
+    }
+}
+
 sub _normalize_ai_task_response {
     my ( $self, $payload, $result, $provider_meta ) = @_;
     $provider_meta ||= {};
@@ -408,26 +451,25 @@ sub _normalize_ai_task_response {
         $task, $result,
         $provider_meta->{lccs_evidence}
     );
+    _apply_lcsh_evidence(
+        $task, $result,
+        $provider_meta->{lcsh_evidence}
+    );
 
     # A model cannot promote its own claim. Only the server-side LCCS adapter
     # can verify that a returned classification exists in the 2024 schedule.
     if ( $task eq 'cataloging_classification' ) {
         $result->{authority_status} = 'unverified'
           unless ( $result->{authority_status} || '' ) eq 'verified';
-        if ( ref $result->{candidate} eq 'HASH' ) {
-            my $evidence_count = scalar @{ $result->{evidence} || [] };
-            $result->{candidate}{confidence} =
-                $result->{status} eq 'insufficient_evidence' ? 'insufficient_evidence'
-              : $evidence_count >= 2                         ? 'medium'
-              :                                               'low';
-        }
+        $result->{candidate}{confidence} = 'insufficient_evidence'
+          if ref $result->{candidate} eq 'HASH'
+          && $result->{status} eq 'insufficient_evidence';
     }
     if ( $task eq 'subject_heading_suggestion' ) {
         for my $candidate ( @{ $result->{candidates} || [] } ) {
             if ( ref $candidate eq 'HASH' ) {
                 $candidate->{authority_status} = 'unverified';
-                my $evidence_count = scalar @{ $candidate->{evidence} || [] };
-                $candidate->{confidence} = $evidence_count >= 2 ? 'medium' : 'low';
+                $candidate->{confidence} = _confidence_label( $candidate->{confidence} );
             }
         }
     }
@@ -436,14 +478,13 @@ sub _normalize_ai_task_response {
           if ref $result->{classification_candidate} eq 'HASH'
           && ( $result->{classification_candidate}{authority_status} || '' ) ne 'verified';
         if ( ref $result->{classification_candidate} eq 'HASH' ) {
-            my $evidence_count = scalar @{ $result->{classification_candidate}{evidence} || [] };
-            $result->{classification_candidate}{confidence} = $evidence_count >= 2 ? 'medium' : 'low';
+            $result->{classification_candidate}{confidence} =
+              _confidence_label( $result->{classification_candidate}{confidence} );
         }
         for my $candidate ( @{ $result->{subject_candidates} || [] } ) {
             if ( ref $candidate eq 'HASH' ) {
                 $candidate->{authority_status} = 'unverified';
-                my $evidence_count = scalar @{ $candidate->{evidence} || [] };
-                $candidate->{confidence} = $evidence_count >= 2 ? 'medium' : 'low';
+                $candidate->{confidence} = _confidence_label( $candidate->{confidence} );
             }
         }
         for my $finding ( @{ $result->{findings} || [] } ) {

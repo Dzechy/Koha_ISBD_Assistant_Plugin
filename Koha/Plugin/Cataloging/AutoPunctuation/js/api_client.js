@@ -217,6 +217,8 @@
         validateField: (pluginPath, payload) => postJson(pluginUrl(pluginPath, 'validate_field'), payload),
         validateRecord: (pluginPath, payload) => postJson(pluginUrl(pluginPath, 'validate_record'), payload),
         aiSuggest,
+        retryAuthority: (pluginPath, payload, options) =>
+            postJson(pluginUrl(pluginPath, 'ai_authority_retry'), payload, options),
         testConnection: pluginPath => postJson(pluginUrl(pluginPath, 'test_connection'), {})
     };
 })(window);

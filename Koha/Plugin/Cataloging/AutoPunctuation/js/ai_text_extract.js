@@ -137,45 +137,6 @@
         return ordered;
     }
 
-    function extractConfidencePercentFromText(text) {
-        if (!text) return null;
-        let value;
-        let match = text.match(/confidence(?:\s*percent|\s*score)?\s*[:=]?\s*([0-9]{1,3}(?:\.\d+)?)(\s*%?)/i);
-        if (match) {
-            value = parseFloat(match[1]);
-            const hasPercent = (match[2] || '').includes('%');
-            if (!hasPercent && value <= 1) value *= 100;
-        } else {
-            match = text.match(/([0-9]{1,3}(?:\.\d+)?)\s*%\s*confidence/i);
-            if (match) value = parseFloat(match[1]);
-        }
-        if (value === undefined || value === null || Number.isNaN(value)) {
-            match = text.match(/confidence\s*[:=]?\s*([01](?:\.\d+)?)/i);
-            if (match) {
-                const raw = parseFloat(match[1]);
-                value = raw <= 1 ? raw * 100 : raw;
-            }
-        }
-        if (value === undefined || value === null || Number.isNaN(value)) {
-            match = text.match(/confidence\s*[:=]?\s*(\d{1,3})\s*\/\s*100/i);
-            if (match) value = parseFloat(match[1]);
-        }
-        if (value === undefined || value === null || Number.isNaN(value)) return null;
-        if (value < 0) value = 0;
-        if (value > 100) value = 100;
-        return value;
-    }
-
-    function normalizeSubjectHeading(value) {
-        let text = (value || '').toString().trim();
-        if (!text) return '';
-        text = text.replace(/\u2014/g, '--');
-        text = text.replace(/\s*--\s*/g, ' -- ');
-        text = text.replace(/\s{2,}/g, ' ');
-        text = text.replace(/\s*--\s*$/g, '').trim();
-        return text;
-    }
-
     function isChronologicalSubdivision(text) {
         if (!text) return false;
         if (/\b\d{3,4}\b/.test(text)) return true;
@@ -317,147 +278,6 @@
         return '';
     }
 
-    function dedupeCaseInsensitive(items) {
-        if (!Array.isArray(items)) return [];
-        const seen = new Set();
-        return items.filter(item => {
-            if (!item) return false;
-            const key = item.toLowerCase();
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-        });
-    }
-
-    function cleanJsonText(content) {
-        const text = (content || '').toString().trim();
-        if (!text) return '';
-        const fenced = text.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
-        if (fenced) return fenced[1].trim();
-        return text;
-    }
-
-    function tryParseJson(content) {
-        const cleaned = cleanJsonText(content);
-        if (!cleaned) return null;
-        try {
-            return JSON.parse(cleaned);
-        } catch (err) {
-            let start = cleaned.indexOf('{');
-            let end = cleaned.lastIndexOf('}');
-            if (start !== -1 && end > start) {
-                try {
-                    return JSON.parse(cleaned.slice(start, end + 1));
-                } catch (err2) {
-                    // ignore
-                }
-            }
-            start = cleaned.indexOf('[');
-            end = cleaned.lastIndexOf(']');
-            if (start !== -1 && end > start) {
-                try {
-                    return JSON.parse(cleaned.slice(start, end + 1));
-                } catch (err3) {
-                    // ignore
-                }
-            }
-        }
-        return null;
-    }
-
-    function extractSubjectsFromStructuredJson(text) {
-        const parsed = tryParseJson(text);
-        if (!parsed || typeof parsed !== 'object') return [];
-        let list = [];
-        if (Array.isArray(parsed.subjects)) {
-            list = parsed.subjects;
-        } else if (typeof parsed.subjects === 'string') {
-            list = parsed.subjects.split(/[;\n|]+/).map(item => item.trim()).filter(Boolean);
-        } else if (Array.isArray(parsed.findings)) {
-            const subjectFinding = parsed.findings.find(item => item && /AI_SUBJECTS/i.test(item.code || ''));
-            if (subjectFinding && typeof subjectFinding.message === 'string') {
-                list = subjectFinding.message.split(/[;\n|]+/).map(item => item.trim()).filter(Boolean);
-            }
-        }
-        if (!list.length) return [];
-        const subjects = subjectsFromHeadingList(list);
-        const formatted = subjects
-            .map(formatSubjectDisplay)
-            .map(item => item.replace(/^\d{3}[0-9 ]\s*/, ''))
-            .filter(Boolean);
-        return dedupeCaseInsensitive(formatted);
-    }
-
-    function extractSubjectHeadingsFromText(text) {
-        if (!text) return [];
-        const structured = extractSubjectsFromStructuredJson(text);
-        if (structured.length) {
-            return structured.map(item => normalizeSubjectHeading(item)).filter(Boolean);
-        }
-        const lines = String(text).split(/\r?\n/);
-        const segments = [];
-        let capture = false;
-        lines.forEach(line => {
-            let trimmed = line || '';
-            trimmed = trimmed.replace(/^\s*[-*\u2022\u2023\u25E6\u2043\u2219]+\s*/g, '');
-            const subjectMatch = trimmed.match(/\b(subjects?|subject headings?|lcsh)\b\s*[:\-]\s*(.+)/i);
-            if (subjectMatch) {
-                segments.push(subjectMatch[2]);
-                capture = true;
-                return;
-            }
-            if (capture) {
-                if (/^\s*$/.test(trimmed)) {
-                    capture = false;
-                    return;
-                }
-                if (/\b(classification|call number|confidence)\b/i.test(trimmed)) {
-                    capture = false;
-                    return;
-                }
-                if (trimmed) segments.push(trimmed);
-            }
-        });
-        if (!segments.length) {
-            const inlineMatch = String(text).match(/\b(subjects?|subject headings?|lcsh)\b\s*[:\-]\s*(.+)$/is);
-            if (inlineMatch) segments.push(inlineMatch[2]);
-        }
-        let joined = segments.join('\n');
-        joined = joined.replace(/\b(classification|call number|confidence)\b.*$/is, '');
-        const parts = joined
-            .split(/[;\n\|]+/)
-            .map(item => (item || '').toString().trim())
-            .filter(Boolean);
-        const normalized = parts
-            .map(item => normalizeSubjectHeading(item))
-            .filter(Boolean);
-        return dedupeCaseInsensitive(normalized);
-    }
-
-    function extractClassificationFromText(text) {
-        if (!text) return '';
-        let match = String(text).match(/\b(?:classification|call number|lc class(?:ification)?|lcc)\b(?:\s*\([^)]*\))?\s*[:\-]\s*([^\r\n]+)/i);
-        if (match) {
-            const candidates = extractLcCallNumbers(match[1] || '');
-            if (candidates.length) return candidates[0];
-        }
-        match = String(text).match(/\b(lc)\b\s*[:\-]\s*([A-Z]{1,3}\s*\d{1,4}(?:\s*\.\s*\d+)?)/i);
-        if (match) {
-            const candidates = extractLcCallNumbers(match[2] || '');
-            if (candidates.length) return candidates[0];
-        }
-        const candidates = extractLcCallNumbers(text);
-        return candidates.length ? candidates[0] : '';
-    }
-
-    function extractCatalogingSuggestionsFromText(text) {
-        return {
-            classification: extractClassificationFromText(text),
-            subjects: extractSubjectHeadingsFromText(text),
-            confidence_percent: extractConfidencePercentFromText(text)
-        };
-    }
-
     function parseLcTarget(target) {
         const value = (target || '').toString().trim();
         let match = value.match(/^(\d{3})\s*\$\s*([a-z0-9])$/i);
@@ -468,17 +288,11 @@
 
     AiTextExtract.normalizeLcText = normalizeLcText;
     AiTextExtract.extractLcCallNumbers = extractLcCallNumbers;
-    AiTextExtract.extractClassificationFromText = extractClassificationFromText;
-    AiTextExtract.extractSubjectHeadingsFromText = extractSubjectHeadingsFromText;
-    AiTextExtract.extractConfidencePercentFromText = extractConfidencePercentFromText;
-    AiTextExtract.extractCatalogingSuggestionsFromText = extractCatalogingSuggestionsFromText;
-    AiTextExtract.normalizeSubjectHeading = normalizeSubjectHeading;
     AiTextExtract.normalizeSubjectObject = normalizeSubjectObject;
     AiTextExtract.subjectObjectFromHeading = subjectObjectFromHeading;
     AiTextExtract.subjectsFromHeadingList = subjectsFromHeadingList;
     AiTextExtract.formatSubjectDisplay = formatSubjectDisplay;
     AiTextExtract.detectClassificationRange = detectClassificationRange;
-    AiTextExtract.dedupeCaseInsensitive = dedupeCaseInsensitive;
     AiTextExtract.parseLcTarget = parseLcTarget;
 
     global.ISBDAiTextExtract = AiTextExtract;
