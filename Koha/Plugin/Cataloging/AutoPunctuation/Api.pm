@@ -735,6 +735,8 @@ sub ai_suggest {
             }
 
             my $result = $provider_result->{data};
+            $result = $self->_canonicalize_ai_provider_response( $payload, $result )
+              if $result;
             my $validation_errors = $result
               ? $self->_validate_ai_task_response( $payload, $result )
               : [ $provider_result->{parse_error} || 'Invalid structured output.' ];
@@ -750,6 +752,8 @@ sub ai_suggest {
                     $repair_settings, $task, $repair_prompt, $schema,
                     $provider_options );
                 $result = $provider_result->{data};
+                $result = $self->_canonicalize_ai_provider_response( $payload, $result )
+                  if $result;
                 $validation_errors = $result
                   ? $self->_validate_ai_task_response( $payload, $result )
                   : [ $provider_result->{parse_error} || $provider_result->{error} || 'Repair failed.' ];

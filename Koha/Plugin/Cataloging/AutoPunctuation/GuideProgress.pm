@@ -474,11 +474,15 @@ sub guide_progress_update {
             return;
         }
         my $payload = $read->{data} || {};
-        unless ( $self->_csrf_ok($payload) ) {
+        # Koha validates csrf_token while dispatching cud-plugin_api. Repeating
+        # the check here reconstructs the session from CGI state and can reject
+        # a request that Koha has already authenticated (notably under Plack).
+        # Still refuse legacy/non-CUD dispatch so this endpoint cannot bypass
+        # Koha's native state-changing request protection.
+        unless ( $self->_cud_plugin_dispatch_ok() ) {
             $response = {
                 ok         => 0,
-                error      => 'Invalid CSRF token',
-                csrf_debug => $self->_csrf_debug_info()
+                error      => 'CSRF-protected plugin dispatch required.'
             };
             $status = '403 Forbidden';
             return;

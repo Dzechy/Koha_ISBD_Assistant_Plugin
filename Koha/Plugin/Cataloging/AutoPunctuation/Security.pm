@@ -98,6 +98,13 @@ sub _plugin_csrf_token {
     return _normalize_csrf_token_value($token);
 }
 
+sub _cud_plugin_dispatch_ok {
+    my ($self) = @_;
+    my $cgi = $self->{'cgi'} || CGI->new;
+    my $op = $cgi->param('op') || '';
+    return $op eq 'cud-plugin_api' ? 1 : 0;
+}
+
 sub _csrf_token_fingerprint {
     my ($value) = @_;
     return '' unless defined $value && $value ne '';

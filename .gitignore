@@ -6,6 +6,14 @@
 BWDGithubToken.txt
 BWDGithubToken.txt:Zone.Identifier
 
+# Repository-root development/reference material (not plugin source)
+/pitch/
+/*.pl
+/*.pm
+/*.pdf
+/*.md
+!/README.md
+
 # Build and release artifacts
 *.kpz
 *.zip

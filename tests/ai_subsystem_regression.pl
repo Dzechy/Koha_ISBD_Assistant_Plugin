@@ -127,6 +127,40 @@ my $valid_class = {
     authority_status => 'unverified', evidence => ['title'], warnings => [], requires_human_review => JSON::true
 };
 is_deeply( Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_validate_ai_task_response($ai, $normalized, $valid_class), [], 'valid classification response passes schema and semantics' );
+my $legacy_review_payload = { %{$normalized}, task => 'cataloging_review' };
+my $legacy_review = {
+    schema_version => '2', task => 'cataloging_review', status => 'success',
+    findings => [
+        { code => 'AI_CLASSIFICATION', message => 'Z665', rationale => 'Title is about cataloguing.', confidence => 0.87 },
+        { code => 'AI_SUBJECTS', message => 'Cataloging; Libraries -- Automation', rationale => 'Title and summary evidence.' }
+    ],
+    warnings => ['Review the suggestions.']
+};
+my $canonical_review =
+  Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_canonicalize_ai_provider_response(
+    $ai, $legacy_review_payload, $legacy_review );
+is( $canonical_review->{schema_version}, '1.0.0',
+    'provider schema version is canonicalized before validation' );
+is( $canonical_review->{classification_candidate}{value}, 'Z665',
+    'legacy finding shape retains a safe LCC candidate for evidence verification' );
+is( scalar @{ $canonical_review->{subject_candidates} }, 2,
+    'legacy subject findings become bounded review candidates' );
+is_deeply(
+    Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_validate_ai_task_response(
+        $ai, $legacy_review_payload, $canonical_review ),
+    [], 'canonicalized cataloging review passes the strict task schema' );
+
+my $canonical_tutor =
+  Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_canonicalize_ai_provider_response(
+    $ai, $tutor_normalized,
+    { schema_version => '3', status => 'success', assistant_message => 'Compare the title proper with the subtitle boundary.', question => 'Which subfield begins the subtitle?' } );
+is( $canonical_tutor->{explanation},
+    'Compare the title proper with the subtitle boundary.',
+    'training tutor uses the same canonical structured AI pipeline' );
+is_deeply(
+    Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_validate_ai_task_response(
+        $ai, $tutor_normalized, $canonical_tutor ),
+    [], 'canonicalized training tutor response passes its strict schema' );
 my $verified_class = {
     %{$valid_class},
     candidate => { %{ $valid_class->{candidate} } },

@@ -75,6 +75,19 @@ if (!securityModule.includes('Koha::Token->new->check_csrf')) {
 if (securityModule.includes('isbd-plugin-csrf-v2')) {
     throw new Error('Legacy plugin-only CSRF token generation is still present');
 }
+if (!securityModule.includes("return $op eq 'cud-plugin_api' ? 1 : 0")) {
+    throw new Error('State-changing plugin methods must require Koha cud-plugin_api dispatch');
+}
+const guideProgress = fs.readFileSync(
+    path.join(root, 'Koha/Plugin/Cataloging/AutoPunctuation/GuideProgress.pm'),
+    'utf8'
+);
+if (!guideProgress.includes('$self->_cud_plugin_dispatch_ok()')) {
+    throw new Error('Training progress must rely on Koha native CUD dispatch protection');
+}
+if (guideProgress.includes("unless ( $self->_csrf_ok($payload) )")) {
+    throw new Error('Training progress must not repeat Koha CSRF validation after dispatch');
+}
 if (!apiClient.includes("url.searchParams.set('op', 'cud-plugin_api')")) {
     throw new Error('Intranet AJAX POST operations must use Koha\'s cud- prefix');
 }

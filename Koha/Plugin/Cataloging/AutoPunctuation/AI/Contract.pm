@@ -15,6 +15,261 @@ my %SCHEMA_FILES = (
     training_tutor             => 'ai_training_tutor_v1.json',
 );
 
+sub _bounded_text {
+    my ( $value, $limit ) = @_;
+    return '' if !defined $value || ref $value;
+    my $text = "$value";
+    $text =~ s/^\s+|\s+$//g;
+    $limit ||= 400;
+    return substr( $text, 0, $limit );
+}
+
+sub _string_list {
+    my ( $value, $limit, $item_limit ) = @_;
+    return [] unless ref $value eq 'ARRAY';
+    $limit      ||= 12;
+    $item_limit ||= 400;
+    my @items;
+    for my $item ( @{$value} ) {
+        last if @items >= $limit;
+        my $text = _bounded_text( $item, $item_limit );
+        push @items, $text if $text ne '';
+    }
+    return \@items;
+}
+
+sub _confidence_label {
+    my ($value) = @_;
+    my $label = lc( _bounded_text( $value, 80 ) );
+    return $label if $label =~ /^(?:high|medium|low|insufficient_evidence)$/;
+    return 'insufficient_evidence' if $label =~ /insufficient|unknown|none/;
+    if ( $label =~ /([0-9]+(?:\.[0-9]+)?)/ ) {
+        my $number = $1 + 0;
+        $number /= 100 if $number > 1;
+        return $number >= 0.8 ? 'high' : $number >= 0.5 ? 'medium' : 'low';
+    }
+    return 'low';
+}
+
+sub _classification_candidate {
+    my ($result) = @_;
+    my $source =
+         ref $result->{candidate} eq 'HASH'                ? $result->{candidate}
+      : ref $result->{classification_candidate} eq 'HASH' ? $result->{classification_candidate}
+      : ref $result->{classification} eq 'HASH'           ? $result->{classification}
+      :                                                       undef;
+    my $value = $source
+      ? ( $source->{value} // $source->{number} // $source->{call_number} // '' )
+      : ( $result->{classification} // $result->{lcc} // $result->{call_number} // '' );
+
+    if ( !ref $result->{findings} && !$value ) {
+        $value = '';
+    }
+    if ( !$value && ref $result->{findings} eq 'ARRAY' ) {
+        for my $finding ( @{ $result->{findings} } ) {
+            next unless ref $finding eq 'HASH';
+            my $code = uc( _bounded_text( $finding->{code}, 80 ) );
+            next unless $code =~ /CLASSIFICATION|CALL_NUMBER|\bLCC\b/;
+            $value = $finding->{value} // $finding->{message} // '';
+            $source ||= $finding;
+            last;
+        }
+    }
+    $value = uc( _bounded_text( $value, 64 ) );
+    $value =~ s/\s+/ /g;
+    return undef
+      unless $value =~ /^[A-Z]{1,3}\d+(?:\.\d+)?(?:\s+[A-Z]\d+(?:\.\d+)?)?$/;
+
+    $source ||= {};
+    my $basis = _bounded_text(
+        $source->{basis} // $source->{rationale} // $source->{explanation}
+          // $result->{rationale} // $result->{explanation}
+          // 'Candidate inferred from the supplied catalogue evidence.',
+        1200
+    );
+    return {
+        value      => $value,
+        confidence => _confidence_label(
+            $source->{confidence} // $source->{model_confidence}
+              // $result->{confidence}
+        ),
+        basis => $basis,
+        ( _bounded_text( $source->{model_confidence}, 80 ) ne ''
+            ? ( model_confidence => _bounded_text( $source->{model_confidence}, 80 ) )
+            : () ),
+    };
+}
+
+sub _subject_candidates {
+    my ($result) = @_;
+    my $raw =
+         ref $result->{candidates} eq 'ARRAY'          ? $result->{candidates}
+      : ref $result->{subject_candidates} eq 'ARRAY'  ? $result->{subject_candidates}
+      : ref $result->{subjects} eq 'ARRAY'            ? $result->{subjects}
+      :                                                  [];
+    if ( !@{$raw} && ref $result->{findings} eq 'ARRAY' ) {
+        my @legacy;
+        for my $finding ( @{ $result->{findings} } ) {
+            next unless ref $finding eq 'HASH';
+            my $code = uc( _bounded_text( $finding->{code}, 80 ) );
+            next unless $code =~ /SUBJECT|LCSH/;
+            my $text = _bounded_text(
+                $finding->{value} // $finding->{message} // '', 2400 );
+            push @legacy, grep { $_ ne '' }
+              map { _bounded_text( $_, 240 ) } split( /[;\n|]+/, $text );
+        }
+        $raw = \@legacy if @legacy;
+    }
+    my @candidates;
+    for my $source ( @{$raw} ) {
+        last if @candidates >= 10;
+        my $heading = ref $source eq 'HASH'
+          ? ( $source->{heading} // $source->{value} // $source->{subject} // '' )
+          : $source;
+        $heading = _bounded_text( $heading, 240 );
+        next if $heading eq '';
+        my @subdivisions;
+        if ( ref $source eq 'HASH' && ref $source->{subdivisions} eq 'ARRAY' ) {
+            for my $subdivision ( @{ $source->{subdivisions} } ) {
+                last if @subdivisions >= 10;
+                next unless ref $subdivision eq 'HASH';
+                my $code = lc( _bounded_text( $subdivision->{code}, 1 ) );
+                my $value = _bounded_text( $subdivision->{value}, 240 );
+                push @subdivisions, { code => $code, value => $value }
+                  if $code =~ /^[xyzv]$/ && $value ne '';
+            }
+        }
+        my $basis = ref $source eq 'HASH'
+          ? _bounded_text(
+            $source->{basis} // $source->{rationale} // $source->{explanation}
+              // 'Heading inferred from the supplied catalogue evidence.',
+            1200 )
+          : 'Heading inferred from the supplied catalogue evidence.';
+        push @candidates,
+          {
+            heading          => $heading,
+            subdivisions     => \@subdivisions,
+            confidence       => _confidence_label( ref $source eq 'HASH' ? $source->{confidence} : '' ),
+            basis            => $basis,
+            evidence         => _string_list( ref $source eq 'HASH' ? $source->{evidence} : [], 12, 400 ),
+            authority_status => 'unverified',
+          };
+    }
+    return \@candidates;
+}
+
+sub _review_findings {
+    my ( $payload, $result ) = @_;
+    return [] unless ref $result->{findings} eq 'ARRAY';
+    my @findings;
+    for my $source ( @{ $result->{findings} } ) {
+        last if @findings >= 20;
+        next unless ref $source eq 'HASH';
+        my $finding = _bounded_text(
+            $source->{finding} // $source->{code} // $source->{message}, 120 );
+        my $explanation = _bounded_text(
+            $source->{explanation} // $source->{rationale} // $source->{message},
+            1200 );
+        next if $finding eq '' || $explanation eq '';
+        my $tag = _bounded_text(
+            $source->{tag} // $payload->{tag_context}{tag}, 3 );
+        my $subfield = _bounded_text(
+            $source->{subfield} // $payload->{tag_context}{active_subfield}, 1 );
+        next unless $tag =~ /^\d{3}$/ && $subfield =~ /^[a-z0-9]$/i;
+        push @findings,
+          {
+            finding          => $finding,
+            tag              => $tag,
+            subfield         => lc($subfield),
+            explanation      => $explanation,
+            confidence       => _confidence_label( $source->{confidence} ),
+            evidence         => _string_list( $source->{evidence}, 12, 400 ),
+            authority_status => ( ( $source->{authority_status} || '' ) eq 'not_applicable' )
+              ? 'not_applicable'
+              : 'unverified',
+          };
+    }
+    return \@findings;
+}
+
+# Provider JSON is untrusted even when a model claims structured-output support.
+# Canonicalize safe, display-only fields before schema validation so legacy
+# provider shapes cannot prevent an otherwise valid LCC candidate from reaching
+# the server-side LCCS evidence verifier.
+sub _canonicalize_ai_provider_response {
+    my ( $self, $payload, $result ) = @_;
+    return undef unless ref $result eq 'HASH';
+    my $task = $payload->{task} || '';
+    my $status = lc( _bounded_text( $result->{status}, 40 ) );
+    $status = 'insufficient_evidence'
+      unless $status =~ /^(?:ok|insufficient_evidence|incomplete)$/;
+    my $canonical = {
+        schema_version        => $SCHEMA_VERSION,
+        task                  => $task,
+        status                => $status,
+        warnings              => _string_list( $result->{warnings}, 12, 400 ),
+        requires_human_review => JSON::true,
+    };
+
+    if ( $task eq 'cataloging_classification' ) {
+        my $candidate = _classification_candidate($result);
+        $canonical->{candidate} = $candidate if $candidate;
+        $canonical->{status} = $candidate ? 'ok' : 'insufficient_evidence'
+          unless $status eq 'incomplete';
+        $canonical->{authority_status} = $candidate ? 'unverified' : 'not_applicable';
+        $canonical->{evidence} = _string_list(
+            ref $result->{evidence} eq 'ARRAY' ? $result->{evidence}
+              : ref $result->{candidate} eq 'HASH' ? $result->{candidate}{evidence}
+              : [],
+            12, 400 );
+    }
+    elsif ( $task eq 'subject_heading_suggestion' ) {
+        $canonical->{candidates} = _subject_candidates($result);
+        $canonical->{status} = @{ $canonical->{candidates} } ? 'ok' : 'insufficient_evidence'
+          unless $status eq 'incomplete';
+    }
+    elsif ( $task eq 'cataloging_review' ) {
+        my $candidate = _classification_candidate($result);
+        if ($candidate) {
+            $candidate->{evidence} = _string_list(
+                ref $result->{classification_candidate} eq 'HASH'
+                  ? $result->{classification_candidate}{evidence}
+                  : $result->{evidence}, 12, 400 );
+            $candidate->{authority_status} = 'unverified';
+            $canonical->{classification_candidate} = $candidate;
+        }
+        $canonical->{subject_candidates} = _subject_candidates($result);
+        $canonical->{findings} = _review_findings( $payload, $result );
+        my $has_content = $candidate
+          || @{ $canonical->{subject_candidates} }
+          || @{ $canonical->{findings} };
+        $canonical->{status} = $has_content ? 'ok' : 'insufficient_evidence'
+          unless $status eq 'incomplete';
+    }
+    elsif ( $task eq 'punctuation_explanation' ) {
+        $canonical->{explanation} = _bounded_text(
+            $result->{explanation} // $result->{assistant_message} // $result->{message},
+            2000 );
+        $canonical->{rule_reference} = _bounded_text(
+            $result->{rule_reference} // $result->{rule} // $result->{basis}, 240 );
+        $canonical->{evidence} = _string_list( $result->{evidence}, 12, 400 );
+        $canonical->{status} = 'insufficient_evidence'
+          if $canonical->{explanation} eq '' || $canonical->{rule_reference} eq '';
+    }
+    elsif ( $task eq 'training_tutor' ) {
+        $canonical->{explanation} = _bounded_text(
+            $result->{explanation} // $result->{assistant_message} // $result->{message},
+            2000 );
+        $canonical->{questions} = _string_list(
+            ref $result->{questions} eq 'ARRAY' ? $result->{questions}
+              : defined $result->{question} ? [ $result->{question} ] : [],
+            8, 400 );
+        $canonical->{status} = 'insufficient_evidence'
+          if $canonical->{explanation} eq '';
+    }
+    return $canonical;
+}
+
 sub _supported_ai_tasks { return [ sort keys %SCHEMA_FILES ]; }
 
 sub _ai_task_schema_file {

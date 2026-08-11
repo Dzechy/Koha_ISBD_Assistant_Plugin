@@ -177,9 +177,9 @@ The normal cataloging interface is `cataloguing/addbiblio.pl`. That is where the
 
 ## Koha 26 Compatibility
 
-Plugin version `1.0.2` and later, including the current `1.1.2`, supports the stock Koha `25.11` and `26.05` plugin controller. Its API methods emit their own CGI status, JSON content type, and JSON body, as required by Koha's `plugins/run.pl`. Plugin POST requests use a form-encoded `payload` and copy `class`, `method`, and `op` into the POST body because Koha `26.05` may not expose URL query parameters through `CGI->param` on POST requests. No Koha core-file override is required.
+Plugin version `1.0.2` and later, including the current `1.2.1`, supports the stock Koha `25.11` and `26.05` plugin controller. Its API methods emit their own CGI status, JSON content type, and JSON body, as required by Koha's `plugins/run.pl`. Plugin POST requests use a form-encoded `payload` and copy `class`, `method`, and `op` into the POST body because Koha `26.05` may not expose URL query parameters through `CGI->param` on POST requests. No Koha core-file override is required.
 
-The root-level `Auth.pm`, `Handler.pm`, and `run.pl` files are retained only as legacy development references and are not included in the KPZ. Do not copy them over Koha `26.05` files. Koha upgrades replace core files, and an override from another release can break authentication or plugin dispatch.
+Koha core-file copies are deliberately excluded from this repository and from the KPZ. Do not copy old `Auth.pm`, `Handler.pm`, or `plugins/run.pl` files over Koha `26.05` files. Koha upgrades replace core files, and an override from another release can break authentication or plugin dispatch.
 
 If an earlier installation applied those overrides, restore the package-owned Koha files before testing `1.1.2`. The recovery helper intentionally supports backup and restore only:
 

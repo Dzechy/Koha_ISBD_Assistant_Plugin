@@ -156,6 +156,12 @@ sub _generate_ai {
     return Koha::Plugin::Cataloging::AutoPunctuation::AI::Provider::generate(@_);
 }
 
+sub _canonicalize_ai_provider_response {
+    return
+      Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_canonicalize_ai_provider_response(
+        @_ );
+}
+
 sub _sanitize_ai_response_for_chat {
     return
       Koha::Plugin::Cataloging::AutoPunctuation::AI::Provider::_sanitize_ai_response_for_chat(

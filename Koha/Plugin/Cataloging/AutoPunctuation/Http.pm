@@ -57,8 +57,8 @@ sub _api_response {
     print to_json($body);
 
     # Koha's stock plugins/run.pl ignores the return value and expects plugin
-    # methods to emit their own CGI response.  The marker lets the legacy
-    # repository-local run.pl avoid emitting a second response.
+    # methods to emit their own CGI response. The marker also makes the helper
+    # safe for compatible dispatch harnesses that inspect a method return value.
     return { __response_emitted => 1 };
 }
 

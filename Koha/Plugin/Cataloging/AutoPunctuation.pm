@@ -40,18 +40,18 @@ use Koha::Plugin::Cataloging::AutoPunctuation::Http;
 use Koha::Plugin::Cataloging::AutoPunctuation::Api;
 use Koha::Plugin::Cataloging::AutoPunctuation::AI;
 
-our $VERSION         = "1.2.0";
+our $VERSION         = "1.2.1";
 our $PLUGIN_REPO_URL = "https://github.com/build-with-duke/Koha_ISBD_Assistant_Plugin/";
 our $PLUGIN_RELEASES_API =
 "https://api.github.com/repos/build-with-duke/Koha_ISBD_Assistant_Plugin/releases/latest";
 our $AUTHOR_LINKEDIN   = "https://linkedin.com/in/duke-j-a1a9b0260";
-our $AI_PROMPT_VERSION = "2.0.0";
+our $AI_PROMPT_VERSION = "2.1.0";
 
 our $metadata = {
     name            => 'Koha_ISBD_Cataloging_Assistant',
     author          => 'Duke Chijimaka Jonathan',
     date_authored   => '2025-06-02',
-    date_updated    => '2026-08-10',
+    date_updated    => '2026-08-11',
     minimum_version => '25.11',
     maximum_version => undef,
     version         => $VERSION,
@@ -315,6 +315,12 @@ sub _plugin_csrf_token {
     return
       Koha::Plugin::Cataloging::AutoPunctuation::Security::_plugin_csrf_token(
         @_);
+}
+
+sub _cud_plugin_dispatch_ok {
+    return
+      Koha::Plugin::Cataloging::AutoPunctuation::Security::_cud_plugin_dispatch_ok(
+        @_ );
 }
 
 # Http
@@ -804,6 +810,12 @@ sub _normalize_ai_task_response {
 
 sub _verify_lccs_result {
     return Koha::Plugin::Cataloging::AutoPunctuation::AI::_verify_lccs_result(@_);
+}
+
+sub _canonicalize_ai_provider_response {
+    return
+      Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_canonicalize_ai_provider_response(
+        @_ );
 }
 
 # AI::Guard
