@@ -4,6 +4,7 @@ package Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract;
 
 use Modern::Perl;
 use JSON ();
+use Koha::Plugin::Cataloging::AutoPunctuation::AI::LCCS ();
 
 our $SCHEMA_VERSION = '1.0.0';
 
@@ -78,7 +79,8 @@ sub _classification_candidate {
     $value = uc( _bounded_text( $value, 64 ) );
     $value =~ s/\s+/ /g;
     return undef
-      unless $value =~ /^[A-Z]{1,3}\d+(?:\.\d+)?(?:\s+[A-Z]\d+(?:\.\d+)?)?$/;
+      unless Koha::Plugin::Cataloging::AutoPunctuation::AI::LCCS::_valid_lccs_candidate(
+        $value);
 
     $source ||= {};
     my $basis = _bounded_text(
@@ -307,7 +309,9 @@ sub _validate_ai_task_response {
             push @{$errors}, 'Classification must be one class number, not a range.'
               if $value =~ /(?:\s[-–—]\s|\bto\b)/i;
             push @{$errors}, 'Classification contains invalid characters or terminal punctuation.'
-              unless $value eq '' || $value =~ /^[A-Z]{1,3}\d+(?:\.\d+)?(?:\s+[A-Z]\d+(?:\.\d+)?)?$/;
+              unless $value eq ''
+              || Koha::Plugin::Cataloging::AutoPunctuation::AI::LCCS::_valid_lccs_candidate(
+                $value);
         }
     }
     if ( $task eq 'subject_heading_suggestion' || $task eq 'cataloging_review' ) {
@@ -343,7 +347,7 @@ sub _apply_lccs_evidence {
     my ( $task, $result, $verification ) = @_;
     return unless $verification && ref $verification eq 'HASH';
     my $status = $verification->{status} || 'unavailable';
-    return if $status eq 'not_applicable';
+    return if $status eq 'not_checked';
 
     my $matches = ref $verification->{matches} eq 'ARRAY'
       ? $verification->{matches}
@@ -386,8 +390,11 @@ sub _apply_lccs_evidence {
     }
 
     my $value = $verification->{candidate} || $candidate->{value} || '';
-    my $warning = $status eq 'no_match'
+    my $warning =
+        $status eq 'no_match'
       ? "No exact lccs-2024 schedule entry verified $value; the AI suggestion is still shown for cataloguer review."
+      : $status eq 'invalid_candidate'
+      ? 'The AI classification candidate was not a valid LCC call-number form and was not verified.'
       : 'LCCS evidence was unavailable; the AI suggestion is still shown as unverified for cataloguer review.';
     push @{ $result->{warnings} }, $warning
       unless grep { $_ eq $warning } @{ $result->{warnings} };
@@ -417,8 +424,11 @@ sub _apply_lcsh_evidence {
           checked_at raw_source_version adapter_version construction_status matches
           error_type http_status cache_status);
         $candidate->{authority} = \%public;
+        my $authority_status = $authority->{status} || '';
         $candidate->{authority_status} =
-          ( $authority->{status} || '' ) eq 'verified' ? 'verified' : 'unverified';
+          $authority_status =~ /^(?:exact_authorized|variant_match|verified)$/
+          ? 'verified'
+          : 'unverified';
     }
     if ( ( $verification->{status} || '' ) eq 'service_unavailable' ) {
         my $warning =
@@ -468,7 +478,13 @@ sub _normalize_ai_task_response {
     if ( $task eq 'subject_heading_suggestion' ) {
         for my $candidate ( @{ $result->{candidates} || [] } ) {
             if ( ref $candidate eq 'HASH' ) {
-                $candidate->{authority_status} = 'unverified';
+                my $authority_status = ref $candidate->{authority} eq 'HASH'
+                  ? ( $candidate->{authority}{status} || '' )
+                  : '';
+                $candidate->{authority_status} =
+                  $authority_status =~ /^(?:exact_authorized|variant_match|verified)$/
+                  ? 'verified'
+                  : 'unverified';
                 $candidate->{confidence} = _confidence_label( $candidate->{confidence} );
             }
         }
@@ -483,7 +499,13 @@ sub _normalize_ai_task_response {
         }
         for my $candidate ( @{ $result->{subject_candidates} || [] } ) {
             if ( ref $candidate eq 'HASH' ) {
-                $candidate->{authority_status} = 'unverified';
+                my $authority_status = ref $candidate->{authority} eq 'HASH'
+                  ? ( $candidate->{authority}{status} || '' )
+                  : '';
+                $candidate->{authority_status} =
+                  $authority_status =~ /^(?:exact_authorized|variant_match|verified)$/
+                  ? 'verified'
+                  : 'unverified';
                 $candidate->{confidence} = _confidence_label( $candidate->{confidence} );
             }
         }

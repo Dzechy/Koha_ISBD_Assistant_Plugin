@@ -44,7 +44,7 @@ my $exact = bless { _loc_ua => $exact_ua }, 'Local::LOCHarness';
 my $result = Koha::Plugin::Cataloging::AutoPunctuation::AI::LinkedData::LOC::search_lcsh(
     $exact, 'Artificial intelligence', {}, { force => 1 } );
 is( $result->{match_type}, 'exact_authorized', 'exact authorized label is verified' );
-is( $result->{status}, 'verified', 'exact match has verified status' );
+is( $result->{status}, 'exact_authorized', 'exact match has explicit authorized status' );
 like( $result->{uri}, qr/^https:/, 'LOC URI is upgraded and constrained to HTTPS' );
 
 my $variant_ua = Local::QueueUA->new([ response( 200, to_json($payload) ) ]);
@@ -53,13 +53,14 @@ $result = Koha::Plugin::Cataloging::AutoPunctuation::AI::LinkedData::LOC::search
     $variant, 'Machine intelligence', {}, { force => 1 } );
 is( $result->{match_type}, 'variant_match', 'variant label is distinguished from authorized label' );
 is( $result->{authorized_heading}, 'Artificial intelligence', 'variant resolves to authorized heading' );
+is( $result->{status}, 'variant_match', 'variant has an explicit match state' );
 
 my $close_ua = Local::QueueUA->new([ response( 200, to_json($payload) ) ]);
 my $close = bless { _loc_ua => $close_ua }, 'Local::LOCHarness';
 $result = Koha::Plugin::Cataloging::AutoPunctuation::AI::LinkedData::LOC::search_lcsh(
     $close, 'Intelligent computing', {}, { force => 1 } );
 is( $result->{match_type}, 'close_candidate', 'close candidate is not promoted to verified' );
-is( $result->{status}, 'unverified', 'close candidate remains unverified' );
+is( $result->{status}, 'close_candidate', 'close candidate remains an explicit possible match' );
 
 for my $case (
     [ 404, 'no_match', 'authority_no_match' ],

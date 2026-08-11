@@ -20,6 +20,32 @@ package Koha::Plugin::Cataloging::AutoPunctuation::AI::Context;
 use Modern::Perl;
 use Scalar::Util qw(looks_like_number);
 
+my @CATALOGING_EVIDENCE_TAGS = qw(
+  245 100 110 111 130 240
+  250 260 264
+  300 306 336 337 338
+  500 501 502 504 505 506 507 508 511 518 520 521 522 524 525 530 533 534 538 546
+  600 610 611 630 648 650 651 655
+  700 710 711 730 740 752 765 767 770 772 773 775 776 780 785 787
+  800 810 811 830
+  020 022 024 041 246 254 255 362 440 490 550 555
+);
+my %CATALOGING_EVIDENCE_RANK = map { $CATALOGING_EVIDENCE_TAGS[$_] => $_ }
+  0 .. $#CATALOGING_EVIDENCE_TAGS;
+
+sub _cataloging_evidence_rank {
+    my ( $self, $tag ) = @_;
+    return $CATALOGING_EVIDENCE_RANK{ $tag || '' } // 10_000;
+}
+
+sub _is_cataloging_task {
+    my ($task) = @_;
+    return ( $task || '' ) =~
+      /^(?:cataloging_classification|subject_heading_suggestion|cataloging_review)$/
+      ? 1
+      : 0;
+}
+
 sub _normalize_occurrence {
     my ( $self, $value ) = @_;
     return 0 unless defined $value && $value ne '';
@@ -73,9 +99,17 @@ sub _normalize_tag_context {
 }
 
 sub _normalize_record_context {
-    my ( $self, $record_context, $max_fields, $max_subfields ) = @_;
+    my ( $self, $record_context, $max_fields, $max_subfields, $task ) = @_;
     return undef unless $record_context && ref $record_context eq 'HASH';
     my @fields = grep { ref $_ eq 'HASH' } @{ $record_context->{fields} || [] };
+    if ( _is_cataloging_task($task) ) {
+        my $position = 0;
+        @fields = map { $_->{field} } sort {
+            _cataloging_evidence_rank( $self, $a->{field}{tag} )
+              <=> _cataloging_evidence_rank( $self, $b->{field}{tag} )
+              || $a->{position} <=> $b->{position}
+        } map { { field => $_, position => $position++ } } @fields;
+    }
     if ( defined $max_fields && @fields > $max_fields ) {
         @fields = @fields[ 0 .. ( $max_fields - 1 ) ];
     }
@@ -120,16 +154,19 @@ sub _normalize_ai_request_payload {
     return $payload unless $payload && ref $payload eq 'HASH';
     my %clone = %{$payload};
     $clone{task} = lc( $payload->{task} || '' );
+    my $task = $clone{task};
     my $context_mode = lc( $payload->{context_mode} || $settings->{ai_context_mode} || 'tag_only' );
     $context_mode = 'tag_plus_related_fields' if $context_mode eq 'tag_plus_neighbors';
     $context_mode = 'full_record'             if $context_mode eq 'full';
+    $context_mode = 'tag_plus_related_fields'
+      if _is_cataloging_task($task);
     $clone{context_mode} = $context_mode;
     $clone{tag_context} =
       _normalize_tag_context( $self, $payload->{tag_context}, 20 );
     if ( $payload->{record_context} ) {
         $clone{record_context} =
           _normalize_record_context( $self, $payload->{record_context}, 30,
-            30 );
+            30, $task );
     }
     $clone{features} = _normalize_ai_features( $self, $payload->{features} );
     return \%clone;

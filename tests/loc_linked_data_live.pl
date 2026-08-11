@@ -15,7 +15,7 @@ my $result =
     $adapter, 'Artificial intelligence',
     { loc_authority_timeout_seconds => 12 }, { force => 1 } );
 
-is( $result->{status}, 'verified', 'live LOC response verifies a known LCSH heading' );
+is( $result->{status}, 'exact_authorized', 'live LOC response verifies a known LCSH heading' );
 is( $result->{match_type}, 'exact_authorized', 'live LOC response is an exact authorized match' );
 is( $result->{authorized_heading}, 'Artificial intelligence', 'live authorized label is preserved' );
 like( $result->{uri} || '', qr{^https://id\.loc\.gov/authorities/subjects/sh\d+$},

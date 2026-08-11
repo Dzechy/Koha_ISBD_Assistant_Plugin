@@ -28,5 +28,60 @@
     "known_ambiguity": true,
     "expected_authority_status": "unverified",
     "expected_human_review": true
+  },
+  {
+    "id": "cataloging-sparse-minimal",
+    "input": { "tag": "245", "ind1": "0", "ind2": "0", "subfields": [{"code":"a","value":"Community seed libraries"}] },
+    "record_context": { "fields": [{"tag":"245","subfields":[{"code":"a","value":"Community seed libraries"}]}] },
+    "expected_task": "cataloging_review",
+    "expected_deterministic_rule": null,
+    "acceptable_ai_interpretation": "A broad, low-confidence candidate supported by the title, or insufficient_evidence if no defensible interpretation exists.",
+    "known_ambiguity": true,
+    "expected_authority_status": "unverified",
+    "expected_human_review": true
+  },
+  {
+    "id": "cataloging-sparse-creator",
+    "input": { "tag": "245", "ind1": "1", "ind2": "0", "subfields": [{"code":"a","value":"Community seed libraries"}] },
+    "record_context": { "fields": [{"tag":"245","subfields":[{"code":"a","value":"Community seed libraries"}]},{"tag":"100","subfields":[{"code":"a","value":"Okafor, Ada"}]}] },
+    "expected_task": "cataloging_review",
+    "expected_deterministic_rule": null,
+    "acceptable_ai_interpretation": "Candidates may use title and creator evidence without treating absent notes as negative evidence.",
+    "known_ambiguity": true,
+    "expected_authority_status": "unverified",
+    "expected_human_review": true
+  },
+  {
+    "id": "cataloging-moderate-record",
+    "input": { "tag": "245", "ind1": "1", "ind2": "0", "subfields": [{"code":"a","value":"Community seed libraries"}] },
+    "record_context": { "fields": [{"tag":"245","subfields":[{"code":"a","value":"Community seed libraries"}]},{"tag":"100","subfields":[{"code":"a","value":"Okafor, Ada"}]},{"tag":"264","ind2":"1","subfields":[{"code":"a","value":"Port Harcourt"},{"code":"c","value":"2025"}]},{"tag":"300","subfields":[{"code":"a","value":"148 pages"}]}] },
+    "expected_task": "cataloging_review",
+    "expected_deterministic_rule": null,
+    "acceptable_ai_interpretation": "Candidates distinguish explicit title, creator, publication, and extent evidence from inferred subject or class.",
+    "known_ambiguity": true,
+    "expected_authority_status": "unverified",
+    "expected_human_review": true
+  },
+  {
+    "id": "cataloging-rich-record",
+    "input": { "tag": "245", "ind1": "1", "ind2": "0", "subfields": [{"code":"a","value":"Community seed libraries in the Niger Delta"}] },
+    "record_context": { "fields": [{"tag":"245","subfields":[{"code":"a","value":"Community seed libraries in the Niger Delta"}]},{"tag":"100","subfields":[{"code":"a","value":"Okafor, Ada"}]},{"tag":"264","ind2":"1","subfields":[{"code":"a","value":"Port Harcourt"},{"code":"c","value":"2025"}]},{"tag":"300","subfields":[{"code":"a","value":"148 pages"}]},{"tag":"336","subfields":[{"code":"a","value":"text"}]},{"tag":"337","subfields":[{"code":"a","value":"unmediated"}]},{"tag":"338","subfields":[{"code":"a","value":"volume"}]},{"tag":"500","subfields":[{"code":"a","value":"Based on interviews with local growers"}]},{"tag":"505","subfields":[{"code":"a","value":"Seed preservation -- Community governance -- Case studies"}]},{"tag":"520","subfields":[{"code":"a","value":"Examines community-led preservation and lending of indigenous crop seeds"}]},{"tag":"650","subfields":[{"code":"a","value":"Seed banks"}]},{"tag":"655","subfields":[{"code":"a","value":"Case studies"}]}] },
+    "expected_task": "cataloging_review",
+    "expected_deterministic_rule": null,
+    "acceptable_ai_interpretation": "Specific candidates may use the richer supplied evidence while external LCCS and LCSH verification remain independent.",
+    "known_ambiguity": false,
+    "expected_authority_status": "unverified",
+    "expected_human_review": true
+  },
+  {
+    "id": "cataloging-uncommon-local-work",
+    "input": { "tag": "245", "ind1": "1", "ind2": "0", "subfields": [{"code":"a","value":"Okrika waterfront canoe-builders oral histories"}] },
+    "record_context": { "fields": [{"tag":"245","subfields":[{"code":"a","value":"Okrika waterfront canoe-builders oral histories"}]},{"tag":"500","subfields":[{"code":"a","value":"Recorded locally in Rivers State; names and terminology follow contributors' usage"}]},{"tag":"520","subfields":[{"code":"a","value":"Interviews about tools, apprenticeship, and wooden canoe construction"}]}] },
+    "expected_task": "subject_heading_suggestion",
+    "expected_deterministic_rule": null,
+    "acceptable_ai_interpretation": "Reason only from supplied local evidence; do not fabricate external familiarity, quotations, or authority identifiers.",
+    "known_ambiguity": true,
+    "expected_authority_status": "unverified",
+    "expected_human_review": true
   }
 ]

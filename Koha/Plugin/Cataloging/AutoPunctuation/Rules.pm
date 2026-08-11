@@ -544,26 +544,22 @@ sub _is_excluded_field {
         my @allow   = split( /\s*,\s*/, $settings->{local_fields_allowlist} );
         my $allowed = scalar grep {
             my $entry = $_;
-            if ( $entry =~ /^9XX$/i )    { return _is_local_tag($tag); }
-            if ( $entry =~ /^(\d)XX$/i ) { return $tag =~ /^$1\d\d$/; }
-            if ( $entry =~ /^\d{3}[a-z0-9]$/i ) {
-                return lc($entry) eq lc( $tag . $subfield );
-            }
-            if ( $entry =~ /^\d{3}$/ ) { return $entry eq $tag; }
-            return 0;
+                 $entry =~ /^9XX$/i            ? _is_local_tag($tag)
+              :  $entry =~ /^(\d)XX$/i         ? $tag =~ /^$1\d\d$/
+              :  $entry =~ /^\d{3}[a-z0-9]$/i ? lc($entry) eq lc( $tag . $subfield )
+              :  $entry =~ /^\d{3}$/           ? $entry eq $tag
+              :                                  0;
         } @allow;
         return 1 unless $allowed;
     }
     my @exclusions = split( /\s*,\s*/, $settings->{excluded_tags} || '' );
     return scalar grep {
         my $entry = $_;
-        if ( $entry =~ /^(\d)XX$/i ) { return $tag =~ /^$1\d\d$/; }
-        if ( $entry =~ /^\d{3}[a-z0-9]$/i ) {
-            return lc($entry) eq lc( $tag . $subfield );
-        }
-        if ( $entry =~ /^\d{3}$/ ) { return $entry eq $tag; }
-        if ( $entry =~ /^9XX$/i )  { return _is_local_tag($tag); }
-        return 0;
+             $entry =~ /^(\d)XX$/i         ? $tag =~ /^$1\d\d$/
+          :  $entry =~ /^\d{3}[a-z0-9]$/i ? lc($entry) eq lc( $tag . $subfield )
+          :  $entry =~ /^\d{3}$/           ? $entry eq $tag
+          :  $entry =~ /^9XX$/i            ? _is_local_tag($tag)
+          :                                  0;
     } @exclusions;
 }
 

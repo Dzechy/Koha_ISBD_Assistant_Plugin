@@ -70,26 +70,51 @@ function verifyCandidate(api, value) {
     const scheduleCode = candidate.slice(letters.length).replace(/\s+/g, ' ').trim();
     if (!scheduleCode) return { candidate, status: 'invalid_candidate', matches: [] };
 
+    // A complete call number may add work/item Cutters, dates, and local
+    // suffixes after the schedule entry. Check the longest exact schedule
+    // prefix first, then progressively remove only trailing call-number
+    // components. Evidence always reports the exact schedule code matched.
+    const scheduleCandidates = [];
+    const addScheduleCandidate = value => {
+        const normalized = String(value || '').trim();
+        if (normalized && !scheduleCandidates.includes(normalized)) scheduleCandidates.push(normalized);
+    };
+    addScheduleCandidate(scheduleCode);
+    const spacedParts = scheduleCode.split(/\s+/).filter(Boolean);
+    while (spacedParts.length > 1) {
+        spacedParts.pop();
+        addScheduleCandidate(spacedParts.join(' '));
+    }
+    let attached = spacedParts[0] || '';
+    while (/\.[A-Z]\d+(?:\.\d+)?$/i.test(attached)) {
+        attached = attached.replace(/\.[A-Z]\d+(?:\.\d+)?$/i, '');
+        addScheduleCandidate(attached);
+    }
+
     const matches = [];
     for (const item of candidateSchedules(api, letters)) {
-        let entries;
-        try {
-            entries = api.findCodes(scheduleCode, { schedule: item.schedule.scope });
-        } catch (_error) {
-            continue;
-        }
-        for (const entry of entries.slice(0, 12)) {
-            if (!pageCarriesClass(api, item.schedule.scope, entry.page, letters)) continue;
-            matches.push({
-                candidate,
-                schedule_code: entry.code,
-                caption: entry.caption_clean || entry.caption || '',
-                notes: Array.isArray(entry.notes) ? entry.notes.slice(0, 3) : [],
-                page: entry.page,
-                scope: item.schedule.scope,
-                schedule_title: entry.schedule && entry.schedule.title || item.schedule.title || '',
-                source_pdf: entry.schedule && entry.schedule.source_pdf || item.schedule.source_pdf || ''
-            });
+        for (const exactCode of scheduleCandidates) {
+            let entries;
+            try {
+                entries = api.findCodes(exactCode, { schedule: item.schedule.scope });
+            } catch (_error) {
+                continue;
+            }
+            for (const entry of entries.slice(0, 12)) {
+                if (!pageCarriesClass(api, item.schedule.scope, entry.page, letters)) continue;
+                matches.push({
+                    candidate,
+                    matched_prefix: `${letters}${exactCode}`,
+                    schedule_code: entry.code,
+                    caption: entry.caption_clean || entry.caption || '',
+                    notes: Array.isArray(entry.notes) ? entry.notes.slice(0, 3) : [],
+                    page: entry.page,
+                    scope: item.schedule.scope,
+                    schedule_title: entry.schedule && entry.schedule.title || item.schedule.title || '',
+                    source_pdf: entry.schedule && entry.schedule.source_pdf || item.schedule.source_pdf || ''
+                });
+            }
+            if (matches.length) break;
         }
         if (matches.length) break;
     }

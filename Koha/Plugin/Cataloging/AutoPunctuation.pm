@@ -40,12 +40,12 @@ use Koha::Plugin::Cataloging::AutoPunctuation::Http;
 use Koha::Plugin::Cataloging::AutoPunctuation::Api;
 use Koha::Plugin::Cataloging::AutoPunctuation::AI;
 
-our $VERSION         = "1.3.0";
+our $VERSION         = "1.4.0";
 our $PLUGIN_REPO_URL = "https://github.com/build-with-duke/Koha_ISBD_Assistant_Plugin/";
 our $PLUGIN_RELEASES_API =
 "https://api.github.com/repos/build-with-duke/Koha_ISBD_Assistant_Plugin/releases/latest";
 our $AUTHOR_LINKEDIN   = "https://linkedin.com/in/duke-j-a1a9b0260";
-our $AI_PROMPT_VERSION = "2.2.0";
+our $AI_PROMPT_VERSION = "3.0.0";
 
 our $metadata = {
     name            => 'Koha_ISBD_Cataloging_Assistant',
@@ -762,27 +762,15 @@ sub _is_cataloging_ai_request {
         @_);
 }
 
-sub _cataloging_tag_context {
+sub _cataloging_primary_context_from_payload {
     return
-      Koha::Plugin::Cataloging::AutoPunctuation::AI::_cataloging_tag_context(
+      Koha::Plugin::Cataloging::AutoPunctuation::AI::_cataloging_primary_context_from_payload(
         @_);
 }
 
-sub _cataloging_tag_context_from_payload {
+sub _cataloging_context_has_evidence {
     return
-      Koha::Plugin::Cataloging::AutoPunctuation::AI::_cataloging_tag_context_from_payload(
-        @_);
-}
-
-sub _cataloging_source_from_tag_context {
-    return
-      Koha::Plugin::Cataloging::AutoPunctuation::AI::_cataloging_source_from_tag_context(
-        @_);
-}
-
-sub _build_cataloging_error_response {
-    return
-      Koha::Plugin::Cataloging::AutoPunctuation::AI::_build_cataloging_error_response(
+      Koha::Plugin::Cataloging::AutoPunctuation::AI::_cataloging_context_has_evidence(
         @_);
 }
 

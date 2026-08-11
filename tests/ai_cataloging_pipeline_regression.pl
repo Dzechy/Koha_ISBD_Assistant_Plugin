@@ -34,6 +34,11 @@ is( $recovered->{ai_parse_status}, 'degraded_recovery', 'recovery is explicitly 
 is( $recovered->{classification_candidate}{value}, 'QA76.73', 'classification survives malformed structured output' );
 is( scalar @{ $recovered->{subject_candidates} }, 2, 'explicit subject list survives malformed structured output' );
 ok( $recovered->{requires_human_review}, 'recovered output remains review-required' );
+is(
+    Koha::Plugin::Cataloging::AutoPunctuation::AI::Parse::_extract_classification_from_text(
+        $harness, 'Classification: QA76.73.J38 S65 2020', {} ),
+    'QA76.73.J38 S65 2020',
+    'canonical recovery parser preserves a complete explicit LCC call number' );
 
 my $projected = Koha::Plugin::Cataloging::AutoPunctuation::Api::_task_response_for_client(
     $payload, $recovered, [] );
@@ -53,7 +58,7 @@ Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_normalize_ai_task_resp
     $harness, $subject_payload, $structured,
     { lcsh_evidence => {
         status => 'complete', results => [{
-            scheme => 'LCSH', status => 'verified', checked => 1,
+            scheme => 'LCSH', status => 'exact_authorized', checked => 1,
             authorized => 1, match_type => 'exact_authorized',
             heading => 'Artificial intelligence',
             authorized_heading => 'Artificial intelligence',
@@ -67,9 +72,11 @@ my $subject_projection =
     $subject_payload, $structured, [] );
 is( $subject_projection->{subjects}[0]{authority}{match_type},
     'exact_authorized', 'authority evidence reaches the stable client projection' );
+is( $subject_projection->{subjects}[0]{authority_status}, 'verified',
+    'server normalization preserves independently verified authority status' );
 like( $subject_projection->{subjects}[0]{rationale}{ai}, qr/central topic/,
     'subject AI rationale reaches the client projection' );
-is( $subject_projection->{client_response_version}, '2.0.0',
+is( $subject_projection->{client_response_version}, '2.1.0',
     'client response projection is independently versioned' );
 
 my $malformed = {

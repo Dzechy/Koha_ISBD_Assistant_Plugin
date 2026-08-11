@@ -27,6 +27,7 @@ sub _normalize_record_context { Koha::Plugin::Cataloging::AutoPunctuation::AI::C
 sub _redact_tag_context { Koha::Plugin::Cataloging::AutoPunctuation::AI::Guard::_redact_tag_context(@_) }
 sub _redact_record_context { Koha::Plugin::Cataloging::AutoPunctuation::AI::Guard::_redact_record_context(@_) }
 sub _filter_record_context { Koha::Plugin::Cataloging::AutoPunctuation::AI::Guard::_filter_record_context(@_) }
+sub _is_excluded_field { Koha::Plugin::Cataloging::AutoPunctuation::Rules::_is_excluded_field(@_) }
 sub _validate_field_with_rules { return { findings => [] }; }
 sub _punctuation_only_change { return Koha::Plugin::Cataloging::AutoPunctuation::Rules::_punctuation_only_change(@_); }
 
@@ -90,6 +91,68 @@ like( $prompt, qr/relevant summary/, 'semantic related-field context is included
 unlike( $prompt, qr/adjacent but irrelevant/, 'unrelated DOM neighbor is excluded' );
 ok( length($prompt) <= 2048, 'prompt maximum length is enforced' );
 like( $prompt, qr/Return only one JSON object/, 'output instruction survives prompt limiting' );
+like( $prompt, qr/Missing MARC fields are not evidence against a suggestion/,
+    'cataloguing prompt does not turn missing metadata into negative evidence' );
+like( $prompt, qr/distinguish explicit evidence from inference/i,
+    'cataloguing prompt separates evidence from professional inference' );
+
+my $sparse_non_title = {
+    request_id => 'sparse-creator', task => 'subject_heading_suggestion',
+    context_mode => 'tag_only',
+    tag_context => { tag => '100', occurrence => 0,
+        subfields => [{ code => 'a', value => 'Okafor, Ada' }] },
+    record_context => { fields => [
+        { tag => '500', occurrence => 0,
+          subfields => [{ code => 'a', value => 'Community oral-history interviews.' }] },
+        { tag => '100', occurrence => 0,
+          subfields => [{ code => 'a', value => 'Okafor, Ada' }] },
+    ] },
+    features => { subject_guidance => 1 },
+};
+my $sparse_normalized =
+  Koha::Plugin::Cataloging::AutoPunctuation::AI::Context::_normalize_ai_request_payload(
+    $ai, $sparse_non_title, { ai_context_mode => 'tag_only' } );
+is( $sparse_normalized->{context_mode}, 'tag_plus_related_fields',
+    'cataloguing task receives evidence context independently of field-assistance default' );
+my $sparse_primary =
+  Koha::Plugin::Cataloging::AutoPunctuation::AI::Prompt::_cataloging_primary_context_from_payload(
+    $ai, $sparse_normalized );
+is( $sparse_primary->{tag}, '100',
+    'meaningful non-245 evidence can anchor a sparse cataloguing request' );
+ok( Koha::Plugin::Cataloging::AutoPunctuation::AI::Prompt::_cataloging_context_has_evidence(
+        $ai, $sparse_primary ),
+    'sparse evidence is not rejected by a fixed MARC field checklist' );
+my $local_context = { fields => [
+    { tag => '999', occurrence => 0,
+      subfields => [{ code => 'a', value => 'Approved local genre evidence' }] }
+] };
+my $allowed_local = $ai->_filter_record_context(
+    $local_context,
+    { ai_context_mode => 'tag_only', enable_local_fields => 1,
+      local_fields_allowlist => '999a', excluded_tags => '' },
+    {}, 'cataloging_review' );
+is( $allowed_local->{fields}[0]{subfields}[0]{value},
+    'Approved local genre evidence',
+    'explicitly allowlisted local evidence survives cataloguing context filtering' );
+my $blocked_local = $ai->_filter_record_context(
+    $local_context,
+    { ai_context_mode => 'tag_only', enable_local_fields => 0,
+      local_fields_allowlist => '', excluded_tags => '' },
+    {}, 'cataloging_review' );
+is_deeply( $blocked_local, {},
+    'local evidence remains excluded when local-field support is disabled' );
+is(
+    Koha::Plugin::Cataloging::AutoPunctuation::AI::Guard::_redact_value(
+        $ai, { ai_redaction_rules => '9XX,520a' }, '999', 'a', 'Private local data' ),
+    '[REDACTED]',
+    'matching AI redaction rules return the redaction marker rather than a boolean'
+);
+is(
+    Koha::Plugin::Cataloging::AutoPunctuation::AI::Guard::_redact_value(
+        $ai, { ai_redaction_rules => '9XX,520a' }, '245', 'a', 'Public title' ),
+    'Public title',
+    'nonmatching AI redaction rules preserve the catalogue value'
+);
 
 my $tutor_payload = {
     request_id => 'tutor-1',
@@ -198,6 +261,12 @@ my $range = { %{$valid_class}, candidate => { %{ $valid_class->{candidate} }, va
 ok( @{ Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_validate_ai_task_response($ai, $normalized, $range) }, 'classification range is rejected' );
 my $punctuated = { %{$valid_class}, candidate => { %{ $valid_class->{candidate} }, value => 'Z665.' } };
 ok( @{ Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_validate_ai_task_response($ai, $normalized, $punctuated) }, 'terminal classification punctuation is rejected' );
+my $full_call_number = { %{$valid_class}, candidate => {
+    %{ $valid_class->{candidate} }, value => 'QA76.73.J38 S65 2020' } };
+is_deeply(
+    Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_validate_ai_task_response(
+        $ai, $normalized, $full_call_number ),
+    [], 'real-world LCC call number with multiple Cutters and date is accepted' );
 
 my $subject_payload = { %{$normalized}, task => 'subject_heading_suggestion' };
 my $invalid_subject = {
@@ -238,7 +307,14 @@ my $fixture_path = File::Spec->catfile( $Bin, 'fixtures', 'ai_evaluation_cases.j
 open my $fixture_fh, '<:encoding(UTF-8)', $fixture_path or die $!;
 my $cases = from_json( do { local $/; <$fixture_fh> } );
 close $fixture_fh;
-ok( @{$cases} >= 3, 'deterministic AI evaluation dataset loads' );
+ok( @{$cases} >= 8, 'deterministic AI evaluation dataset covers sparse through rich records' );
+my %evaluation_ids = map { ( $_->{id} || '' ) => 1 } @{$cases};
+for my $required_case (qw(
+  cataloging-sparse-minimal cataloging-sparse-creator cataloging-moderate-record
+  cataloging-rich-record cataloging-uncommon-local-work
+)) {
+    ok( $evaluation_ids{$required_case}, "$required_case fixture is present" );
+}
 for my $case ( @{$cases} ) {
     ok( $case->{expected_task}, "$case->{id}: expected task recorded" );
     ok( $case->{expected_human_review}, "$case->{id}: human review required" );

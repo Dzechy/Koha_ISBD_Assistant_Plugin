@@ -40,10 +40,6 @@ if (!apiClient.includes("form.set('csrf_token', token)")) {
 if (!apiClient.includes("new URLSearchParams(queryIndex >= 0 ? url.slice(queryIndex + 1) : '')")) {
     throw new Error('API client does not copy URL dispatch parameters into the POST body');
 }
-const apiClientCore = fs.readFileSync(
-    path.join(root, 'Koha/Plugin/Cataloging/AutoPunctuation/js/api_client_core.js'),
-    'utf8'
-);
 const postJsonStart = apiClient.indexOf('async function postJson(');
 const postJsonEnd = apiClient.indexOf('\n    function buildEndpoint(', postJsonStart);
 const postJsonSource = apiClient.slice(postJsonStart, postJsonEnd);
@@ -91,9 +87,9 @@ if (guideProgress.includes("unless ( $self->_csrf_ok($payload) )")) {
 if (!apiClient.includes("url.searchParams.set('op', 'cud-plugin_api')")) {
     throw new Error('Intranet AJAX POST operations must use Koha\'s cud- prefix');
 }
-const csrfNormalizerStart = apiClientCore.indexOf('function normalizeCsrfToken(');
-const csrfNormalizerEnd = apiClientCore.indexOf('\n    function getCsrfToken(', csrfNormalizerStart);
-const csrfNormalizerSource = apiClientCore.slice(csrfNormalizerStart, csrfNormalizerEnd);
+const csrfNormalizerStart = apiClient.indexOf('function normalizeCsrfToken(');
+const csrfNormalizerEnd = apiClient.indexOf('\n    function getCsrfToken(', csrfNormalizerStart);
+const csrfNormalizerSource = apiClient.slice(csrfNormalizerStart, csrfNormalizerEnd);
 if (csrfNormalizerSource.includes("split(',')")) {
     throw new Error('Intranet client must not split Koha CSRF tokens on commas');
 }
@@ -101,18 +97,10 @@ if (csrfNormalizerSource.includes("split(',')")) {
 const intranetFiles = [
     'rules_engine.js',
     'ai_text_extract.js',
-    'api_client_core.js',
-    'api_client_prompt.js',
-    'api_client_guardrails.js',
-    'api_client_response.js',
     'api_client.js',
     'cuttersanborn_data.js',
     'cutter_sanborn.js',
-    'marc_intellisense_ui_core.js',
-    'marc_intellisense_ui_forms.js',
-    'marc_intellisense_ui_ai.js',
-    'marc_intellisense_ui_guide.js',
-    'marc_intellisense_ui_events.js',
+    'marc_intellisense_ui_training.js',
     'marc_intellisense_ui.js',
     'auto-punctuation.js'
 ];

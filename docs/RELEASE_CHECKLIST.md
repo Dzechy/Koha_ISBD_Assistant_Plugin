@@ -27,6 +27,13 @@ Use this checklist before publishing a release-candidate KPZ.
   `perl tests/training_progress_regression.pl`
 - Run AI subsystem and tutor-boundary regressions:
   `perl tests/ai_subsystem_regression.pl`
+- Run catalogue-context, response-pipeline, LCCS, and LOC authority regressions:
+  `node tests/ai_cataloging_context_regression.js`
+  `perl tests/ai_cataloging_pipeline_regression.pl`
+  `perl tests/lccs_evidence_regression.pl`
+  `perl tests/loc_linked_data_regression.pl`
+- Optionally verify the live LOC endpoint when external network access is available:
+  `LOC_LIVE_TEST=1 perl tests/loc_linked_data_live.pl`
 - Confirm documentation examples match engine behavior:
   `node tests/docs_examples.js`
 - Confirm Area 0 wording remains partial/handoff and never states that `338` is ISBD production process.
@@ -43,7 +50,7 @@ Use this checklist before publishing a release-candidate KPZ.
 - Build the KPZ:
   `./scripts/build_kpz.sh`
 - Inspect the package contents and confirm it contains plugin source, the pinned LCCS runtime dataset, and release docs/license:
-  `unzip -l dist/Koha_ISBD_Assistant-1.2.0.kpz`
+  `unzip -l dist/Koha_ISBD_Assistant-1.4.0.kpz`
 - Confirm the KPZ does not contain `PluginGithubPAT`, previous KPZ/ZIP files, `.git`, caches, logs, or local environment files.
 - Confirm repository-only classification schedules under `docs/LCCS` are not included in the KPZ.
 - Confirm `vendor/node_modules/lccs-2024/package.json` is present and pinned to `1.1.0`.

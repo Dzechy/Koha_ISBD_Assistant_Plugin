@@ -10,7 +10,7 @@ use Symbol qw(gensym);
 
 our $PACKAGE_VERSION = '1.1.0';
 
-sub _lccs_candidate_from_result {
+sub _raw_lccs_candidate_from_result {
     my ( $payload, $result ) = @_;
     return '' unless $payload && $result && ref $result eq 'HASH';
     my $task = $payload->{task} || '';
@@ -21,8 +21,16 @@ sub _lccs_candidate_from_result {
     return '' unless $candidate && ref $candidate eq 'HASH';
     my $value = uc( $candidate->{value} || '' );
     $value =~ s/^\s+|\s+$//g;
-    return '' unless $value =~ /^[A-Z]{1,3}\d+(?:\.\d+)?(?:\s+[A-Z]\d+(?:\.\d+)?)?$/;
     return $value;
+}
+
+sub _valid_lccs_candidate {
+    my ($value) = @_;
+    return 0 unless defined $value && !ref $value;
+    return $value =~
+/^[A-Z]{1,3}\d+(?:\.\d+)?(?:\.[A-Z]\d+(?:\.\d+)?)*(?:\s+\.?[A-Z]\d+(?:\.\d+)?)*(?:\s+[12]\d{3}[A-Z]?)?(?:\s+(?:(?:V|VOL|PT|NO|SUPPL?|COPY|C)\.?\s*\d+[A-Z]?|FOLIO|OVERSIZE|REF(?:ERENCE)?))*$/
+      ? 1
+      : 0;
 }
 
 sub _lccs_evidence_script {
@@ -77,13 +85,20 @@ sub _query_lccs_evidence {
 
 sub _verify_lccs_result {
     my ( $self, $payload, $result ) = @_;
-    my $candidate = _lccs_candidate_from_result( $payload, $result );
+    my $candidate = _raw_lccs_candidate_from_result( $payload, $result );
     return {
-        status  => 'not_applicable',
+        status  => 'not_checked',
         source  => 'lccs-2024@' . $PACKAGE_VERSION,
         matches => []
       }
       unless $candidate;
+    return {
+        status    => 'invalid_candidate',
+        source    => 'lccs-2024@' . $PACKAGE_VERSION,
+        candidate => $candidate,
+        matches   => []
+      }
+      unless _valid_lccs_candidate($candidate);
 
     my $evidence = _query_lccs_evidence( $self, [$candidate] );
     return {

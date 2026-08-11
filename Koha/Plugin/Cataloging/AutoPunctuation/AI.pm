@@ -255,27 +255,15 @@ sub _is_cataloging_ai_request {
         @_);
 }
 
-sub _cataloging_tag_context {
+sub _cataloging_primary_context_from_payload {
     return
-      Koha::Plugin::Cataloging::AutoPunctuation::AI::Prompt::_cataloging_tag_context(
+      Koha::Plugin::Cataloging::AutoPunctuation::AI::Prompt::_cataloging_primary_context_from_payload(
         @_);
 }
 
-sub _cataloging_tag_context_from_payload {
+sub _cataloging_context_has_evidence {
     return
-      Koha::Plugin::Cataloging::AutoPunctuation::AI::Prompt::_cataloging_tag_context_from_payload(
-        @_);
-}
-
-sub _cataloging_source_from_tag_context {
-    return
-      Koha::Plugin::Cataloging::AutoPunctuation::AI::Prompt::_cataloging_source_from_tag_context(
-        @_);
-}
-
-sub _build_cataloging_error_response {
-    return
-      Koha::Plugin::Cataloging::AutoPunctuation::AI::Prompt::_build_cataloging_error_response(
+      Koha::Plugin::Cataloging::AutoPunctuation::AI::Prompt::_cataloging_context_has_evidence(
         @_);
 }
 

@@ -91,6 +91,17 @@ sub _format_lc_call_number {
     return uc($class) . $normalized_number;
 }
 
+sub _format_full_lc_call_number {
+    my ( $self, $class, $tail ) = @_;
+    return '' unless $class && defined $tail;
+    my $normalized = uc($tail);
+    $normalized =~ s/\s*\.\s*/./g;
+    $normalized =~ s/\s+/ /g;
+    $normalized =~ s/^\s+|\s+$//g;
+    return '' unless $normalized ne '';
+    return uc($class) . $normalized;
+}
+
 sub _is_blocked_lc_class_prefix {
     my ( $self, $value ) = @_;
     return 0 unless defined $value && $value ne '';
@@ -177,13 +188,16 @@ sub _extract_lc_call_numbers {
             );
         }
     }
-    while ( $normalized =~ /\b([A-Z]{1,3})\s*(\d{1,4}(?:\s*\.\s*\d+)?)\b/ig ) {
-        my ( $class, $number ) = ( $1, $2 );
+    while ( $normalized =~
+/\b([A-Z]{1,3})\s*(\d{1,4}(?:\s*\.\s*\d+)?(?:\s*\.\s*[A-Z]\d+(?:\s*\.\s*\d+)?)*(?:\s+(?:\.?[A-Z]\d+(?:\.\d+)?|\d{4}[A-Z]?)){0,4})\b/ig
+      )
+    {
+        my ( $class, $tail ) = ( $1, $2 );
         next if _is_blocked_lc_class_prefix( $self, $class );
         next
           if _looks_like_marc_tag_reference( $self, $normalized, $+[0],
-            $number );
-        my $value = _format_lc_call_number( $self, $class, $number );
+            $tail );
+        my $value = _format_full_lc_call_number( $self, $class, $tail );
         push @candidates, { value => $value, start => $-[0] } if $value;
     }
     my $ranked = _rank_lc_candidates( $self, $text, \@candidates );

@@ -424,12 +424,12 @@
                                     <li>
                                         <label for="ai_subject_guidance">AI Subject Guidance:</label>
                                         <input type="checkbox" name="ai_subject_guidance" id="ai_subject_guidance" value="1" [% IF settings.ai_subject_guidance %]checked[% END %]/>
-                                        <span class="hint">Suggest subject headings from title source.</span>
+                                        <span class="hint">Suggest subject headings from the available bibliographic evidence.</span>
                                     </li>
                                     <li>
                                         <label for="ai_callnumber_guidance">AI Call Number Guidance:</label>
                                         <input type="checkbox" name="ai_callnumber_guidance" id="ai_callnumber_guidance" value="1" [% IF settings.ai_callnumber_guidance %]checked[% END %]/>
-                                        <span class="hint">Suggest an LC class number from title source.</span>
+                                        <span class="hint">Suggest an LC class number from the available bibliographic evidence.</span>
                                     </li>
                                     <li>
                                         <label for="lc_class_target">LC Classification Target (tag$subfield):</label>

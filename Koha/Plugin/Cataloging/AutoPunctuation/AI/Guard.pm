@@ -18,6 +18,7 @@
 package Koha::Plugin::Cataloging::AutoPunctuation::AI::Guard;
 
 use Modern::Perl;
+use Koha::Plugin::Cataloging::AutoPunctuation::AI::Context ();
 
 sub _validate_ai_response_guardrails {
     my ( $self, $payload, $result, $pack, $settings ) = @_;
@@ -186,18 +187,49 @@ sub _redact_record_context {
 }
 
 sub _filter_record_context {
-    my ( $self, $record_context, $settings, $tag_context ) = @_;
+    my ( $self, $record_context, $settings, $tag_context, $task ) = @_;
     return {} unless $record_context && ref $record_context eq 'HASH';
+    $task ||= $settings->{_ai_task} || '';
+    my $cataloging_task = $task =~
+      /^(?:cataloging_classification|subject_heading_suggestion|cataloging_review)$/
+      ? 1
+      : 0;
     my $mode = $settings->{ai_context_mode} || 'tag_only';
     $mode = 'tag_plus_related_fields' if $mode eq 'tag_plus_neighbors';
     $mode = 'full_record' if $mode eq 'full';
+    $mode = 'tag_plus_related_fields' if $cataloging_task;
     return {} if $mode eq 'tag_only';
     my $fields = $record_context->{fields};
     return {} unless $fields && ref $fields eq 'ARRAY' && @{$fields};
     my $normalized =
-      $self->_normalize_record_context( $record_context, 30, 30 );
+      $self->_normalize_record_context( $record_context, 30, 30, $task );
     my @list = @{ $normalized->{fields} || [] };
+    @list = map {
+        my $field = $_;
+        my @subfields = grep {
+            my $sub = $_;
+            my $excluded = $self->can('_is_excluded_field')
+              ? $self->_is_excluded_field(
+                $settings, $field->{tag} || '', $sub->{code} || '' )
+              : 0;
+            !$excluded;
+        } @{ $field->{subfields} || [] };
+        @subfields ? { %{$field}, subfields => \@subfields } : ();
+    } @list;
     return {} unless @list;
+
+    if ($cataloging_task) {
+        my $position = 0;
+        my @prioritized = map { $_->{field} } sort {
+            Koha::Plugin::Cataloging::AutoPunctuation::AI::Context::_cataloging_evidence_rank(
+                $self, $a->{field}{tag} )
+              <=> Koha::Plugin::Cataloging::AutoPunctuation::AI::Context::_cataloging_evidence_rank(
+                $self, $b->{field}{tag} )
+              || $a->{position} <=> $b->{position}
+        } map { { field => $_, position => $position++ } } @list;
+        @prioritized = @prioritized[ 0 .. 23 ] if @prioritized > 24;
+        return { fields => \@prioritized };
+    }
 
     if ( $mode eq 'tag_plus_related_fields' ) {
         my $target_tag = $tag_context
@@ -207,7 +239,7 @@ sub _filter_record_context {
           ? $self->_normalize_occurrence( $tag_context->{occurrence} )
           : 0;
         my %related = map { $_ => 1 }
-          qw(020 022 041 100 110 111 130 240 245 246 250 254 255 260 264 300 336 337 338 362 440 490 500 504 505 520 600 610 611 630 648 650 651 655 700 710 711 730 830);
+          qw(020 022 024 041 100 110 111 130 240 245 246 250 254 255 260 264 300 306 336 337 338 362 440 490 500 501 502 504 505 506 507 508 511 518 520 521 522 524 525 530 533 534 538 546 550 555 600 610 611 630 648 650 651 655 700 710 711 730 740 752 765 767 770 772 773 775 776 780 785 787 800 810 811 830);
         my @subset = grep {
             my $field = $_ || {};
             my $tag   = $field->{tag} || '';
@@ -236,19 +268,11 @@ sub _redact_value {
     my @rules = split( /\s*,\s*/, $settings->{ai_redaction_rules} || '' );
     my $should_redact = scalar grep {
         my $entry = $_;
-        if ( $entry =~ /^9XX$/i ) {
-            return _is_local_tag($tag);
-        }
-        if ( $entry =~ /^(\d)XX$/i ) {
-            return $tag =~ /^$1\d\d$/;
-        }
-        if ( $entry =~ /^\d{3}[a-z0-9]$/i ) {
-            return lc($entry) eq lc( $tag . $subfield );
-        }
-        if ( $entry =~ /^\d{3}$/ ) {
-            return $entry eq $tag;
-        }
-        return 0;
+             $entry =~ /^9XX$/i            ? _is_local_tag($tag)
+          :  $entry =~ /^(\d)XX$/i         ? $tag =~ /^$1\d\d$/
+          :  $entry =~ /^\d{3}[a-z0-9]$/i ? lc($entry) eq lc( $tag . $subfield )
+          :  $entry =~ /^\d{3}$/           ? $entry eq $tag
+          :                                  0;
     } @rules;
     return $should_redact ? '[REDACTED]' : $value;
 }

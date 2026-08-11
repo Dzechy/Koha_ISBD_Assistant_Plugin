@@ -27,7 +27,7 @@ use Koha::Plugin::Cataloging::AutoPunctuation::AI::Prompt ();
 use Koha::Plugin::Cataloging::AutoPunctuation::AI::LCCS ();
 use Koha::Plugin::Cataloging::AutoPunctuation::AI::LinkedData::LOC ();
 
-our $CLIENT_RESPONSE_VERSION = '2.0.0';
+our $CLIENT_RESPONSE_VERSION = '2.1.0';
 
 sub _semantic_subfields {
     my ( $tag, $subfields, $pack ) = @_;
@@ -154,7 +154,7 @@ sub _task_response_for_client {
                 evidence => $candidate->{evidence} || $result->{evidence} || [],
             },
             verification => $result->{evidence_verification} || {
-                type => 'LCCS', status => 'not_applicable'
+                type => 'LCCS', status => 'not_checked'
             },
             requires_human_review => JSON::true,
         };
@@ -574,31 +574,7 @@ sub ai_suggest {
               _semantic_primary_subfield( $tag, $subfields, $pack )
               unless $primary_subfield;
 
-            if ($cataloging_mode) {
-                my $cataloging_tag_context =
-                  $self->_cataloging_tag_context_from_payload($payload);
-                if ( !$cataloging_tag_context || !%{$cataloging_tag_context} ) {
-                    $response_inner = _cataloging_insufficient_response(
-                        $self, $payload,
-                        '245$a is required for cataloging guidance.' );
-                    last AI_REQUEST;
-                }
-                my $source_result = $self->_cataloging_source_from_tag_context(
-                    $cataloging_tag_context);
-                if ( $source_result->{error} ) {
-                    $response_inner = _cataloging_insufficient_response(
-                        $self, $payload, $source_result->{error} );
-                    last AI_REQUEST;
-                }
-                if ( $self->_is_excluded_field( $settings, '245', 'a' ) ) {
-                    $response_inner =
-                      { error =>
-'AI cataloging guidance is disabled because 245$a is excluded.'
-                      };
-                    last AI_REQUEST;
-                }
-            }
-            else {
+            if (!$cataloging_mode) {
                 if (
                     $self->_is_excluded_field(
                         $settings, $tag, $primary_subfield
@@ -647,35 +623,43 @@ sub ai_suggest {
                 last AI_REQUEST;
             }
 
-            my $cataloging_source = '';
             my $deterministic_findings = [];
             if ($cataloging_mode) {
-                my $cataloging_tag_context =
-                  $self->_cataloging_tag_context_from_payload($payload);
-                my $source_result = $self->_cataloging_source_from_tag_context(
-                    $cataloging_tag_context);
-                if ( $source_result->{error} ) {
-                    $response_inner = _cataloging_insufficient_response(
-                        $self, $payload, $source_result->{error} );
-                    last AI_REQUEST;
-                }
-                $cataloging_source = $source_result->{source};
-                my $filtered_tag_context =
-                  $self->_redact_tag_context( $cataloging_tag_context,
+                my $request_tag_context = $payload->{tag_context} || {};
+                my @safe_request_subfields = grep {
+                    !$self->_is_excluded_field(
+                        $settings, $request_tag_context->{tag} || '',
+                        $_->{code} || '' )
+                } @{ $request_tag_context->{subfields} || [] };
+                $payload->{tag_context} = $self->_redact_tag_context(
+                    { %{$request_tag_context}, subfields => \@safe_request_subfields },
                     $settings );
-                $payload->{tag_context} = $filtered_tag_context;
                 my $context_settings = { %{$settings} };
+                $context_settings->{_ai_task} = $task;
                 $context_settings->{ai_context_mode} = $payload->{context_mode}
                   if $payload->{context_mode};
                 my $filtered_record = $self->_filter_record_context(
                     $payload->{record_context}, $context_settings,
-                    $cataloging_tag_context );
+                    $payload->{tag_context}, $task );
                 if ( $filtered_record && @{ $filtered_record->{fields} || [] } ) {
-                    $payload->{record_context} = $filtered_record;
+                    $payload->{record_context} =
+                      $self->_redact_record_context( $filtered_record, $settings );
                 }
                 else {
                     delete $payload->{record_context};
                 }
+                my $cataloging_context =
+                  $self->_cataloging_primary_context_from_payload($payload);
+                if ( !$cataloging_context
+                    || !$self->_cataloging_context_has_evidence($cataloging_context) )
+                {
+                    $response_inner = _cataloging_insufficient_response(
+                        $self, $payload,
+                        'No meaningful bibliographic evidence is available for this cataloguing task.' );
+                    last AI_REQUEST;
+                }
+                $payload->{tag_context} =
+                  $self->_redact_tag_context( $cataloging_context, $settings );
             }
             else {
                 my $field_payload = {
@@ -717,7 +701,6 @@ sub ai_suggest {
                 $payload,
                 $settings,
                 {
-                    source      => $cataloging_source,
                     tag_context => $payload->{tag_context},
                     deterministic_findings => $deterministic_findings,
                 }
@@ -752,7 +735,7 @@ sub ai_suggest {
             my $cache_key = sha256_hex(
                 join( '|',
                     $task,
-                    'generation-cache:2',
+                    'generation-cache:3',
                     'schema:1.0.0',
                     $tag,
                     ( $tag_context->{ind1} // '' ),

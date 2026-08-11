@@ -159,7 +159,7 @@ bash scripts/build_kpz.sh
 The expected package path is:
 
 ```text
-dist/Koha_ISBD_Assistant-1.3.0.kpz
+dist/Koha_ISBD_Assistant-1.4.0.kpz
 ```
 
 Install it in Koha:
@@ -178,11 +178,11 @@ The normal cataloging interface is `cataloguing/addbiblio.pl`. That is where the
 
 ## Koha 26 Compatibility
 
-Plugin version `1.0.2` and later, including the current `1.3.0`, supports the stock Koha `25.11` and `26.05` plugin controller. Its API methods emit their own CGI status, JSON content type, and JSON body, as required by Koha's `plugins/run.pl`. Plugin POST requests use a form-encoded `payload` and copy `class`, `method`, and `op` into the POST body because Koha `26.05` may not expose URL query parameters through `CGI->param` on POST requests. No Koha core-file override is required.
+Plugin version `1.0.2` and later, including the current `1.4.0`, supports the stock Koha `25.11` and `26.05` plugin controller. Its API methods emit their own CGI status, JSON content type, and JSON body, as required by Koha's `plugins/run.pl`. Plugin POST requests use a form-encoded `payload` and copy `class`, `method`, and `op` into the POST body because Koha `26.05` may not expose URL query parameters through `CGI->param` on POST requests. No Koha core-file override is required.
 
 Koha core-file copies are deliberately excluded from this repository and from the KPZ. Do not copy old `Auth.pm`, `Handler.pm`, or `plugins/run.pl` files over Koha `26.05` files. Koha upgrades replace core files, and an override from another release can break authentication or plugin dispatch.
 
-If an earlier installation applied those overrides, restore the package-owned Koha files before testing `1.3.0`. The recovery helper intentionally supports backup and restore only:
+If an earlier installation applied those overrides, restore the package-owned Koha files before testing `1.4.0`. The recovery helper intentionally supports backup and restore only:
 
 ```bash
 bash scripts/kohafilesbackup.sh backup
@@ -330,7 +330,7 @@ Model selection is provider-specific. The configure page remembers OpenRouter an
 
 `ai_prompt_default` is the punctuation guidance prompt. It should keep the model focused on explaining and suggesting punctuation-compatible changes.
 
-`ai_prompt_cataloging` is the cataloging prompt for classification and subject suggestions. It supports `{{source_text}}`.
+`ai_prompt_cataloging` is the cataloging prompt for classification and subject suggestions. It supports `{{source_text}}`, which is populated from the highest-priority meaningful bibliographic context available rather than requiring `245$a`.
 
 Customize prompts only when you have a clear local policy need. Do not remove instructions that require JSON shape, punctuation-only behavior for punctuation patches, deterministic-rule compliance, or safe handling of record content. A weaker prompt can increase rejected patches or unsafe advice, but it cannot bypass server-side guardrails.
 
@@ -354,13 +354,13 @@ These rules reduce what record data is sent to the provider. Keep local fields r
 - `tag_plus_related_fields`: include bibliographically relevant fields rather than adjacent DOM fields.
 - `full_record`: include the redacted full record.
 
-Start with `tag_only`. Use broader context only when cataloging guidance needs it and local privacy policy allows it.
+Start with `tag_only` for field-level punctuation explanations. Classification, subject, and cataloguing-review tasks automatically receive a bounded, redacted set of bibliographically relevant fields because they require record-level evidence; this task-specific override does not enable blind full-record submission. Missing fields reduce confidence or specificity instead of blocking a request, and only a record with no meaningful evidence returns `insufficient_evidence`.
 
 `ai_payload_preview` defaults to off. It lets administrators inspect the AI payload before sending. Turn it on when validating redaction behavior or debugging provider requests.
 
 AI never supplies an applicable punctuation patch. The deterministic rules engine generates punctuation fixes; AI may only explain those verified findings.
 
-Classification candidates are checked server-side against the exact `lccs-2024@1.1.0` dataset published on npm. An exact schedule/page match is returned as structured `evidence_verification` and labelled `verified`; this verifies that the number exists in the 2024 schedule, not that it is the best number for the work. When the package is unavailable or no exact entry matches, the AI candidate still comes through as `unverified` with a warning and mandatory cataloguer review.
+Classification candidates are checked server-side against the exact `lccs-2024@1.1.0` dataset published on npm. Full call numbers are retained, while verification checks the longest exact schedule prefix represented in the package. An exact schedule/page match is returned as structured `evidence_verification` and labelled `verified`; this verifies that the schedule number exists, not that the complete shelf number is correct or best for the work. `invalid_candidate`, `not_checked`, `no_match`, and `unavailable` remain explicit non-verified states and preserve valid advisory candidates for cataloguer review.
 
 For source builds, run `npm ci` before tests or KPZ packaging. The build bundles the pinned LCCS runtime data into the KPZ, so the Koha host does not need to run npm after plugin installation. The machine-readable dataset complements but does not replace official LC policy, local classification practice, or professional judgment.
 
@@ -618,7 +618,7 @@ bash scripts/build_kpz.sh
 Confirm the artifact exists:
 
 ```text
-dist/Koha_ISBD_Assistant-1.3.0.kpz
+dist/Koha_ISBD_Assistant-1.4.0.kpz
 ```
 
 Some Perl compile checks require Koha modules in `@INC`; run those inside a Koha environment.
@@ -634,7 +634,7 @@ bash scripts/build_kpz.sh
 The build writes the installable plugin package to:
 
 ```text
-dist/Koha_ISBD_Assistant-1.3.0.kpz
+dist/Koha_ISBD_Assistant-1.4.0.kpz
 ```
 
 Before sharing a package with another Koha site, run the tests in the previous section and install the KPZ in a staging Koha instance.

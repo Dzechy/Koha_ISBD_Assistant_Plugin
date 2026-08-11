@@ -57,6 +57,12 @@
             lastChangeMeta: null,
             lastChangeAt: 0,
             validationLocks: new Set(),
+            validationTimers: new Map(),
+            validationFingerprints: new Map(),
+            aiPanelRefreshTimer: null,
+            sidePanelFingerprint: '',
+            aiSubjectListFingerprint: '',
+            performance: {},
             aiRequestCounter: 0,
             aiRequests: {
                 punctuation: { id: 0, inFlight: false, status: '', statusType: 'info' },
@@ -187,6 +193,40 @@
         if (settings.debugMode) {
             console.log(`[ISBD Assistant] ${message}`);
         }
+    }
+
+    function performanceNow() {
+        return global.performance && typeof global.performance.now === 'function'
+            ? global.performance.now()
+            : Date.now();
+    }
+
+    function recordPerformance(state, name, startedAt) {
+        if (!state || !name) return;
+        if (!state.performance) state.performance = {};
+        const elapsed = Math.max(0, performanceNow() - startedAt);
+        const metric = state.performance[name] || { count: 0, totalMs: 0, maxMs: 0, lastMs: 0 };
+        metric.count += 1;
+        metric.totalMs += elapsed;
+        metric.maxMs = Math.max(metric.maxMs, elapsed);
+        metric.lastMs = elapsed;
+        state.performance[name] = metric;
+    }
+
+    function performanceSummary(state) {
+        const source = state && state.performance ? state.performance : {};
+        const summary = {};
+        Object.keys(source).forEach(name => {
+            const metric = source[name];
+            summary[name] = {
+                count: metric.count,
+                total_ms: Number(metric.totalMs.toFixed(2)),
+                average_ms: Number((metric.count ? metric.totalMs / metric.count : 0).toFixed(2)),
+                max_ms: Number(metric.maxMs.toFixed(2)),
+                last_ms: Number(metric.lastMs.toFixed(2))
+            };
+        });
+        return summary;
     }
 
     function buildPluginUrl(settings, methodName, extraParams) {
@@ -1282,6 +1322,41 @@
         saveFloatingPanelState($modal);
     }
 
+    const LIVE_VALIDATION_DEBOUNCE_MS = 200;
+
+    function cancelScheduledValidation(state, element) {
+        if (!state || !state.validationTimers || !element) return;
+        const timer = state.validationTimers.get(element);
+        if (timer) clearTimeout(timer);
+        state.validationTimers.delete(element);
+    }
+
+    function scheduleFieldValidation(element, settings, state, meta, indicatorMeta) {
+        if (!element || !state) return;
+        cancelScheduledValidation(state, element);
+        const timer = setTimeout(() => {
+            state.validationTimers.delete(element);
+            if (meta) {
+                runFieldValidation(element, settings, state, { apply: false });
+                consumeRevalidation(state, meta);
+            } else if (indicatorMeta) {
+                runIndicatorValidation(indicatorMeta, settings, state, { apply: false });
+            }
+        }, LIVE_VALIDATION_DEBOUNCE_MS);
+        state.validationTimers.set(element, timer);
+    }
+
+    function scheduleAiPanelRefresh($panel, settings, state) {
+        if (!$panel || !$panel.length || !state) return;
+        if (state.aiPanelRefreshTimer) clearTimeout(state.aiPanelRefreshTimer);
+        state.aiPanelRefreshTimer = setTimeout(() => {
+            state.aiPanelRefreshTimer = null;
+            if (!$panel.is(':visible')) return;
+            updateAiPanelSelection($panel, settings, state);
+            updateAiCatalogingContext($panel, settings, state);
+        }, LIVE_VALIDATION_DEBOUNCE_MS);
+    }
+
     function bindFieldHandlers(settings, state) {
         const selector = 'input[id*="subfield"], input[id*="tag_"], textarea[id*="subfield"], textarea[id*="tag_"], select[id*="subfield"], select[id*="tag_"], input[name^="field_"], textarea[name^="field_"], select[name^="field_"]';
         $(document).on('focusin.isbd', selector, function() {
@@ -1290,11 +1365,11 @@
             }
             const $aiPanel = $('#isbd-ai-panel');
             if ($aiPanel.length && $aiPanel.is(':visible')) {
-                updateAiPanelSelection($aiPanel, settings, state);
-                updateAiCatalogingContext($aiPanel, settings, state);
+                scheduleAiPanelRefresh($aiPanel, settings, state);
             }
         });
         $(document).on('blur.isbd', selector, function() {
+            cancelScheduledValidation(state, this);
             const meta = parseFieldMeta(this);
             const indicatorMeta = !meta ? parseIndicatorMeta(this) : null;
             if (meta) {
@@ -1305,6 +1380,7 @@
         });
         $(document).on('change.isbd', selector, function() {
             if (document.activeElement === this) return;
+            cancelScheduledValidation(state, this);
             const meta = parseFieldMeta(this);
             const indicatorMeta = !meta ? parseIndicatorMeta(this) : null;
             if (meta) {
@@ -1315,24 +1391,20 @@
         });
 
         $(document).on('input.isbd', selector, function() {
+            const inputStartedAt = performanceNow();
             $(this).siblings('.isbd-ghost-text').remove();
             const meta = parseFieldMeta(this);
             const indicatorMeta = !meta ? parseIndicatorMeta(this) : null;
             if (settings.enableLiveValidation) {
-                if (meta) {
-                    runFieldValidation(this, settings, state, { apply: false });
-                    consumeRevalidation(state, meta);
-                } else if (indicatorMeta) {
-                    runIndicatorValidation(indicatorMeta, settings, state, { apply: false });
-                }
+                scheduleFieldValidation(this, settings, state, meta, indicatorMeta);
             } else if (consumeRevalidation(state, meta)) {
-                runFieldValidation(this, settings, state, { apply: false });
+                scheduleFieldValidation(this, settings, state, meta, indicatorMeta);
             }
             const $aiPanel = $('#isbd-ai-panel');
             if ($aiPanel.length && $aiPanel.is(':visible')) {
-                updateAiPanelSelection($aiPanel, settings, state);
-                updateAiCatalogingContext($aiPanel, settings, state);
+                scheduleAiPanelRefresh($aiPanel, settings, state);
             }
+            recordPerformance(state, 'input_handler', inputStartedAt);
         });
 
         $(document).on('keydown.isbd', selector, function(event) {
@@ -1369,8 +1441,7 @@
         if (state && state.validationLocks) {
             state.validationLocks.add(lockKey);
         }
-        const visited = opts.visited || new Set();
-        visited.add(lockKey);
+        const validationStartedAt = performanceNow();
         try {
             if (state && opts.recordChange !== false) {
                 state.lastChangeMeta = { ...meta };
@@ -1379,7 +1450,20 @@
             if (isTagExcluded(settings, state, meta.tag)) return;
             const fieldContext = buildFieldContext(meta.tag, meta.occurrence);
             if (!fieldContext) return;
+            const fingerprint = JSON.stringify(fieldContext);
+            const previousFingerprint = state && state.validationFingerprints
+                ? state.validationFingerprints.get(lockKey)
+                : null;
+            if (previousFingerprint
+                && previousFingerprint.value === fingerprint
+                && (!opts.apply || previousFingerprint.applied)) {
+                return;
+            }
+            const dependencyStartedAt = performanceNow();
+            // validateField evaluates the complete MARC field, including its
+            // declared cross-subfield punctuation dependencies, in one pass.
             const result = global.ISBDRulesEngine.validateField(fieldContext, settings, state.rules);
+            recordPerformance(state, 'dependency_validation', dependencyStartedAt);
             const filteredFindings = result.findings.filter(finding => !isExcluded(settings, state, finding.tag, finding.subfield));
             updateFindingsForField(state, meta, filteredFindings);
             if (opts.apply) {
@@ -1390,24 +1474,24 @@
             queueMainEntryPersonalNameValidation(statementCaseContext || fieldContext, settings, state);
             const combinedFindings = collectFindingsForField(state, meta.tag, meta.occurrence);
             updateIndicators(fieldContext, combinedFindings);
-            updateSidePanel(state);
-            updateGuardrails(settings, state);
             if (opts.apply) {
                 notifyDependentFindings(meta, filteredFindings, state);
             }
             maybeShowGhost(element, filteredFindings, settings, state);
             refreshGuideForChange(state, meta);
-            if (!opts.skipDependents) {
-                revalidateDependentSubfields(settings, state, meta, {
-                    apply: opts.apply,
-                    visited,
-                    recordChange: false
+            if (state && state.validationFingerprints) {
+                state.validationFingerprints.set(lockKey, {
+                    value: fingerprint,
+                    applied: !!opts.apply
                 });
             }
+            updateGuardrails(settings, state);
+            updateSidePanel(state);
         } finally {
             if (state && state.validationLocks) {
                 state.validationLocks.delete(lockKey);
             }
+            recordPerformance(state, 'field_validation', validationStartedAt);
         }
     }
 
@@ -1430,8 +1514,8 @@
         queueMainEntryPersonalNameValidation(statementCaseContext || fieldContext, settings, state);
         const combinedFindings = collectFindingsForField(state, indicatorMeta.tag, indicatorMeta.occurrence || '');
         updateIndicators(fieldContext, combinedFindings);
-        updateSidePanel(state);
         updateGuardrails(settings, state);
+        updateSidePanel(state);
         refreshGuideForChange(state, { tag: indicatorMeta.tag, code: '', occurrence: indicatorMeta.occurrence || '' });
     }
 
@@ -1447,8 +1531,8 @@
                 });
                 refreshAll(settings);
             }
-            updateSidePanel(state);
             updateGuardrails(settings, state);
+            updateSidePanel(state);
             const errorCount = countSeverity(state.findings, 'ERROR');
             const missingRequiredCount = Array.isArray(state.missingRequired) ? state.missingRequired.length : 0;
             const blockingCount = errorCount + missingRequiredCount;
@@ -1619,31 +1703,6 @@
         return deps.size ? deps : null;
     }
 
-    function revalidateDependentSubfields(settings, state, meta, options) {
-        if (!meta || !meta.tag || !meta.code) return;
-        const deps = getDependentSubfields(state, meta.tag, (meta.code || '').toLowerCase());
-        if (!deps || !deps.size) return;
-        const opts = options || {};
-        const visited = opts.visited || new Set();
-        const occurrence = meta.occurrence || '';
-        deps.forEach(code => {
-            if (!code || code === '*' || code === (meta.code || '').toLowerCase()) return;
-            const $field = findFieldElement(meta.tag, code, occurrence);
-            if (!$field.length) return;
-            const fieldMeta = parseFieldMeta($field[0]);
-            if (!fieldMeta) return;
-            const fieldKey = buildFieldKey(fieldMeta);
-            if (visited.has(fieldKey)) return;
-            visited.add(fieldKey);
-            runFieldValidation($field[0], settings, state, {
-                apply: opts.apply,
-                skipDependents: false,
-                visited,
-                recordChange: opts.recordChange
-            });
-        });
-    }
-
     function refreshGuideForChange(state, meta) {
         if (!state || !state.guideActive || !state.guideRefresh || !state.guideCurrentStep) return;
         const step = state.guideCurrentStep;
@@ -1748,15 +1807,61 @@
         return { fields: filtered };
     }
 
-    function buildAiRecordContext(meta, settings, state) {
-        const mode = settings.aiContextMode || 'tag_only';
+    const CATALOGING_EVIDENCE_TAGS = [
+        '245', '100', '110', '111', '130', '240',
+        '250', '260', '264', '300', '306', '336', '337', '338',
+        '500', '501', '502', '504', '505', '506', '507', '508', '511', '518',
+        '520', '521', '522', '524', '525', '530', '533', '534', '538', '546',
+        '600', '610', '611', '630', '648', '650', '651', '655',
+        '700', '710', '711', '730', '740', '752', '765', '767', '770', '772',
+        '773', '775', '776', '780', '785', '787', '800', '810', '811', '830',
+        '020', '022', '024', '041', '246', '254', '255', '362', '440', '490', '550', '555'
+    ];
+    const CATALOGING_EVIDENCE_RANK = new Map(
+        CATALOGING_EVIDENCE_TAGS.map((tag, index) => [tag, index])
+    );
+
+    function isCatalogingTaskName(task) {
+        return ['cataloging_classification', 'subject_heading_suggestion', 'cataloging_review'].includes(task);
+    }
+
+    function prioritizeCatalogingFields(fields, limit) {
+        return (fields || [])
+            .map((field, position) => ({ field, position }))
+            .sort((left, right) => {
+                const leftRank = CATALOGING_EVIDENCE_RANK.has(left.field.tag)
+                    ? CATALOGING_EVIDENCE_RANK.get(left.field.tag)
+                    : 10000;
+                const rightRank = CATALOGING_EVIDENCE_RANK.has(right.field.tag)
+                    ? CATALOGING_EVIDENCE_RANK.get(right.field.tag)
+                    : 10000;
+                return leftRank - rightRank || left.position - right.position;
+            })
+            .slice(0, limit || 30)
+            .map(entry => entry.field);
+    }
+
+    function buildAiRecordContext(meta, settings, state, task) {
+        const contextStartedAt = performanceNow();
+        const catalogingTask = isCatalogingTaskName(task);
+        const mode = catalogingTask ? 'tag_plus_related_fields' : (settings.aiContextMode || 'tag_only');
         if (mode === 'tag_only') return null;
         const record = filterRecordContext(buildRecordContext(), settings, state);
         const normalized = {
             fields: (record.fields || []).map(field => {
-                return { ...field, occurrence: normalizeOccurrence(field.occurrence) };
+                return {
+                    ...field,
+                    occurrence: normalizeOccurrence(field.occurrence),
+                    subfields: (field.subfields || []).slice(0, 30)
+                };
             })
         };
+        if (catalogingTask) {
+            normalized.fields = prioritizeCatalogingFields(normalized.fields, 30);
+        } else {
+            normalized.fields = normalized.fields.slice(0, 30);
+        }
+        recordPerformance(state, 'ai_context_construction', contextStartedAt);
         if (mode === 'full' || mode === 'full_record') return normalized;
         // The server selects related fields by MARC semantics. DOM adjacency
         // is not a bibliographic relationship, so send normalized candidates.
@@ -2224,8 +2329,8 @@
         const trimmed = (value || '').toString();
         if (!trimmed.trim()) {
             updateStatementCaseFinding(state, meta, null);
-            updateSidePanel(state);
             updateGuardrails(settings, state);
+            updateSidePanel(state);
             return;
         }
         if (state.statementCaseTimers.has(key)) {
@@ -2277,8 +2382,8 @@
             const combined = collectFindingsForField(state, meta.tag, meta.occurrence);
             updateIndicators(fieldContext, combined);
         }
-        updateSidePanel(state);
         updateGuardrails(settings, state);
+        updateSidePanel(state);
     }
 
     function countSeverity(findingsMap, severity) {
@@ -2437,6 +2542,20 @@
     function updateSidePanel(state) {
         const $container = $('#isbd-findings');
         if (!$container.length) return;
+        const renderStartedAt = performanceNow();
+        const findingSnapshot = [];
+        state.findings.forEach((list, key) => {
+            findingSnapshot.push([key, list]);
+        });
+        const fingerprint = JSON.stringify({
+            findings: findingSnapshot,
+            missingRequired: state.missingRequired || [],
+            guardrailAlerts: state.guardrailAlerts || [],
+            ignored: Array.from(state.ignoredFindings || []).sort(),
+            readOnly: !!state.readOnly
+        });
+        if (state.sidePanelFingerprint === fingerprint) return;
+        state.sidePanelFingerprint = fingerprint;
         $container.empty();
         let total = 0;
         const isReadOnly = state && state.readOnly;
@@ -2582,9 +2701,11 @@
         if (!total) {
             $container.append('<div class="meta">No ISBD findings yet.</div>');
         }
+        recordPerformance(state, 'side_panel_render', renderStartedAt);
     }
 
     function updateGuardrails(settings, state) {
+        const guardrailStartedAt = performanceNow();
         const missing = [];
         const seen = new Set();
         const requiredTokens = getRequiredFieldTokens(state);
@@ -2606,6 +2727,7 @@
         const total = errorCount + missingCount;
         const status = total === 0 ? 'All guardrails satisfied' : `${total} issue(s) (${missingCount} required missing)`;
         $('#isbd-guardrail-status').text(`Guardrails: ${status}`);
+        recordPerformance(state, 'guardrail_update', guardrailStartedAt);
     }
 
     function isInternFeatureAllowed(state, key) {
@@ -2745,8 +2867,8 @@
         const record = filterRecordContext(buildRecordContext(), settings, state);
         const result = global.ISBDRulesEngine.validateRecord(record, settings, state.rules, settings.strictCoverageMode);
         state.findings = groupFindings(result.findings);
-        updateSidePanel(state);
         updateGuardrails(settings, state);
+        updateSidePanel(state);
         queueStatementCaseRecordValidations(settings, state);
         notifyDependentFindingsAfterRefresh(state);
     }
@@ -3204,7 +3326,9 @@
 
     function updateAiCatalogingContext($panel, settings, state) {
         if (!$panel || !$panel.length) return {};
-        const titleInfo = getTitleWithSubtitle();
+        const panelStartedAt = performanceNow();
+        const evidenceTarget = resolveAiTargetElement(state);
+        const evidenceMeta = evidenceTarget ? parseFieldMeta(evidenceTarget) : null;
         const cutterSource = getPreferredCutterSource();
         const yearInfo = getPublicationYear();
         const aiSuggestions = (state && state.aiSuggestions) ? state.aiSuggestions : { classification: '', subjects: [], confidence: null, errors: [] };
@@ -3227,7 +3351,9 @@
         const catalogingAllowed = isInternFeatureAllowed(state, 'aiCataloging');
         const aiApplyAllowed = isInternFeatureAllowed(state, 'aiApplyActions');
 
-        $panel.find('#isbd-ai-title').text(titleInfo.value || '(missing)');
+        $panel.find('#isbd-ai-title').text(evidenceMeta
+            ? `${evidenceMeta.tag}$${evidenceMeta.code || ''} (current field)`
+            : 'available record fields');
         $panel.find('#isbd-ai-cutter-source').text(cutterSource.label || 'Title');
         $panel.find('#isbd-ai-cutter').text(cutter || '(no match)');
         $panel.find('#isbd-ai-year').text(year || '(n/a)');
@@ -3260,7 +3386,9 @@
                 ? 'No exact LCCS schedule match'
                 : (evidenceVerification && evidenceVerification.status === 'unavailable'
                     ? 'LCCS verification unavailable'
-                    : (normalizedClassification ? 'LCCS not verified' : 'Classification not requested')));
+                    : (evidenceVerification && evidenceVerification.status === 'invalid_candidate'
+                        ? 'Invalid LCC candidate'
+                        : (normalizedClassification ? 'LCCS not verified' : 'Classification not requested'))));
         const trustLabels = [
             '<strong>AI suggestion</strong>',
             evidenceTrustLabel,
@@ -3284,22 +3412,21 @@
             || aiSuggestions.authorityLookupStatus === 'invalid_authority_response';
         $panel.find('#isbd-ai-retry-authority').toggle(!!authorityUnavailable);
 
-        const hasTitle = !!titleInfo.title;
         const selection = getAiCatalogingSelectionState($panel, settings);
         const $runBtn = $panel.find('#isbd-ai-run-cataloging');
-        if ($runBtn.length) $runBtn.prop('disabled', !catalogingAllowed || !hasTitle || !selection.hasFeature);
+        if ($runBtn.length) $runBtn.prop('disabled', !catalogingAllowed || !selection.hasFeature);
         let status = '';
         if (!catalogingAllowed) {
             status = 'AI cataloging requests are disabled for this internship profile.';
-        } else if (!hasTitle) {
-            status = 'Title source requires 245$a. 245$n, 245$p, 245$b, and 245$c are included when present.';
         } else if (!selection.hasFeature) {
             status = 'Select classification and/or subjects to enable suggestions.';
+        } else {
+            status = 'Suggestions use bounded bibliographic evidence from the current record when requested.';
         }
         const requestState = getAiRequestState(state, 'cataloging');
         const inFlight = requestState && requestState.inFlight;
         if (!inFlight) {
-            updateAiCatalogingStatus($panel, status, hasTitle ? 'info' : 'error');
+            updateAiCatalogingStatus($panel, status, 'info');
         }
         const $useSuggested = $panel.find('#isbd-ai-use-suggested-class');
         if ($useSuggested.length) {
@@ -3329,7 +3456,7 @@
             $apply942.prop('disabled', !!(readOnly || !aiApplyAllowed));
         }
         updateAiCatalogingControls($panel, settings);
-        return {
+        const projection = {
             titleInfo,
             cutterSource,
             year,
@@ -3340,6 +3467,8 @@
             cutter,
             prefix
         };
+        recordPerformance(state, 'ai_panel_projection', panelStartedAt);
+        return projection;
     }
 
     function getAiCatalogingSelectionState($panel, settings) {
@@ -3360,9 +3489,10 @@
         const state = global.ISBDIntellisenseState;
         const catalogingAllowed = isInternFeatureAllowed(state, 'aiCataloging');
         const aiApplyAllowed = isInternFeatureAllowed(state, 'aiApplyActions');
+        const requestState = getAiRequestState(state, 'cataloging');
         if ($button.length) {
             $button.text(selection.label);
-            $button.prop('disabled', $button.prop('disabled') || !selection.hasFeature || !catalogingAllowed);
+            $button.prop('disabled', !selection.hasFeature || !catalogingAllowed || !!(requestState && requestState.inFlight));
         }
         const $itemButtons = $panel.find('.isbd-ai-subject-apply, .isbd-ai-subject-undo, .isbd-ai-subject-redo');
         if ($itemButtons.length) {
@@ -3400,7 +3530,7 @@
                     <div class="body">
                         <div class="isbd-ai-section">
                             <div class="isbd-ai-section-title">Cataloging Suggestions</div>
-                            <div class="meta">Title source (245$a + optional $n/$p/$b/$c): <strong id="isbd-ai-title">None</strong></div>
+                            <div class="meta">Primary record evidence: <strong id="isbd-ai-title">None</strong></div>
                             <div class="meta">Cutter source: <span id="isbd-ai-cutter-source">Title</span></div>
                             <div class="options">
                                 <label><input type="checkbox" id="isbd-ai-opt-classification"> Classification number</label>
@@ -3619,35 +3749,26 @@
                 showAiPreviewModal(payload);
             });
             $panel.find('#isbd-ai-cataloging-preview').on('click', function() {
-                const titleInfo = getTitleWithSubtitle();
-                if (!titleInfo.title) {
-                    toast('warning', '245$a is required before previewing AI cataloging payload.');
-                    return;
-                }
-                const fieldContext = buildFieldContext('245', titleInfo.occurrence || '');
-                if (!fieldContext) {
-                    toast('warning', 'Unable to read 245 context for preview.');
-                    return;
-                }
-                const tagContext = buildCatalogingTagContext(fieldContext);
-                if (!tagContext) {
-                    toast('warning', 'Unable to build 245 title source for preview.');
-                    return;
-                }
                 const features = {
                     punctuation_explain: false,
                     subject_guidance: settings.aiSubjectGuidance && $panel.find('#isbd-ai-opt-subjects').is(':checked'),
                     call_number_guidance: settings.aiCallNumberGuidance && $panel.find('#isbd-ai-opt-classification').is(':checked')
                 };
+                const task = catalogingTaskFromFeatures(features);
+                const evidenceContext = buildCatalogingEvidenceRequestContext(settings, state, task);
+                const tagContext = evidenceContext.tagContext;
+                if (!tagContext) {
+                    toast('warning', 'No meaningful bibliographic evidence is available for preview.');
+                    return;
+                }
                 const payload = {
                     request_id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-                    task: catalogingTaskFromFeatures(features),
-                    context_mode: normalizeAiContextMode(settings.aiContextMode),
+                    task,
+                    context_mode: normalizeAiContextMode(settings.aiContextMode, task),
                     tag_context: redactTagContext(tagContext, settings, state),
                     features
                 };
-                const previewRecordContext = buildAiRecordContext(
-                    { tag: '245', occurrence: titleInfo.occurrence || 0 }, settings, state );
+                const previewRecordContext = evidenceContext.recordContext;
                 if (previewRecordContext && previewRecordContext.fields && previewRecordContext.fields.length) {
                     payload.record_context = redactRecordContext(previewRecordContext, settings, state);
                 }
@@ -3959,7 +4080,8 @@
         }
     }
 
-    function normalizeAiContextMode(mode) {
+    function normalizeAiContextMode(mode, task) {
+        if (isCatalogingTaskName(task)) return 'tag_plus_related_fields';
         if (mode === 'tag_plus_neighbors') return 'tag_plus_related_fields';
         if (mode === 'full') return 'full_record';
         return ['tag_only', 'tag_plus_related_fields', 'full_record'].includes(mode) ? mode : 'tag_only';
@@ -4004,33 +4126,6 @@
             if (onStatus) onStatus(`Error: ${message}`, 'error');
             return;
         }
-        const titleInfo = getTitleWithSubtitle();
-        if (!titleInfo.title) {
-            const message = '245$a is required for AI cataloging guidance.';
-            toast('warning', message);
-            if (onStatus) onStatus(`Error: ${message}`, 'error');
-            return;
-        }
-        if (isExcluded(settings, state, '245', 'a')) {
-            const message = 'AI cataloging guidance is disabled because 245$a is excluded.';
-            toast('warning', message);
-            if (onStatus) onStatus(`Error: ${message}`, 'error');
-            return;
-        }
-        const fieldContext = buildFieldContext('245', titleInfo.occurrence || '');
-        if (!fieldContext) {
-            const message = 'Unable to read 245 context.';
-            toast('warning', message);
-            if (onStatus) onStatus(`Error: ${message}`, 'error');
-            return;
-        }
-        const tagContext = buildCatalogingTagContext(fieldContext);
-        if (!tagContext || !tagContext.subfields || !tagContext.subfields.length) {
-            const message = '245$a is required for AI cataloging guidance.';
-            toast('warning', message);
-            if (onStatus) onStatus(`Error: ${message}`, 'error');
-            return;
-        }
         const features = opts.features || {
             punctuation_explain: false,
             subject_guidance: settings.aiSubjectGuidance,
@@ -4042,15 +4137,23 @@
             if (onStatus) onStatus(`Error: ${message}`, 'error');
             return;
         }
+        const task = catalogingTaskFromFeatures(features);
+        const evidenceContext = buildCatalogingEvidenceRequestContext(settings, state, task);
+        const tagContext = evidenceContext.tagContext;
+        if (!tagContext) {
+            const message = 'No meaningful bibliographic evidence is available for AI cataloguing guidance.';
+            toast('warning', message);
+            if (onStatus) onStatus(`Error: ${message}`, 'error');
+            return;
+        }
         const payload = {
             request_id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-            task: catalogingTaskFromFeatures(features),
-            context_mode: normalizeAiContextMode(settings.aiContextMode),
+            task,
+            context_mode: normalizeAiContextMode(settings.aiContextMode, task),
             tag_context: tagContext,
             features
         };
-        const catalogingRecordContext = buildAiRecordContext(
-            { tag: '245', occurrence: titleInfo.occurrence || 0 }, settings, state );
+        const catalogingRecordContext = evidenceContext.recordContext;
         if (catalogingRecordContext && catalogingRecordContext.fields && catalogingRecordContext.fields.length) {
             payload.record_context = catalogingRecordContext;
         }
@@ -4399,19 +4502,19 @@
     }
 
     function sanitizeAiClassificationSuggestion(text) {
-        const cleaned = normalizeClassificationSuggestion(text);
+        let cleaned = normalizeClassificationSuggestion(text);
         if (!cleaned) return '';
         if (/^\d{3}\s*\$[a-z0-9]/i.test(cleaned)) return '';
         if (/^(AND|ARE|BUT|CAN|FOR|FROM|HAD|HAS|HAVE|HER|HIS|ITS|MAY|NOT|OUR|THE|THIS|THAT|TOO|WAS|WERE|WHO|YOU)\s+\d{1,4}(?:\.\d+)?$/i.test(cleaned)) {
             return '';
         }
-        const extract = global.ISBDAiTextExtract;
-        if (extract && typeof extract.extractLcCallNumbers === 'function') {
-            const matches = extract.extractLcCallNumbers(cleaned);
-            if (!matches.length) return '';
-            return (matches[0] || '').toString().trim();
-        }
-        return cleaned;
+        cleaned = cleaned.toUpperCase()
+            .replace(/\s*\.\s*/g, '.')
+            .replace(/^([A-Z]{1,3})\s+(\d)/, '$1$2')
+            .replace(/\s+/g, ' ')
+            .trim();
+        const valid = /^[A-Z]{1,3}\d+(?:\.\d+)?(?:\.[A-Z]\d+(?:\.\d+)?)*(?:\s+\.?[A-Z]\d+(?:\.\d+)?)*(?:\s+[12]\d{3}[A-Z]?)?(?:\s+(?:(?:V|VOL|PT|NO|SUPPL?|COPY|C)\.?\s*\d+[A-Z]?|FOLIO|OVERSIZE|REF(?:ERENCE)?))*$/.test(cleaned);
+        return valid ? cleaned : '';
     }
 
     function formatCatalogingAssistantText(text) {
@@ -4506,14 +4609,22 @@
     function renderAiSubjectList($panel, subjects) {
         const $list = $panel.find('#isbd-ai-subjects');
         if (!$list.length) return;
-        if (!Array.isArray(subjects) || !subjects.length) {
-            $list.text('No safe subject suggestion was produced.');
-            return;
-        }
         const state = global.ISBDIntellisenseState || {};
         const history = (state && state.aiSubjectHistory && typeof state.aiSubjectHistory === 'object')
             ? state.aiSubjectHistory
             : {};
+        const fingerprint = JSON.stringify({
+            subjects: subjects || [],
+            history,
+            readOnly: !!state.readOnly,
+            canApply: internFeatureAllowed(state, 'aiApplyActions')
+        });
+        if (state.aiSubjectListFingerprint === fingerprint) return;
+        state.aiSubjectListFingerprint = fingerprint;
+        if (!Array.isArray(subjects) || !subjects.length) {
+            $list.text('No safe subject suggestion was produced.');
+            return;
+        }
         const formatter = global.ISBDAiTextExtract && typeof global.ISBDAiTextExtract.formatSubjectDisplay === 'function'
             ? global.ISBDAiTextExtract.formatSubjectDisplay
             : null;
@@ -4543,7 +4654,8 @@
                 ? item.authority
                 : { status: 'unverified', match_type: 'no_match' };
             let authorityLabel = 'No LCSH authority match found';
-            if (authority.match_type === 'exact_authorized' && authority.status === 'verified') authorityLabel = 'LCSH verified';
+            if (authority.match_type === 'exact_authorized'
+                && ['exact_authorized', 'verified'].includes(authority.status)) authorityLabel = 'LCSH verified';
             else if (authority.match_type === 'variant_match') authorityLabel = 'Authorized heading found';
             else if (authority.match_type === 'close_candidate') authorityLabel = 'Possible authority match';
             else if (authority.status === 'service_unavailable') authorityLabel = 'Authority verification unavailable';
@@ -5006,13 +5118,36 @@
         const subfields = filterCatalogingSubfields(rawSubfields, { activeCode });
         const activeSubfield = activeCode || (subfields[0] ? subfields[0].code : '');
         return {
-            tag: fieldContext.tag || '245',
+            tag: fieldContext.tag || '',
             ind1: fieldContext.ind1 || '',
             ind2: fieldContext.ind2 || '',
             occurrence: normalizeOccurrence(fieldContext.occurrence),
             active_subfield: activeSubfield,
             subfields
         };
+    }
+
+    function isMeaningfulCatalogingValue(value) {
+        const text = (value === undefined || value === null ? '' : String(value)).trim();
+        if (!text || /^\[redacted\]$/i.test(text)) return false;
+        if (/^(?:n\/a|none|null|unknown|tbd|to be determined|untitled|no title)$/i.test(text)) return false;
+        if (/^\[?(?:title|subtitle|responsibility|classification|subject|heading)\]?$/i.test(text)) return false;
+        if (/^[-_?.]{2,}$/.test(text) || /^test(?:ing)?$/i.test(text)) return false;
+        return true;
+    }
+
+    function buildCatalogingEvidenceRequestContext(settings, state, task) {
+        const recordContext = buildAiRecordContext(null, settings, state, task || 'cataloging_review');
+        const fields = recordContext && Array.isArray(recordContext.fields)
+            ? prioritizeCatalogingFields(recordContext.fields, 30)
+            : [];
+        const primary = fields.find(field => (field.subfields || []).some(sub => isMeaningfulCatalogingValue(sub.value)));
+        if (!primary) return { tagContext: null, recordContext };
+        const tagContext = buildCatalogingTagContext(primary);
+        if (!tagContext || !(tagContext.subfields || []).some(sub => isMeaningfulCatalogingValue(sub.value))) {
+            return { tagContext: null, recordContext };
+        }
+        return { tagContext, recordContext };
     }
 
     function getPreferredCutterSource() {
@@ -7518,6 +7653,11 @@
     global.ISBDIntellisenseTestHooks = {
         buildTitleSourceFromParts,
         filterCatalogingSubfields,
+        buildCatalogingTagContext,
+        isMeaningfulCatalogingValue,
+        prioritizeCatalogingFields,
+        sanitizeAiClassificationSuggestion,
+        performanceSummary,
         buildPluginUrl
     };
     global.ISBDIntellisenseUI = { init: initUI };

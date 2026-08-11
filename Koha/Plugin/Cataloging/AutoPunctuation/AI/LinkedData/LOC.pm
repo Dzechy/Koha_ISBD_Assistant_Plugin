@@ -10,7 +10,7 @@ use Time::HiRes qw(time);
 use URI::Escape qw(uri_escape_utf8);
 use Koha::Plugin::Cataloging::AutoPunctuation::AI::AuthorityCache ();
 
-our $ADAPTER_VERSION = '1.0.0';
+our $ADAPTER_VERSION = '2.0.0';
 our $SOURCE_LABEL = 'Library of Congress Linked Data Service';
 my $SUBJECT_BASE = 'https://id.loc.gov/authorities/subjects/';
 my $SUGGEST_URL  = $SUBJECT_BASE . 'suggest2/';
@@ -158,11 +158,10 @@ sub _result_from_suggest_payload {
     my $ranked = _rank_hits(\@hits);
     my $best = $ranked->[0];
     my $match_type = $best->{match_type};
-    my $status = $match_type eq 'close_candidate' ? 'unverified' : 'verified';
     my $is_complex = _normalize_heading_key($query) =~ /--/ ? 1 : 0;
     return {
         %{$best},
-        status       => $status,
+        status       => $match_type,
         checked      => 1,
         match_type   => $match_type,
         matches      => $ranked,
@@ -310,7 +309,7 @@ sub _normalized_jsonld_record {
       : '';
     return {
         scheme             => 'LCSH',
-        status             => 'verified',
+        status             => 'exact_authorized',
         match_type         => 'exact_authorized',
         checked            => 1,
         authorized         => 1,

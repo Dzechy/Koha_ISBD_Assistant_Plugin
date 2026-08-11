@@ -274,9 +274,9 @@ sub _load_settings {
             next;
         }
         if (   $key eq 'cataloging'
-            && $norm_value =~
-            /focused on LC classification and subject headings/i
-            && $norm_value =~ /Rationale:\s*<brief ISBD basis>/i )
+            && ( $norm_value =~ /focused on LC classification and subject headings/i
+              || $norm_value =~ /Use ONLY this title source text/i
+              || $norm_value =~ /SOURCE is computed server-side from 245\$a/i ) )
         {
             $settings->{$setting_key} = $active_default;
             next;
