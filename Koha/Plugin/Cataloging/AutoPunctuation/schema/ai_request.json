@@ -96,6 +96,19 @@
         "subject_guidance": { "type": "boolean" },
         "call_number_guidance": { "type": "boolean" }
       }
+    },
+    "tutor_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["hint", "beginner", "rule", "why"]
+        },
+        "question": { "type": "string", "maxLength": 500 },
+        "curriculum_context": { "type": "string", "maxLength": 1200 },
+        "do_not_reveal_answer": { "type": "boolean" }
+      }
     }
   }
 }

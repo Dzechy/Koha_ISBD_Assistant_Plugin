@@ -22,7 +22,7 @@ The rule engine is the source of truth. AI is optional, advisory, and constraine
 - [AI Safety And Context](#ai-safety-and-context)
 - [AI Tuning And Limits](#ai-tuning-and-limits)
 - [ISBD Guardrails](#isbd-guardrails)
-- [Training Guide And Internship Mode](#training-guide-and-internship-mode)
+- [Training Workspace And Internship Mode](#training-workspace-and-internship-mode)
 - [Custom Rules](#custom-rules)
 - [Coverage Report](#coverage-report)
 - [Troubleshooting](#troubleshooting)
@@ -46,7 +46,7 @@ The plugin is ISBD-first, but it can be used in AACR2, RDA, and local MARC21 wor
 - Shows findings with severity, expected value, and apply/undo controls.
 - Applies deterministic punctuation fixes when allowed.
 - Supports ghost text and AI Assist for guided suggestions.
-- Tracks guide progress for training workflows.
+- Provides an eleven-module cataloguing course with onboarding, practice labs, assessment, remediation, and mastery tracking.
 - Lets administrators restrict trainees through internship mode.
 - Lets administrators add local JSON rules without editing plugin code.
 - Provides a coverage report that shows which active MARC framework fields are covered, excluded, or missing deterministic rules.
@@ -158,7 +158,7 @@ bash scripts/build_kpz.sh
 The expected package path is:
 
 ```text
-dist/Koha_ISBD_Assistant-1.0.2.kpz
+dist/Koha_ISBD_Assistant-1.1.0.kpz
 ```
 
 Install it in Koha:
@@ -177,11 +177,11 @@ The normal cataloging interface is `cataloguing/addbiblio.pl`. That is where the
 
 ## Koha 26 Compatibility
 
-Plugin version `1.0.2` supports the stock Koha `25.11` and `26.05` plugin controller. Its API methods emit their own CGI status, JSON content type, and JSON body, as required by Koha's `plugins/run.pl`. Plugin POST requests use a form-encoded `payload` and copy `class`, `method`, and `op` into the POST body because Koha `26.05` may not expose URL query parameters through `CGI->param` on POST requests. No Koha core-file override is required.
+Plugin version `1.0.2` and later, including the current `1.1.0`, supports the stock Koha `25.11` and `26.05` plugin controller. Its API methods emit their own CGI status, JSON content type, and JSON body, as required by Koha's `plugins/run.pl`. Plugin POST requests use a form-encoded `payload` and copy `class`, `method`, and `op` into the POST body because Koha `26.05` may not expose URL query parameters through `CGI->param` on POST requests. No Koha core-file override is required.
 
 The root-level `Auth.pm`, `Handler.pm`, and `run.pl` files are retained only as legacy development references and are not included in the KPZ. Do not copy them over Koha `26.05` files. Koha upgrades replace core files, and an override from another release can break authentication or plugin dispatch.
 
-If an earlier installation applied those overrides, restore the package-owned Koha files before testing `1.0.2`. The recovery helper intentionally supports backup and restore only:
+If an earlier installation applied those overrides, restore the package-owned Koha files before testing `1.1.0`. The recovery helper intentionally supports backup and restore only:
 
 ```bash
 bash scripts/kohafilesbackup.sh backup
@@ -255,13 +255,13 @@ Tokens are comma-separated. A token such as `245a` means field `245` subfield `$
 
 ### Training
 
-`enable_guide` defaults to on. It enables the step-by-step ISBD training guide.
+`enable_guide` defaults to on. It enables the full ISBD cataloguing training workspace. The workspace includes first-launch onboarding, a prerequisite-based learning path, lesson content, interactive MARC exercises, progressive hints, quizzes, realistic scenarios, spaced review, and a final competency assessment.
 
 `guide_users` defaults to empty. Selected users are excluded from the guide. Use this for experienced staff who do not need training prompts.
 
 `guide_exclusion_list` defaults to empty. It is a manual exclusion list for guide behavior when user selection is not enough.
 
-The progress table updates as staff use the guide. The configure page can filter progress and export visible rows as CSV or Excel.
+Progress distinguishes course completion from demonstrated mastery. The configure-page supervisor table reports current module and lesson, completion, mastery, weak skills, attempts, failed questions, review recommendations, assessment status, and last activity. Visible rows can be exported as CSV, JSON, or Excel.
 
 ### Internship Mode
 
@@ -405,21 +405,30 @@ The plugin intentionally guards:
 
 This is why some fields are shown as partial, handoff, or guarded in the coverage matrix. A safe assistant should avoid damaging data it cannot understand deterministically.
 
-## Training Guide And Internship Mode
+## Training Workspace And Internship Mode
 
-The guide is for learning and reinforcement. It can remain enabled for new catalogers while experienced staff are excluded through `guide_users`.
+The training workspace is a professional cataloguing course, not a feature tour. It follows **Learn → See → Try → Check → Understand → Practice → Master** across eleven modules: Foundations, MARC Structure, ISBD Areas, Title & Responsibility, Edition Statements, Publication, Physical Description, Series, Notes & Identifiers, Automation & AI, and Practical Assessment.
+
+First launch asks about experience and explains the learning model. Each lesson teaches why a concept matters, shows a MARC example, and provides several exercise types. The MARC lab supports tag, indicator, and subfield editing, adding/removing subfields, and reordering repeated subfields. Incorrect answers are recorded without immediately revealing the answer; hints become progressively more specific. Revealed answers cannot award mastery.
+
+Modules unlock only after prerequisite mastery. Completion means the required lesson work was done; mastery additionally requires sufficient independent performance at the configured threshold. Recurring mistakes create targeted review recommendations, and previously learned skills return as spaced review. Advanced review mode unlocks navigation for explicit review but never grants completion or mastery.
+
+The optional AI tutor can explain a concept, offer a no-answer hint, or point to the supplied rule context. It is constrained by the curriculum and remains advisory. Deterministic rules and authoritative cataloguing sources remain primary.
+
+The workspace can remain enabled for new cataloguers while experienced staff are excluded through `guide_users`. Curriculum data lives in `Koha/Plugin/Cataloging/AutoPunctuation/rules/intern_guide_v2.json` using schema and guide version `3.0.0`. When course, guide, or rules versions change, completed work is preserved but marked as requiring review.
 
 Internship mode is stricter. It lets supervisors choose trainee accounts and decide whether those users can toggle the assistant, toggle auto-apply, show the panel, use AI, apply panel actions, or apply AI-generated actions.
 
 Suggested rollout:
 
-1. Enable the guide.
+1. Enable the training workspace.
 2. Keep auto-apply off.
 3. Keep save blocking off.
 4. Put trainees in internship mode.
 5. Allow panel visibility but restrict apply actions at first.
-6. Review progress exports during training.
-7. Gradually allow apply/undo after staff demonstrate consistency.
+6. Review completion, mastery, weak skills, and assessment status during training.
+7. Use progress exports for supervision and local records.
+8. Gradually allow apply/undo after staff demonstrate consistency.
 
 ## Custom Rules
 
@@ -584,9 +593,14 @@ Run the documentation and rule checks from the repository root:
 ```bash
 node tests/docs_examples.js
 node tests/guide_consistency.js
+node tests/training_engine_regression.js
 node tests/rules_engine_regression.js
+node tests/semantic_relationship_regression.js
 node tests/koha26_transport.js
 perl tests/rules_backend_regression.pl
+perl tests/semantic_relationship_backend.pl
+perl tests/training_progress_regression.pl
+perl tests/ai_subsystem_regression.pl
 perl tests/http_response_regression.pl
 ```
 
@@ -599,7 +613,7 @@ bash scripts/build_kpz.sh
 Confirm the artifact exists:
 
 ```text
-dist/Koha_ISBD_Assistant-1.0.2.kpz
+dist/Koha_ISBD_Assistant-1.1.0.kpz
 ```
 
 Some Perl compile checks require Koha modules in `@INC`; run those inside a Koha environment.
@@ -615,7 +629,7 @@ bash scripts/build_kpz.sh
 The build writes the installable plugin package to:
 
 ```text
-dist/Koha_ISBD_Assistant-1.0.2.kpz
+dist/Koha_ISBD_Assistant-1.1.0.kpz
 ```
 
 Before sharing a package with another Koha site, run the tests in the previous section and install the KPZ in a staging Koha instance.

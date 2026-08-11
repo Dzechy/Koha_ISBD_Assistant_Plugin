@@ -549,6 +549,7 @@ sub intranet_js {
         }
         my @js_files = (
             'js/rules_engine.js',
+            'js/training_engine.js',
             'js/ai_text_extract.js',
             'js/api_client_core.js',
             'js/api_client_prompt.js',
@@ -561,6 +562,7 @@ sub intranet_js {
             'js/marc_intellisense_ui_forms.js',
             'js/marc_intellisense_ui_ai.js',
             'js/marc_intellisense_ui_guide.js',
+            'js/marc_intellisense_ui_training.js',
             'js/marc_intellisense_ui_events.js',
             'js/marc_intellisense_ui.js',
             'js/auto-punctuation.js'
@@ -571,6 +573,20 @@ sub intranet_js {
         my $rules_pack      = $self->_load_rules_pack();
         my $rules_pack_json = to_json($rules_pack);
         $rules_pack_json =~ s{</}{<\\/}g;
+        my $training_curriculum = {};
+        try {
+            $training_curriculum = from_json(
+                $self->_read_file('rules/intern_guide_v2.json') || '{}'
+            );
+        }
+        catch {
+            $training_curriculum = {};
+        };
+        $training_curriculum = {}
+          unless $training_curriculum
+          && ref $training_curriculum eq 'HASH';
+        my $training_curriculum_json = to_json($training_curriculum);
+        $training_curriculum_json =~ s{</}{<\\/}g;
         my $framework_fields_json = to_json( $framework_fields || [] );
         my $schemas               = {
             ai_request             => $self->_load_schema('ai_request.json'),
@@ -734,6 +750,7 @@ sub intranet_js {
                         }
                     }
                     window.ISBDRulePack = $rules_pack_json;
+                    window.ISBDTrainingCurriculum = $training_curriculum_json;
                     window.ISBDSchemas = $schemas_json;
                     window.AutoPunctuationSettings = parsedSettings || {};
                     $js_content

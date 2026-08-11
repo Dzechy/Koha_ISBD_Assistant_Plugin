@@ -17,6 +17,12 @@ Use this checklist before publishing a release-candidate KPZ.
   `node tests/koha26_transport.js`
 - Confirm guide/rule fixture consistency:
   `node tests/guide_consistency.js`
+- Run training competency regressions:
+  `node tests/training_engine_regression.js`
+- Run server progress normalization regressions:
+  `perl tests/training_progress_regression.pl`
+- Run AI subsystem and tutor-boundary regressions:
+  `perl tests/ai_subsystem_regression.pl`
 - Confirm documentation examples match engine behavior:
   `node tests/docs_examples.js`
 - Confirm Area 0 wording remains partial/handoff and never states that `338` is ISBD production process.
@@ -33,14 +39,20 @@ Use this checklist before publishing a release-candidate KPZ.
 - Build the KPZ:
   `./scripts/build_kpz.sh`
 - Inspect the package contents and confirm it contains only plugin source plus release docs/license:
-  `unzip -l dist/Koha_ISBD_Assistant-1.0.2.kpz`
+  `unzip -l dist/Koha_ISBD_Assistant-1.1.0.kpz`
 - Confirm the KPZ does not contain `PluginGithubPAT`, previous KPZ/ZIP files, `.git`, caches, logs, or local environment files.
+- Confirm repository-only classification schedules under `docs/LCCS` are not included in the KPZ.
 
 ## Koha Smoke Test
 
 - Upload the KPZ in Koha `25.11` and `26.05` test instances with plugins enabled.
 - Open the configure page and save settings with AI disabled.
 - Open the tool page and confirm the guide and coverage views render.
+- Open training as a first-time user and complete all four onboarding screens.
+- Confirm prerequisite modules are locked, advanced review mode unlocks navigation only, and completed modules can be revisited.
+- Confirm wrong answers, progressive hints, answer reveal, reset, MARC subfield add/remove/reorder, and lesson completion behave as documented.
+- Confirm revealed or skipped practice cannot award mastery or final certification.
+- Confirm the supervisor table reports completion and mastery separately, weak skills, attempts, failures, recommendations, assessment, and last activity; export CSV, JSON, and Excel once.
 - On `cataloguing/addbiblio.pl`, confirm live validation appears for representative `245`, `250`, `260/264`, `300`, `490`, `5XX`, and standard-number fields.
 - Confirm save blocking only occurs for configured ERROR guardrails.
 - Confirm AI-disabled mode produces no external network request.

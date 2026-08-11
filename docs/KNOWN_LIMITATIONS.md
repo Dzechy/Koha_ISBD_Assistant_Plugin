@@ -12,3 +12,5 @@ The plugin is deterministic punctuation assistance, not a full cataloging author
 - Structured notes such as contents, reproduction, and linking notes may require local practice and source review.
 - Local `9XX` fields are excluded unless a site explicitly enables local-field rules.
 - AI output is advisory only. Deterministic findings and local cataloging policy govern patches.
+- Training progress is available locally in the browser and synchronizes to plugin storage when the authenticated Koha progress endpoint is reachable. Cross-device continuation and supervisor reporting require successful server synchronization.
+- The optional AI tutor requires configured AI access. Training lessons, deterministic feedback, hints, scoring, mastery, and certification remain available without AI.

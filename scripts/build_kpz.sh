@@ -42,6 +42,9 @@ cp -R "$ROOT_DIR/Koha/." "$TMP_DIR/Koha/"
 cp "$ROOT_DIR/LICENSE" "$TMP_DIR/" 2>/dev/null || true
 cp "$ROOT_DIR/README.md" "$TMP_DIR/" 2>/dev/null || true
 cp -R "$ROOT_DIR/docs" "$TMP_DIR/" 2>/dev/null || true
+# Source-reference classification schedules are useful in the repository but
+# are not runtime plugin documentation and would add tens of megabytes to KPZ.
+rm -rf "$TMP_DIR/docs/LCCS"
 
 (
   cd "$TMP_DIR"

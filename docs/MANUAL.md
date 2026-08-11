@@ -32,4 +32,12 @@ The plugin refuses risky automation for authority headings, URLs, control fields
 
 ## Training
 
-Guide v2 is stored in `Koha/Plugin/Cataloging/AutoPunctuation/rules/intern_guide_v2.json`. Progress should record guide and rules versions so supervisors can mark modules for review after curriculum or rule changes. Supervisor reporting uses not started, in progress, completed, mastered, failed quiz count, and last activity, with CSV/JSON export.
+Open **ISBD Training** from the cataloguing toolbar. New trainees complete four onboarding screens before seeing the dashboard. Use **Continue training** to open the recommended lesson, or revisit an unlocked module from the learning path.
+
+Lessons combine short explanations, annotated MARC examples, interactive practice, progressive hints, feedback, and reflection. In the MARC lab, edit the tag, indicators, subfield codes, values, and order, then choose **Check answer**. **Show answer** is explicit and records the attempt as revealed, so it cannot award mastery. **Reset** starts a fresh independent attempt.
+
+Course completion and mastery are different. Lessons require correct practice; skills require repeated performance at sufficient difficulty; modules require assessed skill mastery; final certification requires the practical assessment and all prerequisites. Advanced review mode only unlocks navigation.
+
+The curriculum is stored in `Koha/Plugin/Cataloging/AutoPunctuation/rules/intern_guide_v2.json` using schema `3.0.0`. Progress records course, guide, and rules versions. A version change preserves completed work and marks it for review.
+
+Supervisors use **Configuration → Training Progress** to review current module, completion, mastery, weak skills, attempts, failed questions, recommendations, assessment status, and last activity. CSV, JSON, and Excel exports contain the visible supervisor columns.

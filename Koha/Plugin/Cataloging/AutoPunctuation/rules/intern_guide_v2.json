@@ -1,116 +1,747 @@
 {
-  "guide_version": "2.0.0",
+  "schema_version": "3.0.0",
+  "guide_version": "3.0.0",
+  "course_version": "3.0.0",
   "rules_version": "1.0.0",
-  "progress_policy": {
-    "store_guide_version_with_progress": true,
-    "mark_modules_for_review_when_guide_or_rules_version_changes": true,
-    "supervisor_statuses": ["not_started", "in_progress", "completed", "mastered"],
-    "export_formats": ["csv", "json"]
+  "course": {
+    "id": "isbd-cataloguing-competency",
+    "title": "ISBD Cataloguing Competency",
+    "version": "3.0.0",
+    "description": "A structured course in MARC21, ISBD reasoning, safe automation, and professional cataloguer judgment.",
+    "learning_model": ["learn", "see", "try", "check", "understand", "practice", "master"],
+    "mastery_threshold": 0.85,
+    "review_trigger": 2
   },
-  "modules": [
+  "onboarding": [
     {
-      "id": "novice-isbd-foundations",
-      "level": "novice",
-      "title": "ISBD Foundations",
-      "objectives": ["Describe bibliographic records", "Identify MARC tags, indicators, and subfields", "Name ISBD areas 0-8", "Explain prescribed punctuation"],
-      "depends_on": [],
-      "mastery_threshold": 0.85,
-      "lessons": [
-        {
-          "id": "bibliographic-records",
-          "why": "Reviewers need to know that the record describes a resource, not the cataloger workflow.",
-          "how": "Read tags, indicators, and subfields as structured evidence.",
-          "common_mistake": "Treating punctuation as decoration instead of encoded display logic.",
-          "do_not_automate": "Do not infer missing source-of-information facts."
-        },
-        {
-          "id": "what-plugin-automates",
-          "why": "The deterministic engine is intentionally narrow.",
-          "how": "Use findings for punctuation-only changes and hand off authority, URL, coordinate, control, and local-policy fields.",
-          "common_mistake": "Accepting AI advice as cataloging authority.",
-          "do_not_automate": "Authority headings, URLs, control fields, complex structured notes, complex cartographic coordinates, and local-policy fields."
-        },
-        {
-          "id": "reading-a-finding",
-          "rule_id": "ISBD_TITLE_245C_001",
-          "why": "Safe review depends on comparing current value, expected value, rationale, severity, and patch target.",
-          "how": "Confirm the rule, inspect the proposed replacement, apply, and undo in sandbox mode if needed.",
-          "common_mistake": "Applying a patch to the right tag but wrong repeated subfield.",
-          "do_not_automate": "Non-punctuation wording changes."
-        }
-      ],
-      "examples": [
-        {
-          "name": "245 title/responsibility prefix convention",
-          "fixture": "245 title/responsibility prefix convention"
-        }
-      ],
-      "quiz": [
-        {
-          "question": "Where does the slash live in the baseline 245 title/responsibility convention?",
-          "answers": [
-            { "text": "At the start of 245$c", "correct": true, "explanation": "The baseline engine uses prefix-on-current for 245$c." },
-            { "text": "At the end of 245$b", "correct": false, "explanation": "That is legacy guide text and does not match the engine." }
-          ]
-        }
-      ],
-      "scenario_records": [
-        {
-          "id": "novice-title-sandbox",
-          "description": "Fix a 245 field with missing title/responsibility boundary punctuation.",
-          "field": {
-            "tag": "245",
-            "subfields": [
-              { "code": "a", "value": "The great Gatsby" },
-              { "code": "b", "value": "a novel" },
-              { "code": "c", "value": "F. Scott Fitzgerald" }
-            ]
-          }
-        }
+      "id": "welcome",
+      "title": "Welcome to ISBD Training",
+      "body": "Learn how bibliographic records are structured, how ISBD punctuation works, and how to review automated cataloguing suggestions safely."
+    },
+    {
+      "id": "outcomes",
+      "title": "What you'll learn",
+      "items": ["MARC structure", "ISBD descriptive areas", "prescribed punctuation", "field relationships", "cataloguer judgment", "automation boundaries", "AI-assisted review"]
+    },
+    {
+      "id": "experience",
+      "title": "How much cataloguing experience do you have?",
+      "options": [
+        { "value": "new", "label": "Completely new" },
+        { "value": "basic_marc", "label": "Basic MARC knowledge" },
+        { "value": "some_experience", "label": "Some cataloguing experience" },
+        { "value": "experienced", "label": "Experienced cataloguer" }
       ]
     },
     {
-      "id": "practitioner-area-rules",
-      "level": "practitioner",
-      "title": "Applying Area Rules",
-      "objectives": ["Review Areas 1-8", "Separate deterministic punctuation from cataloger judgment", "Use AI only as advisory help"],
-      "depends_on": ["novice-isbd-foundations"],
+      "id": "learning-model",
+      "title": "How training works",
+      "body": "Learn → See → Try → Check → Understand → Practice → Master. Completion records activity; mastery requires successful, unassisted practice."
+    }
+  ],
+  "progress_policy": {
+    "store_course_version_with_progress": true,
+    "store_guide_version_with_progress": true,
+    "store_rules_version_with_progress": true,
+    "mark_modules_for_review_when_guide_or_rules_version_changes": true,
+    "supervisor_statuses": ["not_started", "in_progress", "completed", "mastered", "review_required"],
+    "export_formats": ["csv", "json", "xlsx"]
+  },
+  "skills": [
+    { "id": "cataloguing-foundations", "title": "Cataloguing foundations", "module_id": "foundations", "required_demonstrations": 2, "minimum_difficulty": 2 },
+    { "id": "marc-structure", "title": "MARC structure", "module_id": "marc-structure", "required_demonstrations": 2, "minimum_difficulty": 3 },
+    { "id": "isbd-areas", "title": "ISBD descriptive areas", "module_id": "isbd-areas", "required_demonstrations": 2, "minimum_difficulty": 3 },
+    { "id": "semantic-relationships", "title": "Semantic field relationships", "module_id": "title-responsibility", "required_demonstrations": 2, "minimum_difficulty": 3 },
+    { "id": "terminal-punctuation", "title": "Terminal punctuation", "module_id": "title-responsibility", "required_demonstrations": 2, "minimum_difficulty": 3 },
+    { "id": "edition-250", "title": "Edition statements", "module_id": "edition-statements", "required_demonstrations": 2, "minimum_difficulty": 3 },
+    { "id": "publication-264", "title": "Publication and 264 indicators", "module_id": "publication", "required_demonstrations": 2, "minimum_difficulty": 3 },
+    { "id": "physical-300", "title": "Physical description", "module_id": "physical-description", "required_demonstrations": 2, "minimum_difficulty": 3 },
+    { "id": "series", "title": "Series transcription and access", "module_id": "series", "required_demonstrations": 2, "minimum_difficulty": 3 },
+    { "id": "notes-identifiers", "title": "Notes and identifiers", "module_id": "notes-identifiers", "required_demonstrations": 2, "minimum_difficulty": 3 },
+    { "id": "automation-boundaries", "title": "Automation boundaries", "module_id": "automation-ai", "required_demonstrations": 2, "minimum_difficulty": 3 },
+    { "id": "record-review", "title": "Independent record review", "module_id": "practical-assessment", "required_demonstrations": 2, "minimum_difficulty": 5 }
+  ],
+  "glossary": [
+    { "term": "MARC", "definition": "A standard for representing bibliographic and authority data in machine-readable fields." },
+    { "term": "tag", "definition": "A three-character number identifying a MARC field and its bibliographic role." },
+    { "term": "indicator", "definition": "One of two field positions whose value changes how a MARC field is interpreted or displayed." },
+    { "term": "subfield", "definition": "A coded component within a MARC variable field, such as 245$a for title proper." },
+    { "term": "ISBD", "definition": "International Standard Bibliographic Description, which organizes descriptive elements and their presentation." },
+    { "term": "prescribed punctuation", "definition": "Punctuation that expresses the relationship between ISBD descriptive elements." },
+    { "term": "title proper", "definition": "The chief title of a resource, normally transcribed in 245$a." },
+    { "term": "other title information", "definition": "A subtitle or other information subordinate to the title proper, normally in 245$b." },
+    { "term": "statement of responsibility", "definition": "A statement naming persons or bodies responsible for the resource, normally in 245$c." },
+    { "term": "edition statement", "definition": "A statement identifying an edition, normally transcribed in field 250." },
+    { "term": "extent", "definition": "The number and type of physical units, normally recorded in 300$a." },
+    { "term": "authority control", "definition": "Use of controlled, verified forms for names, subjects, and other access points." },
+    { "term": "transcription", "definition": "Recording descriptive information from the prescribed source according to cataloguing instructions." },
+    { "term": "descriptive area", "definition": "An ISBD grouping of related bibliographic elements, such as title, edition, or publication." }
+  ],
+  "modules": [
+    {
+      "id": "foundations",
+      "order": 1,
+      "level": "foundation",
+      "title": "Foundations",
+      "description": "Understand what a bibliographic record describes and where professional judgment begins.",
+      "objectives": ["Distinguish description from workflow", "Recognize evidence and judgment", "Explain the learning model"],
+      "prerequisites": [],
+      "depends_on": [],
+      "skills": ["cataloguing-foundations"],
       "mastery_threshold": 0.85,
       "lessons": [
-        { "id": "area-1-245-246", "rule_id": "ISBD_TITLE_245B_001", "why": "Title boundaries are common and visible.", "how": "Use prefix-on-current for 245$b and 245$c; resolve relationships by MARC role, not entry order.", "common_mistake": "Putting slash at the end of $b or treating the previous DOM input as the previous bibliographic element.", "do_not_automate": "Choosing title proper from ambiguous source data." },
-        { "id": "area-2-250", "rule_id": "ISBD_EDITION_250A_ALONE", "why": "Edition abbreviations often end with meaningful periods.", "how": "Preserve abbreviation points and add prescribed punctuation only where needed.", "common_mistake": "Collapsing 'ed.. —' to one period.", "do_not_automate": "Deciding whether wording is an edition statement." },
-        { "id": "area-3-254-255-362", "rule_id": "ISBD_CARTO_255A_001", "why": "Some material-specific punctuation is deterministic.", "how": "Apply terminal punctuation to simple scale/music/serial statements.", "common_mistake": "Spacing ratio colons.", "do_not_automate": "Complex coordinate internals." },
-        { "id": "area-4-260-264", "rule_id": "ISBD_PUBL_260B_HAS_C", "why": "Publication boundaries drive common display punctuation.", "how": "Use the 264 second indicator for function, preserve publisher abbreviation periods, and leave copyright 264 ind2=4 without manufactured ending punctuation.", "common_mistake": "Using the wrong 264 indicator for production/publication/distribution/manufacture/copyright function.", "do_not_automate": "Local production-process mappings." },
-        { "id": "area-5-300", "rule_id": "ISBD_PHYS_300A_HAS_C_NO_B", "why": "Physical descriptions frequently use abbreviation periods.", "how": "Preserve 'p.' and 'ill.' before semicolons.", "common_mistake": "Stripping the period before adding ' ;'.", "do_not_automate": "Material extent decisions." },
-        { "id": "area-6-series", "rule_id": "ISBD_SERIES_490A", "why": "Series transcription and tracing differ.", "how": "Patch semantic boundaries in transcribed 490/440 fields without manufacturing final 490 punctuation; hand off controlled 8XX headings.", "common_mistake": "Adding a final 490 period or editing authority-controlled series tracing punctuation.", "do_not_automate": "Authority-controlled 8XX headings." },
-        { "id": "area-7-notes", "rule_id": "ISBD_NOTES_500A_001", "why": "Simple note periods are deterministic.", "how": "Patch simple notes and hand off structured notes.", "common_mistake": "Normalizing internal 505/533 syntax without context.", "do_not_automate": "Complex structured notes." },
-        { "id": "area-8-identifiers", "rule_id": "ISBD_ISBN_020", "why": "Identifiers should not carry sentence punctuation.", "how": "Remove terminal punctuation from identifier values.", "common_mistake": "Treating ISBN periods like note punctuation.", "do_not_automate": "Changing identifier digits." },
-        { "id": "handoff-ai", "why": "AI can explain punctuation and suggest LCC/LCSH candidates, but it cannot authorize record changes.", "how": "Treat AI output as advisory. Apply only punctuation-only patches that pass deterministic guardrails; review LCC/LCSH candidates against authority/cataloging policy before saving.", "common_mistake": "Letting AI rewrite descriptive data or bypass deterministic ISBD findings.", "do_not_automate": "Authoritative headings, URLs, local fields, control fields, source-of-information decisions, and any non-punctuation rewrite." }
+        {
+          "id": "records-evidence-judgment",
+          "title": "Records, evidence, and judgment",
+          "why": "A record describes a resource from evidence; it is not a log of software actions.",
+          "how": "Separate facts transcribed from the source, deterministic presentation rules, and decisions requiring cataloguer judgment.",
+          "common_mistake": "Treating a software suggestion as bibliographic evidence.",
+          "do_not_automate": "Do not infer a missing source of information or accept an unverified heading.",
+          "sections": {
+            "introduction": "Cataloguing begins with evidence about a resource and a structured description of that evidence.",
+            "why_it_matters": "Reliable records require a clear boundary between transcription, deterministic formatting, and professional judgment.",
+            "learn": "The assistant may validate known structures. It cannot decide what an ambiguous source says.",
+            "see_it": "A title page is evidence; a 245 field is a structured representation; punctuation expresses relationships.",
+            "reflection": "Which parts of your local workflow depend on policy rather than universal rules?"
+          },
+          "exercises": [
+            {
+              "id": "foundation-knowledge-1",
+              "type": "knowledge",
+              "prompt": "What does a bibliographic record primarily describe?",
+              "options": ["The resource", "The cataloguer's workflow", "The plugin configuration", "The circulation history"],
+              "expected_answer": "The resource",
+              "scoring": { "passing_score": 1 },
+              "hints": ["Focus on the object being catalogued.", "The record represents bibliographic evidence, not software actions."],
+              "explanation": "A bibliographic record is a structured description of a resource.",
+              "referenced_concept": "bibliographic description",
+              "skill": "cataloguing-foundations",
+              "difficulty": 2
+            },
+            {
+              "id": "foundation-judgment-1",
+              "type": "cataloguer_judgment",
+              "prompt": "A title page is ambiguous about whether a name belongs to the title. Who must decide?",
+              "options": ["The cataloguer reviewing the source", "The punctuation engine", "The AI tutor", "The browser"],
+              "expected_answer": "The cataloguer reviewing the source",
+              "hints": ["Ask whether punctuation alone can resolve the evidence.", "Ambiguous transcription remains a human decision."],
+              "explanation": "Source-of-information and ambiguous transcription decisions require cataloguer judgment.",
+              "referenced_concept": "transcription",
+              "skill": "cataloguing-foundations",
+              "difficulty": 3
+            }
+          ]
+        }
       ],
-      "examples": [
-        { "fixture": "300 preserves p. before semicolon" },
-        { "fixture": "260 preserves Co. before comma" },
-        { "fixture": "264 publication second indicator" }
-      ],
-      "quiz": [],
-      "scenario_records": []
+      "assessment": { "exercise_ids": ["foundation-knowledge-1", "foundation-judgment-1"], "mastery_threshold": 0.85 }
     },
     {
-      "id": "reviewer-quality-control",
-      "level": "reviewer",
-      "title": "Reviewer Quality Control",
-      "objectives": ["Explain rule rationales", "Spot false positives", "Write safe custom rules", "Review intern work", "Run regression tests", "Document local exceptions"],
-      "depends_on": ["practitioner-area-rules"],
+      "id": "marc-structure",
+      "order": 2,
+      "level": "foundation",
+      "title": "MARC Structure",
+      "description": "Read tags, indicators, subfields, occurrences, and repeated elements as structured data.",
+      "objectives": ["Identify field components", "Preserve repeated subfield order", "Recognize indicator meaning"],
+      "prerequisites": ["foundations"],
+      "depends_on": ["foundations"],
+      "skills": ["marc-structure"],
       "mastery_threshold": 0.85,
       "lessons": [
-        { "id": "explain-rationale", "why": "Supervisors must defend every automated change.", "how": "Trace finding code to rule rationale and ISBD coverage status.", "common_mistake": "Approving a fix without checking rule scope.", "do_not_automate": "Judgment-heavy cataloging decisions." },
-        { "id": "false-positives", "why": "Conservative automation still needs review.", "how": "Compare current value, expected value, subfield index, and field context.", "common_mistake": "Ignoring repeated subfield indexes.", "do_not_automate": "Ambiguous source interpretation." },
-        { "id": "custom-rules", "why": "Local policy belongs in explicit local rules.", "how": "Use schema-valid punctuation-only checks with tests.", "common_mistake": "Writing broad regexes that alter headings.", "do_not_automate": "Authority, URL, control, and local fields by default." },
-        { "id": "regression-testing", "why": "JS and Perl engines must stay identical.", "how": "Run shared fixtures through both test runners before release.", "common_mistake": "Testing only the browser path.", "do_not_automate": "Untested production-process mappings." }
+        {
+          "id": "marc-anatomy",
+          "title": "Anatomy of a MARC field",
+          "why": "Punctuation rules act on semantic subfields, while storage still preserves field and subfield occurrences.",
+          "how": "Read 245 10 $a as tag 245, indicators 1 and 0, and title-proper subfield a.",
+          "common_mistake": "Assuming repeated subfields are interchangeable or that display order can overwrite storage order.",
+          "do_not_automate": "Do not reorder meaningful repeated values without a cataloguing rule.",
+          "sections": {
+            "introduction": "MARC represents bibliographic roles through fields and coded subfields.",
+            "why_it_matters": "A correction aimed at the wrong occurrence can damage valid data.",
+            "learn": "Tags identify fields; indicators qualify meaning; subfield codes identify elements; occurrences identify repetitions.",
+            "see_it": "245 10 $a The great Gatsby $b a novel $c F. Scott Fitzgerald",
+            "reflection": "How would you identify the second 264$a without relying on screen position?"
+          },
+          "exercises": [
+            {
+              "id": "marc-recognition-245c",
+              "type": "recognition",
+              "prompt": "Which component contains the statement of responsibility in a typical 245 field?",
+              "options": ["245$c", "245$a", "245 indicator 2", "300$a"],
+              "expected_answer": "245$c",
+              "hints": ["Look for the subfield role, not its screen position.", "The statement of responsibility follows the title information."],
+              "explanation": "In a typical MARC21 title statement, 245$c contains the statement of responsibility.",
+              "referenced_rule": "ISBD_TITLE_245C_001",
+              "referenced_concept": "statement of responsibility",
+              "skill": "marc-structure",
+              "difficulty": 2
+            },
+            {
+              "id": "marc-application-field",
+              "type": "field_builder",
+              "prompt": "Build a 245 field with first indicator 1, second indicator 0, title proper 'Things fall apart', and responsibility 'Chinua Achebe'.",
+              "initial_record": { "tag": "245", "ind1": " ", "ind2": " ", "subfields": [{ "code": "a", "value": "" }] },
+              "expected_answer": { "tag": "245", "ind1": "1", "ind2": "0", "subfields": [{ "code": "a", "value": "Things fall apart" }, { "code": "c", "value": "/ Chinua Achebe." }] },
+              "hints": ["Set both indicators before editing subfields.", "Use $a for title proper and $c for responsibility.", "The relationship before $c is expressed by a slash."],
+              "explanation": "The tag and indicators identify the field, while $a and $c carry distinct bibliographic elements.",
+              "referenced_rule": "ISBD_TITLE_245C_001",
+              "referenced_concept": "MARC field structure",
+              "skill": "marc-structure",
+              "difficulty": 3
+            }
+          ]
+        }
       ],
-      "examples": [],
-      "quiz": [],
-      "scenario_records": []
+      "assessment": { "exercise_ids": ["marc-recognition-245c", "marc-application-field"], "mastery_threshold": 0.85 }
+    },
+    {
+      "id": "isbd-areas",
+      "order": 3,
+      "level": "foundation",
+      "title": "ISBD Areas",
+      "description": "Connect descriptive elements to ISBD areas and understand punctuation as relationship notation.",
+      "objectives": ["Recognize descriptive areas", "Explain prescribed punctuation", "Distinguish content from presentation"],
+      "prerequisites": ["marc-structure"],
+      "depends_on": ["marc-structure"],
+      "skills": ["isbd-areas"],
+      "mastery_threshold": 0.85,
+      "lessons": [
+        {
+          "id": "areas-and-relationships",
+          "title": "Areas and relationships",
+          "why": "ISBD punctuation communicates boundaries between descriptive elements.",
+          "how": "Identify the elements first, then apply the prescribed relationship between them.",
+          "common_mistake": "Memorizing a mark without understanding which elements it connects.",
+          "do_not_automate": "Do not invent descriptive elements that are absent from the source.",
+          "sections": {
+            "introduction": "ISBD organizes description into coherent areas, from content form through identifiers and resource type.",
+            "why_it_matters": "Relationship-aware punctuation remains correct even when UI storage order varies.",
+            "learn": "Identify element A, element B, and their relationship before selecting punctuation.",
+            "see_it": "Title proper → other title information is expressed with a colon boundary.",
+            "reflection": "What information must be known before any punctuation rule can be applied safely?"
+          },
+          "exercises": [
+            {
+              "id": "isbd-area-recognition",
+              "type": "recognition",
+              "prompt": "Which descriptive area contains title and statement of responsibility?",
+              "options": ["Area 1", "Area 2", "Area 5", "Area 8"],
+              "expected_answer": "Area 1",
+              "hints": ["It is the first descriptive area after content form/media type.", "Title and responsibility are taught together."],
+              "explanation": "ISBD Area 1 contains title and statement of responsibility information.",
+              "referenced_concept": "descriptive area",
+              "skill": "isbd-areas",
+              "difficulty": 2
+            },
+            {
+              "id": "isbd-reasoning-boundary",
+              "type": "reasoning",
+              "prompt": "Why is a colon used between 245$a and 245$b in this course?",
+              "options": ["It expresses the title-proper to other-title-information relationship", "Every 245 contains a colon", "The plugin always inserts one", "$b is always last"],
+              "expected_answer": "It expresses the title-proper to other-title-information relationship",
+              "hints": ["Name both bibliographic elements.", "The mark communicates a relationship, not a field-wide habit."],
+              "explanation": "The prescribed punctuation follows the semantic relationship between title proper and other title information.",
+              "referenced_rule": "ISBD_TITLE_245B_001",
+              "referenced_concept": "prescribed punctuation",
+              "skill": "isbd-areas",
+              "difficulty": 3
+            }
+          ]
+        }
+      ],
+      "assessment": { "exercise_ids": ["isbd-area-recognition", "isbd-reasoning-boundary"], "mastery_threshold": 0.85 }
+    },
+    {
+      "id": "title-responsibility",
+      "order": 4,
+      "level": "practitioner",
+      "title": "Title & Responsibility",
+      "description": "Construct and review semantic relationships in 245 title statements.",
+      "objectives": ["Construct 245 fields", "Detect duplicate and misplaced punctuation", "Explain title relationships"],
+      "prerequisites": ["isbd-areas"],
+      "depends_on": ["isbd-areas"],
+      "skills": ["semantic-relationships", "terminal-punctuation"],
+      "mastery_threshold": 0.85,
+      "lessons": [
+        {
+          "id": "title-relationship-lab",
+          "title": "245 relationship lab",
+          "why": "Area 1 punctuation is visible, frequent, and easy to misapply when learned as isolated marks.",
+          "how": "Resolve title proper, other title information, and responsibility, then express each boundary once.",
+          "common_mistake": "Leaving a period before the responsibility slash or creating duplicate terminal points.",
+          "do_not_automate": "Do not choose the title proper from an ambiguous source or rewrite the wording.",
+          "sections": {
+            "introduction": "245$a, $b, and $c form a semantic sequence even when their inputs are not adjacent in the DOM.",
+            "why_it_matters": "Correct punctuation depends on bibliographic roles and the presence of related elements.",
+            "learn": "245$a title proper → colon → 245$b other title information → slash → 245$c responsibility.",
+            "see_it": "245 10 $a The great Gatsby : $b a novel / $c F. Scott Fitzgerald.",
+            "reflection": "Why should the engine inspect whether $c exists before deciding how $b ends?"
+          },
+          "exercises": [
+            {
+              "id": "title-fix-245",
+              "type": "field_builder",
+              "prompt": "Correct the punctuation without changing the bibliographic information.",
+              "initial_record": { "tag": "245", "ind1": "1", "ind2": "0", "subfields": [{ "code": "a", "value": "The great Gatsby" }, { "code": "b", "value": "a novel." }, { "code": "c", "value": "F. Scott Fitzgerald" }] },
+              "expected_answer": { "tag": "245", "ind1": "1", "ind2": "0", "subfields": [{ "code": "a", "value": "The great Gatsby" }, { "code": "b", "value": ": a novel" }, { "code": "c", "value": "/ F. Scott Fitzgerald." }] },
+              "hints": ["Look at the relationship between $a and $b.", "$a is title proper; $b is other title information.", "Now inspect the relationship between $b and responsibility in $c."],
+              "explanation": "The colon expresses the $a-to-$b relationship, the slash introduces responsibility, and the complete statement ends once.",
+              "referenced_rule": "ISBD_TITLE_245B_001",
+              "referenced_concept": "title relationships",
+              "skill": "semantic-relationships",
+              "difficulty": 3
+            },
+            {
+              "id": "title-detect-errors",
+              "type": "error_detection",
+              "prompt": "Find every problem in: 245 10 $a The great Gatsby $b : a novel. $c / F. Scott Fitzgerald..",
+              "options": ["Period before the slash in $b", "Duplicate final period in $c", "Colon after $a", "First indicator 1"],
+              "expected_answer": ["Period before the slash in $b", "Duplicate final period in $c"],
+              "hints": ["Check every boundary and the final terminator separately.", "One listed colon is the correct title-to-subtitle boundary."],
+              "explanation": "$b must not carry an extra period before the responsibility slash, and $c must end with only one point.",
+              "referenced_rule": "ISBD_DOUBLE_PUNCT_001",
+              "referenced_concept": "duplicate punctuation",
+              "skill": "terminal-punctuation",
+              "difficulty": 4
+            },
+            {
+              "id": "title-why-slash",
+              "type": "reasoning",
+              "prompt": "Why does the slash appear before 245$c?",
+              "options": ["$c contains the statement of responsibility", "Every 245 requires a slash", "$c is always last", "The plugin inserts it automatically"],
+              "expected_answer": "$c contains the statement of responsibility",
+              "hints": ["Identify the role of $c.", "The punctuation introduces a bibliographic element."],
+              "explanation": "The slash is prescribed because $c introduces the statement of responsibility, not because of its physical position.",
+              "referenced_rule": "ISBD_TITLE_245C_001",
+              "referenced_concept": "statement of responsibility",
+              "skill": "semantic-relationships",
+              "difficulty": 3
+            }
+          ]
+        }
+      ],
+      "assessment": { "exercise_ids": ["title-fix-245", "title-detect-errors", "title-why-slash"], "mastery_threshold": 0.85 }
+    },
+    {
+      "id": "edition-statements",
+      "order": 5,
+      "level": "practitioner",
+      "title": "Edition Statements",
+      "description": "Preserve meaningful abbreviation points while applying Area 2 relationships.",
+      "objectives": ["Recognize edition elements", "Preserve abbreviations", "Apply 250 relationships"],
+      "prerequisites": ["title-responsibility"],
+      "depends_on": ["title-responsibility"],
+      "skills": ["edition-250"],
+      "mastery_threshold": 0.85,
+      "lessons": [
+        {
+          "id": "edition-abbreviations",
+          "title": "Edition statements and abbreviation points",
+          "why": "A period may be part of an abbreviation and must not be treated as disposable punctuation.",
+          "how": "Identify the edition element and preserve intrinsic abbreviation points before applying boundaries.",
+          "common_mistake": "Collapsing a meaningful point in 'ed.' while trying to remove duplicates.",
+          "do_not_automate": "Do not decide whether source wording qualifies as an edition statement.",
+          "sections": {
+            "introduction": "Area 2 identifies edition statements and responsibility relating to an edition.",
+            "why_it_matters": "Character-aware normalization must distinguish intrinsic punctuation from generated punctuation.",
+            "learn": "Preserve abbreviation punctuation, then apply the relationship required by the next element.",
+            "see_it": "250 ## $a 2nd ed. / $b revised by Ada Okafor.",
+            "reflection": "How can provenance make punctuation removal safer?"
+          },
+          "exercises": [
+            {
+              "id": "edition-application",
+              "type": "application",
+              "prompt": "Enter the correctly punctuated 250$a before an additional edition statement in 250$b: 2nd ed.",
+              "expected_answer": "2nd ed.,",
+              "acceptable_alternatives": ["2nd ed., "],
+              "hints": ["The abbreviation point belongs to 'ed.'.", "An additional edition statement is introduced after a comma boundary."],
+              "explanation": "The intrinsic point in 'ed.' is preserved before the prescribed comma boundary.",
+              "referenced_rule": "ISBD_EDITION_250A_HAS_B",
+              "referenced_concept": "edition statement",
+              "skill": "edition-250",
+              "difficulty": 3
+            },
+            {
+              "id": "edition-error-detection",
+              "type": "error_detection",
+              "prompt": "Which problems occur in 250 ## $a 2nd ed, $b revised by Ada Okafor.. ?",
+              "options": ["Missing abbreviation point in ed.", "Duplicate terminal point", "The slash boundary", "Use of field 250"],
+              "expected_answer": ["Missing abbreviation point in ed.", "Duplicate terminal point"],
+              "hints": ["Separate intrinsic abbreviation punctuation from field-ending punctuation.", "One point is missing and another is duplicated."],
+              "explanation": "The edition abbreviation needs its point, while the responsibility statement should end only once.",
+              "referenced_rule": "ISBD_EDITION_250A_HAS_B",
+              "referenced_concept": "abbreviation punctuation",
+              "skill": "edition-250",
+              "difficulty": 4
+            }
+          ]
+        }
+      ],
+      "assessment": { "exercise_ids": ["edition-application", "edition-error-detection"], "mastery_threshold": 0.85 }
+    },
+    {
+      "id": "publication",
+      "order": 6,
+      "level": "practitioner",
+      "title": "Publication",
+      "description": "Apply Area 4 punctuation and interpret 264 functions through the second indicator.",
+      "objectives": ["Interpret 264 indicator 2", "Construct publication relationships", "Protect copyright statements"],
+      "prerequisites": ["edition-statements"],
+      "depends_on": ["edition-statements"],
+      "skills": ["publication-264"],
+      "mastery_threshold": 0.85,
+      "lessons": [
+        {
+          "id": "publication-functions",
+          "title": "Publication functions and repeated elements",
+          "why": "The same tag can represent production, publication, distribution, manufacture, or copyright.",
+          "how": "Read 264 indicator 2 before applying function-specific rules; preserve repeated places and publishers.",
+          "common_mistake": "Treating 264 ind2=4 copyright as an ordinary publication statement.",
+          "do_not_automate": "Do not infer a publication function or local production mapping from wording alone.",
+          "sections": {
+            "introduction": "Area 4 elements are related, repeated, and qualified by field indicators.",
+            "why_it_matters": "A rule correct for publication can be wrong for copyright.",
+            "learn": "264 second indicator 1 means publication; 4 means copyright notice.",
+            "see_it": "264 #1 $a Lagos : $b Spectrum Books, $c 2026.",
+            "reflection": "What evidence should be checked before changing a 264 indicator?"
+          },
+          "exercises": [
+            {
+              "id": "publication-indicator-recognition",
+              "type": "recognition",
+              "prompt": "Which 264 second indicator identifies a copyright notice?",
+              "options": ["4", "1", "0", "3"],
+              "expected_answer": "4",
+              "hints": ["Publication uses 1.", "Copyright has its own distinct function value."],
+              "explanation": "264 ind2=4 identifies a copyright notice and is handled conservatively.",
+              "referenced_rule": "ISBD_PUBL_264_COPYRIGHT_NO_PUNCT",
+              "referenced_concept": "264 function indicator",
+              "skill": "publication-264",
+              "difficulty": 2
+            },
+            {
+              "id": "publication-build-264",
+              "type": "field_builder",
+              "prompt": "Build a publication statement for Lagos, Spectrum Books, 2026.",
+              "initial_record": { "tag": "264", "ind1": " ", "ind2": "1", "subfields": [{ "code": "a", "value": "Lagos" }, { "code": "b", "value": "Spectrum Books" }, { "code": "c", "value": "2026" }] },
+              "expected_answer": { "tag": "264", "ind1": " ", "ind2": "1", "subfields": [{ "code": "a", "value": "Lagos :" }, { "code": "b", "value": "Spectrum Books," }, { "code": "c", "value": "2026." }] },
+              "hints": ["Confirm the function in indicator 2.", "Place precedes publisher; publisher precedes date.", "Check colon, comma, and terminal point separately."],
+              "explanation": "The punctuation expresses the place-to-agent and agent-to-date relationships for a publication statement.",
+              "referenced_rule": "ISBD_PUBL_260B_HAS_C",
+              "referenced_concept": "publication statement",
+              "skill": "publication-264",
+              "difficulty": 4
+            }
+          ]
+        }
+      ],
+      "assessment": { "exercise_ids": ["publication-indicator-recognition", "publication-build-264"], "mastery_threshold": 0.85 }
+    },
+    {
+      "id": "physical-description",
+      "order": 7,
+      "level": "practitioner",
+      "title": "Physical Description",
+      "description": "Construct 300 relationships while preserving meaningful abbreviation points.",
+      "objectives": ["Identify extent and dimensions", "Apply colon and semicolon boundaries", "Preserve p. and ill."],
+      "prerequisites": ["publication"],
+      "depends_on": ["publication"],
+      "skills": ["physical-300"],
+      "mastery_threshold": 0.85,
+      "lessons": [
+        {
+          "id": "physical-relationships",
+          "title": "Extent, details, and dimensions",
+          "why": "Physical-description abbreviations often end in points immediately before prescribed separators.",
+          "how": "Resolve extent $a, other physical details $b, dimensions $c, and accompanying material $e.",
+          "common_mistake": "Removing the point from p. or ill. before adding a semicolon.",
+          "do_not_automate": "Do not decide the extent or material type from incomplete evidence.",
+          "sections": {
+            "introduction": "Area 5 describes the carrier through extent and related physical details.",
+            "why_it_matters": "Correct display can contain adjacent intrinsic and prescribed punctuation.",
+            "learn": "$a to $b uses a colon; physical details to dimensions use a semicolon.",
+            "see_it": "300 ## $a 320 p. : $b ill. ; $c 24 cm.",
+            "reflection": "Why is 'ill. ;' not automatically duplicate punctuation?"
+          },
+          "exercises": [
+            {
+              "id": "physical-application",
+              "type": "application",
+              "prompt": "Correct 300$b when it contains 'ill.' and is followed by 300$c dimensions.",
+              "expected_answer": "ill. ;",
+              "hints": ["The point belongs to the abbreviation.", "Dimensions are introduced by a semicolon relationship."],
+              "explanation": "The abbreviation point is intrinsic; the spaced semicolon is the prescribed boundary before dimensions.",
+              "referenced_rule": "ISBD_PHYS_300B_HAS_C",
+              "referenced_concept": "physical details",
+              "skill": "physical-300",
+              "difficulty": 3
+            },
+            {
+              "id": "physical-reasoning",
+              "type": "reasoning",
+              "prompt": "Why should the assistant preserve the point in '320 p. ; 24 cm.'?",
+              "options": ["It belongs to the abbreviation p.", "Every 300$a requires two marks", "The semicolon replaces a point", "Dimensions are an identifier"],
+              "expected_answer": "It belongs to the abbreviation p.",
+              "hints": ["Distinguish intrinsic from prescribed punctuation.", "Read 'p.' as an abbreviated word."],
+              "explanation": "The point is part of the abbreviation and must survive relationship punctuation.",
+              "referenced_rule": "ISBD_PHYS_300A_HAS_C_NO_B",
+              "referenced_concept": "intrinsic punctuation",
+              "skill": "physical-300",
+              "difficulty": 4
+            }
+          ]
+        }
+      ],
+      "assessment": { "exercise_ids": ["physical-application", "physical-reasoning"], "mastery_threshold": 0.85 }
+    },
+    {
+      "id": "series",
+      "order": 8,
+      "level": "practitioner",
+      "title": "Series",
+      "description": "Distinguish transcribed series statements from authority-controlled series access points.",
+      "objectives": ["Review 490 relationships", "Protect 8XX authority headings", "Avoid manufactured final punctuation"],
+      "prerequisites": ["physical-description"],
+      "depends_on": ["physical-description"],
+      "skills": ["series"],
+      "mastery_threshold": 0.85,
+      "lessons": [
+        {
+          "id": "series-transcription-access",
+          "title": "Series transcription and access",
+          "why": "A transcribed series statement and a controlled series access point serve different purposes.",
+          "how": "Apply known 490 relationships conservatively and hand 8XX headings to authority control.",
+          "common_mistake": "Manufacturing a final point in 490 or editing an authority-controlled 8XX heading.",
+          "do_not_automate": "Do not rewrite controlled series access points without authority verification.",
+          "sections": {
+            "introduction": "Series information can appear as transcription and as a controlled access point.",
+            "why_it_matters": "A punctuation rule must respect whether data is descriptive or controlled.",
+            "learn": "490 is transcribed; 8XX series access points are authority-sensitive.",
+            "see_it": "490 1# $a African studies ; $v volume 12",
+            "reflection": "Why can identical words require different handling in 490 and 830?"
+          },
+          "exercises": [
+            {
+              "id": "series-recognition",
+              "type": "recognition",
+              "prompt": "Which field is a transcribed series statement?",
+              "options": ["490", "830", "100", "020"],
+              "expected_answer": "490",
+              "hints": ["Separate description from controlled access.", "The 8XX field is the controlled access point."],
+              "explanation": "490 records the transcribed series statement; 830 is a controlled series access point.",
+              "referenced_rule": "ISBD_SERIES_490A",
+              "referenced_concept": "series statement",
+              "skill": "series",
+              "difficulty": 2
+            },
+            {
+              "id": "series-automation-judgment",
+              "type": "automation_judgment",
+              "prompt": "Should the assistant rewrite an 830 heading to a form it predicts is authorized?",
+              "options": ["No, authority verification and cataloguer review are required", "Yes, whenever confidence is high", "Yes, because 830 is punctuation-only", "Only when 490 is absent"],
+              "expected_answer": "No, authority verification and cataloguer review are required",
+              "hints": ["Ask whether this is a deterministic punctuation decision.", "Controlled headings require authoritative evidence."],
+              "explanation": "The assistant must not manufacture or authorize controlled access points.",
+              "referenced_rule": "ISBD_SERIES_8XX_HANDSOFF",
+              "referenced_concept": "authority control",
+              "skill": "series",
+              "difficulty": 4
+            }
+          ]
+        }
+      ],
+      "assessment": { "exercise_ids": ["series-recognition", "series-automation-judgment"], "mastery_threshold": 0.85 }
+    },
+    {
+      "id": "notes-identifiers",
+      "order": 9,
+      "level": "practitioner",
+      "title": "Notes & Identifiers",
+      "description": "Differentiate simple note punctuation, structured notes, and punctuation-free identifiers.",
+      "objectives": ["Review simple notes", "Recognize structured-note handoffs", "Remove punctuation from standard numbers"],
+      "prerequisites": ["series"],
+      "depends_on": ["series"],
+      "skills": ["notes-identifiers"],
+      "mastery_threshold": 0.85,
+      "lessons": [
+        {
+          "id": "notes-and-standard-numbers",
+          "title": "Simple notes, complex notes, and identifiers",
+          "why": "A note may need sentence punctuation while an ISBN must remain punctuation-free.",
+          "how": "Apply deterministic endings to simple notes, hand off complex structures, and protect identifier digits.",
+          "common_mistake": "Applying note punctuation to identifiers or normalizing the internal syntax of 505/533/534.",
+          "do_not_automate": "Do not rewrite structured note content or identifier digits.",
+          "sections": {
+            "introduction": "Different MARC roles require different punctuation policies.",
+            "why_it_matters": "A universal terminal-point rule would corrupt standard numbers and structured content.",
+            "learn": "Simple 500 notes normally end in a point; 020/022 values should not; complex notes are conservative handoffs.",
+            "see_it": "500 ## $a Includes bibliographical references. | 020 ## $a 9789781234567",
+            "reflection": "What feature of a field tells you whether sentence punctuation is appropriate?"
+          },
+          "exercises": [
+            {
+              "id": "identifier-error-detection",
+              "type": "error_detection",
+              "prompt": "Find the problems: 020 ## $a 9789781234567. and 500 ## $a Includes index",
+              "options": ["ISBN has terminal punctuation", "Simple note lacks terminal punctuation", "020 should be 245", "500 must never contain punctuation"],
+              "expected_answer": ["ISBN has terminal punctuation", "Simple note lacks terminal punctuation"],
+              "hints": ["Compare the semantic role of each field.", "One is a standard number; one is a sentence-like note."],
+              "explanation": "Identifier punctuation should be removed, while the simple note needs its terminal point.",
+              "referenced_rule": "ISBD_STDNUM_NO_PUNCT_001",
+              "referenced_concept": "field-specific policy",
+              "skill": "notes-identifiers",
+              "difficulty": 3
+            },
+            {
+              "id": "complex-note-judgment",
+              "type": "automation_judgment",
+              "prompt": "A 505 contains chapter titles separated by dashes. Should the assistant normalize all internal punctuation automatically?",
+              "options": ["No, structured note internals require context and review", "Yes, every 5XX is a sentence", "Yes, if the note is long", "Only by deleting dashes"],
+              "expected_answer": "No, structured note internals require context and review",
+              "hints": ["505 is a structured contents note.", "The internal marks may carry meaning."],
+              "explanation": "Complex structured notes are a deliberate automation handoff.",
+              "referenced_rule": "ISBD_NOTES_COMPLEX_HANDSOFF",
+              "referenced_concept": "structured notes",
+              "skill": "notes-identifiers",
+              "difficulty": 4
+            }
+          ]
+        }
+      ],
+      "assessment": { "exercise_ids": ["identifier-error-detection", "complex-note-judgment"], "mastery_threshold": 0.85 }
+    },
+    {
+      "id": "automation-ai",
+      "order": 10,
+      "level": "reviewer",
+      "title": "Automation & AI",
+      "description": "Practice distinguishing deterministic help, advisory AI, authority evidence, local policy, and human judgment.",
+      "objectives": ["Classify safe automation", "Review AI advice", "Protect authority and local-policy decisions"],
+      "prerequisites": ["notes-identifiers"],
+      "depends_on": ["notes-identifiers"],
+      "skills": ["automation-boundaries"],
+      "mastery_threshold": 0.85,
+      "lessons": [
+        {
+          "id": "safe-automation-boundaries",
+          "title": "What software can and cannot decide",
+          "why": "Reliable assistance depends on knowing when the system should stop.",
+          "how": "Use deterministic rules for known punctuation; treat AI explanations and suggestions as advisory; verify authority and policy decisions.",
+          "common_mistake": "Equating fluent AI output with authoritative cataloguing evidence.",
+          "do_not_automate": "Source selection, ambiguous transcription, authority headings, local policy, complex notes, and judgment-heavy decisions.",
+          "sections": {
+            "introduction": "Automation is safest when inputs, relationships, and permitted transformations are explicit.",
+            "why_it_matters": "A confident explanation can still be wrong or unsupported.",
+            "learn": "Deterministic findings are authoritative for implemented punctuation rules; AI tutoring is optional and advisory.",
+            "see_it": "Safe: add a known missing 500 point. Human review: select a subject heading or interpret an ambiguous title page.",
+            "reflection": "What evidence would make an AI suggestion reviewable rather than merely plausible?"
+          },
+          "exercises": [
+            {
+              "id": "automation-safe-choice",
+              "type": "automation_judgment",
+              "prompt": "Which task is the safest candidate for deterministic automation?",
+              "options": ["Add known prescribed punctuation between identified 245 elements", "Choose title proper from an ambiguous source", "Authorize a new subject heading", "Apply an undocumented local policy"],
+              "expected_answer": "Add known prescribed punctuation between identified 245 elements",
+              "hints": ["Look for explicit elements and a known relationship.", "The safest option does not require new bibliographic judgment."],
+              "explanation": "Known punctuation relationships can be deterministic once the elements are identified.",
+              "referenced_rule": "ISBD_TITLE_245B_001",
+              "referenced_concept": "safe automation",
+              "skill": "automation-boundaries",
+              "difficulty": 3
+            },
+            {
+              "id": "ai-safety-review",
+              "type": "cataloguer_judgment",
+              "prompt": "An AI tutor suggests an LCSH heading with high confidence but no authority verification. What should happen next?",
+              "options": ["Verify it against the authority source and policy before use", "Apply it automatically", "Treat confidence as authority", "Replace the deterministic rules"],
+              "expected_answer": "Verify it against the authority source and policy before use",
+              "hints": ["Confidence is not authority status.", "Controlled headings require authoritative verification."],
+              "explanation": "AI suggestions remain unverified and require professional review against authoritative sources.",
+              "referenced_concept": "AI-assisted review",
+              "skill": "automation-boundaries",
+              "difficulty": 4
+            }
+          ]
+        }
+      ],
+      "assessment": { "exercise_ids": ["automation-safe-choice", "ai-safety-review"], "mastery_threshold": 0.85 }
+    },
+    {
+      "id": "practical-assessment",
+      "order": 11,
+      "level": "assessment",
+      "title": "Practical Assessment",
+      "description": "Demonstrate independent MARC recognition, ISBD reasoning, correction, construction, review, and automation judgment.",
+      "objectives": ["Construct a realistic title statement", "Review another cataloguer's work", "Justify automation boundaries"],
+      "prerequisites": ["automation-ai"],
+      "depends_on": ["automation-ai"],
+      "skills": ["record-review"],
+      "mastery_threshold": 0.85,
+      "certification": true,
+      "lessons": [
+        {
+          "id": "final-competency-assessment",
+          "title": "Final competency assessment",
+          "why": "Course completion is not evidence of competency until the trainee works independently.",
+          "how": "Complete realistic construction, review, and judgment tasks without hints or revealed answers.",
+          "common_mistake": "Treating click-through completion as mastery.",
+          "do_not_automate": "Do not certify a trainee who skipped or revealed assessment answers.",
+          "sections": {
+            "introduction": "This assessment combines recognition, construction, error detection, reasoning, and safety judgment.",
+            "why_it_matters": "Competency requires transferable reasoning across records, not memorized marks.",
+            "learn": "Review the source scenario, structure the field, check relationships, and explain where judgment remains.",
+            "see_it": "Scenario: a newly received Nigerian monograph with title, subtitle, responsibility, publication, and physical details.",
+            "reflection": "Which decision in the assessment required the most professional judgment, and why?"
+          },
+          "exercises": [
+            {
+              "id": "assessment-construct-title",
+              "type": "record_construction",
+              "prompt": "The title page reads: The history of Nigerian libraries / a study of development and practice / by John Okafor. Construct the 245 field; use first indicator 1 and second indicator 0.",
+              "initial_record": { "tag": "245", "ind1": "1", "ind2": "0", "subfields": [{ "code": "a", "value": "" }, { "code": "b", "value": "" }, { "code": "c", "value": "" }] },
+              "expected_answer": { "tag": "245", "ind1": "1", "ind2": "0", "subfields": [{ "code": "a", "value": "The history of Nigerian libraries" }, { "code": "b", "value": ": a study of development and practice" }, { "code": "c", "value": "/ John Okafor." }] },
+              "hints": ["Identify title proper, other title information, and responsibility.", "Express each relationship once.", "Check both indicators and the final terminator."],
+              "explanation": "The constructed field preserves the information while expressing title, subtitle, and responsibility relationships.",
+              "referenced_rule": "ISBD_TITLE_245C_001",
+              "referenced_concept": "record construction",
+              "skill": "record-review",
+              "difficulty": 5
+            },
+            {
+              "id": "assessment-review-record",
+              "type": "error_detection",
+              "prompt": "Review another cataloguer's record: 264 #4 $a Lagos : $b Spectrum Books, $c ©2026. and 020 ## $a 9789781234567. Identify every unsafe punctuation action.",
+              "options": ["Manufactured publication punctuation in copyright 264", "Terminal point on ISBN", "Copyright symbol", "Use of 264 tag"],
+              "expected_answer": ["Manufactured publication punctuation in copyright 264", "Terminal point on ISBN"],
+              "hints": ["Read the 264 function indicator first.", "Then inspect the semantic role of the standard number."],
+              "explanation": "Copyright 264 is not normalized as an ordinary publication statement, and identifiers must not carry sentence punctuation.",
+              "referenced_rule": "ISBD_PUBL_264_COPYRIGHT_NO_PUNCT",
+              "referenced_concept": "record review",
+              "skill": "record-review",
+              "difficulty": 6
+            },
+            {
+              "id": "assessment-automation-judgment",
+              "type": "automation_judgment",
+              "prompt": "During final review, the source is ambiguous about whether a phrase is subtitle or responsibility. What is the correct action?",
+              "options": ["Pause automation and review the prescribed source and policy", "Let AI choose and apply automatically", "Always place it in 245$b", "Delete the phrase"],
+              "expected_answer": "Pause automation and review the prescribed source and policy",
+              "hints": ["This is a source interpretation question.", "Deterministic punctuation begins only after elements are identified."],
+              "explanation": "Ambiguous transcription is a professional judgment boundary and cannot be certified through automated guessing.",
+              "referenced_concept": "cataloguer judgment",
+              "skill": "record-review",
+              "difficulty": 7
+            }
+          ]
+        }
+      ],
+      "assessment": {
+        "exercise_ids": ["assessment-construct-title", "assessment-review-record", "assessment-automation-judgment"],
+        "mastery_threshold": 0.85,
+        "hints_disqualify_attempt": true,
+        "revealed_answers_disqualify_attempt": true
+      }
     }
   ]
 }

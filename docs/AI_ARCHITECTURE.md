@@ -9,3 +9,5 @@ The supported tasks are `punctuation_explanation`, `cataloging_classification`, 
 Cache keys include task, schema and prompt versions, rules version, provider/model, tag, indicators, field occurrence, ordered subfields, normalized record context, feature flags, context mode, user scope, redaction settings, prompt length, temperature, reasoning effort, and capability overrides.
 
 Punctuation fixes originate only in the deterministic rules engine. AI may explain a deterministic finding but cannot return an applicable MARC mutation.
+
+The training tutor is optional and does not participate in scoring. The deterministic training engine evaluates answers, records attempts, calculates mastery, and controls certification. AI receives only bounded exercise/curriculum context and can provide an explanation or progressive hint; it cannot mark an answer correct, unlock a module, or award mastery.

@@ -762,6 +762,8 @@
                                         <select id="progress-status-filter" class="form-control input-sm" style="width: 180px;">
                                             <option value="all">All statuses</option>
                                             <option value="completed">Completed</option>
+                                            <option value="mastered">Mastered</option>
+                                            <option value="review_required">Review required</option>
                                             <option value="in_progress">In progress</option>
                                             <option value="not_started">Not started</option>
                                         </select>
@@ -777,6 +779,9 @@
                                         <button type="button" class="btn btn-default btn-sm" id="progress-export-csv">
                                             <i class="fa fa-download"></i> Export CSV
                                         </button>
+                                        <button type="button" class="btn btn-default btn-sm" id="progress-export-json">
+                                            <i class="fa fa-code"></i> Export JSON
+                                        </button>
                                         <button type="button" class="btn btn-default btn-sm" id="progress-export-excel">
                                             <i class="fa fa-table"></i> Export Excel
                                         </button>
@@ -789,19 +794,21 @@
                                             <tr>
                                                 <th class="sortable" data-sort="userid">User ID</th>
                                                 <th class="sortable" data-sort="name">Name</th>
-                                                <th class="sortable" data-sort="tier">Tier</th>
+                                                <th class="sortable" data-sort="tier">Trainee level</th>
                                                 <th class="sortable" data-sort="module">Module</th>
-                                                <th class="sortable" data-sort="steps_completed">Module Steps Done</th>
-                                                <th class="sortable" data-sort="steps_skipped">Module Steps Skipped</th>
-                                                <th class="sortable" data-sort="total_steps_completed">Total Steps Done</th>
-                                                <th class="sortable" data-sort="total_steps_skipped">Total Steps Skipped</th>
-                                                <th class="sortable" data-sort="summary">Completion Progress</th>
-                                                <th class="sortable" data-sort="updated_at">Last Updated</th>
+                                                <th class="sortable" data-sort="summary">Completion</th>
+                                                <th class="sortable" data-sort="mastery">Mastery</th>
+                                                <th>Weak skills</th>
+                                                <th class="sortable" data-sort="attempts">Attempts</th>
+                                                <th class="sortable" data-sort="failed">Failed</th>
+                                                <th>Review recommendations</th>
+                                                <th class="sortable" data-sort="assessment">Assessment</th>
+                                                <th class="sortable" data-sort="updated_at">Last activity</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr>
-                                                <td colspan="10">Loading progress...</td>
+                                                <td colspan="12">Loading progress...</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -1442,7 +1449,7 @@
         var $tbody = $('#isbd-progress-table tbody');
         $tbody.empty();
         if (!rows || !rows.length) {
-            $tbody.append('<tr><td colspan="10">No progress records yet.</td></tr>');
+            $tbody.append('<tr><td colspan="12">No progress records yet.</td></tr>');
             updateProgressFilterOptions([]);
             return;
         }
@@ -1451,8 +1458,7 @@
             var summaryCounts = row.summary_counts || row.summary || {};
             var summary = row.summary || {};
             var moduleSummary = summary.current_module || fallbackCurrentModule(summary) || 'n/a';
-            var tierSummary = fallbackCurrentTier(summary, summaryCounts) || 'Tier 1';
-            var moduleCounts = moduleCountsFromSummary(summary, summaryCounts, moduleSummary);
+            var tierSummary = summary.trainee_level || fallbackCurrentTier(summary, summaryCounts) || 'New';
             var overallCounts = overallCountsFromSummary(summary, summaryCounts);
             var overallDone = overallCounts.completed + overallCounts.skipped;
             var completionPercent = Number(summary.completion_percent);
@@ -1463,6 +1469,15 @@
             var summaryText = summarizeProgressRow(overallDone, overallCounts.total, completionPercent);
             var completionSort = Number(completionPercent);
             if (!isFinite(completionSort)) completionSort = 0;
+            var mastery = Number(summary.mastery_percentage || 0);
+            var weakSkills = Array.isArray(summary.weak_skills) ? summary.weak_skills.join(', ') : '';
+            var attempts = Number(summary.exercise_attempts || 0);
+            var failed = Number(summary.failed_questions || 0);
+            var recommendations = Array.isArray(summary.review_recommendations) ? summary.review_recommendations.join('; ') : '';
+            var assessmentStatus = summary.assessment_status || 'not_started';
+            var assessmentScore = Number(summary.assessment_score || 0);
+            if (Array.isArray(summary.requires_review) && summary.requires_review.length) status = 'review_required';
+            else if (mastery >= 100) status = 'mastered';
             filterRows.push({
                 module: moduleSummary,
                 tier: tierSummary
@@ -1475,11 +1490,13 @@
                 .append('<td>' + escapeHtml(row.name || '') + '</td>')
                 .append('<td>' + escapeHtml(tierSummary) + '</td>')
                 .append('<td>' + escapeHtml(moduleSummary) + '</td>')
-                .append('<td data-sort-value="' + moduleCounts.completed + '">' + moduleCounts.completed + '</td>')
-                .append('<td data-sort-value="' + moduleCounts.skipped + '">' + moduleCounts.skipped + '</td>')
-                .append('<td data-sort-value="' + overallCounts.completed + '">' + overallCounts.completed + '</td>')
-                .append('<td data-sort-value="' + overallCounts.skipped + '">' + overallCounts.skipped + '</td>')
                 .append('<td data-sort-value="' + completionSort + '">' + escapeHtml(summaryText) + '</td>')
+                .append('<td data-sort-value="' + mastery + '">' + mastery + '%</td>')
+                .append('<td>' + escapeHtml(weakSkills || 'None recorded') + '</td>')
+                .append('<td data-sort-value="' + attempts + '">' + attempts + '</td>')
+                .append('<td data-sort-value="' + failed + '">' + failed + '</td>')
+                .append('<td>' + escapeHtml(recommendations || 'None') + '</td>')
+                .append('<td data-sort-value="' + assessmentScore + '">' + escapeHtml(assessmentStatus.replace(/_/g, ' ')) + (assessmentScore ? ' (' + assessmentScore + '%)' : '') + '</td>')
                 .append('<td data-sort-value="' + Number(row.updated_at || 0) + '">' + formatTimestamp(row.updated_at) + '</td>');
             $tbody.append($tr);
         });
@@ -1528,19 +1545,8 @@
         var rows = [];
         $('#isbd-progress-table tbody tr:visible').each(function() {
             var cells = $(this).children('td');
-            if (!cells.length || cells.length < 10) return;
-            rows.push([
-                $(cells[0]).text().trim(),
-                $(cells[1]).text().trim(),
-                $(cells[2]).text().trim(),
-                $(cells[3]).text().trim(),
-                $(cells[4]).text().trim(),
-                $(cells[5]).text().trim(),
-                $(cells[6]).text().trim(),
-                $(cells[7]).text().trim(),
-                $(cells[8]).text().trim(),
-                $(cells[9]).text().trim()
-            ]);
+            if (!cells.length || cells.length < 12) return;
+            rows.push(cells.map(function() { return $(this).text().trim(); }).get());
         });
         return rows;
     }
@@ -1563,7 +1569,7 @@
             toastr.warning('No visible progress rows to export.');
             return;
         }
-        var headers = ['User ID', 'Name', 'Tier', 'Module', 'Module Steps Done', 'Module Steps Skipped', 'Total Steps Done', 'Total Steps Skipped', 'Completion Progress', 'Last Updated'];
+        var headers = ['User ID', 'Name', 'Trainee Level', 'Module', 'Completion', 'Mastery', 'Weak Skills', 'Attempts', 'Failed', 'Review Recommendations', 'Assessment', 'Last Activity'];
         var esc = function(value) {
             var text = (value === undefined || value === null) ? '' : String(value);
             return '"' + text.replace(/"/g, '""') + '"';
@@ -1574,6 +1580,22 @@
         });
         var stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
         downloadBlob('isbd-training-progress-' + stamp + '.csv', 'text/csv;charset=utf-8', '\ufeff' + lines.join('\n'));
+    }
+
+    function exportProgressAsJson() {
+        var rows = getVisibleProgressRowsForExport();
+        if (!rows.length) {
+            toastr.warning('No visible progress rows to export.');
+            return;
+        }
+        var keys = ['user_id', 'name', 'trainee_level', 'module', 'completion', 'mastery', 'weak_skills', 'attempts', 'failed', 'review_recommendations', 'assessment', 'last_activity'];
+        var records = rows.map(function(row) {
+            var record = {};
+            keys.forEach(function(key, index) { record[key] = row[index] || ''; });
+            return record;
+        });
+        var stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+        downloadBlob('isbd-training-progress-' + stamp + '.json', 'application/json;charset=utf-8', JSON.stringify(records, null, 2));
     }
 
     function buildXlsxWorkbookBytes(headers, rows) {
@@ -1766,7 +1788,7 @@
             toastr.warning('No visible progress rows to export.');
             return;
         }
-        var headers = ['User ID', 'Name', 'Tier', 'Module', 'Module Steps Done', 'Module Steps Skipped', 'Total Steps Done', 'Total Steps Skipped', 'Completion Progress', 'Last Updated'];
+        var headers = ['User ID', 'Name', 'Trainee Level', 'Module', 'Completion', 'Mastery', 'Weak Skills', 'Attempts', 'Failed', 'Review Recommendations', 'Assessment', 'Last Activity'];
         var stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
         try {
             var xlsxBytes = buildXlsxWorkbookBytes(headers, rows);
@@ -2006,7 +2028,7 @@
             .catch(function(err) {
                 if (shouldIgnoreProgressLoadError(err)) return;
                 toastr.error('Progress load failed: ' + err.message);
-                $('#isbd-progress-table tbody').html('<tr><td colspan="10">Unable to load progress.</td></tr>');
+                $('#isbd-progress-table tbody').html('<tr><td colspan="12">Unable to load progress.</td></tr>');
                 updateProgressFilterOptions([]);
             })
             .finally(function() {
@@ -2659,6 +2681,9 @@
         });
         $('#progress-export-csv').on('click', function() {
             exportProgressAsCsv();
+        });
+        $('#progress-export-json').on('click', function() {
+            exportProgressAsJson();
         });
         $('#progress-export-excel').on('click', function() {
             exportProgressAsExcel();

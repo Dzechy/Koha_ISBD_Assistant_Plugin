@@ -6825,6 +6825,23 @@
     function showGuide(settings) {
         const state = global.ISBDIntellisenseState;
         if (!state) return;
+        if (global.ISBDTrainingWorkspace && typeof global.ISBDTrainingWorkspace.open === 'function') {
+            try {
+                state.guideActive = true;
+                state.guideRefresh = null;
+                state.guideCurrentStep = null;
+                global.ISBDTrainingWorkspace.open(settings, state, {
+                    onClose: () => updateGuideToggleButton()
+                });
+                updateGuideToggleButton();
+            } catch (error) {
+                state.guideActive = false;
+                updateGuideToggleButton();
+                toast('error', 'Unable to open the training workspace. See console for details.');
+                console.error('[ISBD Assistant] Training workspace error:', error);
+            }
+            return;
+        }
         try {
             state.guideActive = true;
             state.guideRefresh = null;

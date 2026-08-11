@@ -29,26 +29,57 @@ const fixtures = JSON.parse(fs.readFileSync(path.join(root, 't/fixtures/isbd_pun
 const ruleIds = new Set((pack.rules || []).map(rule => rule.id).filter(Boolean));
 const fixtureNames = new Set(fixtures.map(fixture => fixture.name));
 
-assert.strictEqual(guide.guide_version, '2.0.0', 'guide v2 version is explicit');
-assert(Array.isArray(guide.modules) && guide.modules.length >= 3, 'guide has novice, practitioner, and reviewer modules');
+assert.strictEqual(guide.schema_version, '3.0.0', 'training schema version is explicit');
+assert.strictEqual(guide.guide_version, '3.0.0', 'training curriculum version is explicit');
+assert(Array.isArray(guide.modules) && guide.modules.length === 11, 'curriculum has the complete eleven-module learning path');
+assert(Array.isArray(guide.skills) && guide.skills.length >= 10, 'curriculum declares independently mastered skills');
+assert(Array.isArray(guide.glossary) && guide.glossary.length >= 14, 'contextual glossary is data-driven');
+
+const exerciseTypes = new Set();
+const exerciseIds = new Set();
+const skillIds = new Set(guide.skills.map(skill => skill.id));
 
 guide.modules.forEach(module => {
   assert(module.id, 'module has id');
   assert(module.level, `${module.id} has level`);
+  assert(Array.isArray(module.prerequisites), `${module.id} has prerequisites`);
+  assert(Array.isArray(module.skills) && module.skills.length, `${module.id} assesses skills`);
+  module.skills.forEach(skill => assert(skillIds.has(skill), `${module.id} references declared skill ${skill}`));
   assert(Array.isArray(module.lessons), `${module.id} has lessons`);
   module.lessons.forEach(lesson => {
     ['why', 'how', 'common_mistake', 'do_not_automate'].forEach(key => {
       assert(lesson[key], `${module.id}/${lesson.id} includes ${key}`);
     });
-    if (lesson.rule_id) {
-      assert(ruleIds.has(lesson.rule_id), `${module.id}/${lesson.id} references existing rule ${lesson.rule_id}`);
-    }
+    assert(lesson.sections && lesson.sections.introduction && lesson.sections.why_it_matters
+      && lesson.sections.learn && lesson.sections.see_it && lesson.sections.reflection,
+    `${module.id}/${lesson.id} supports the complete lesson model`);
+    assert(Array.isArray(lesson.exercises) && lesson.exercises.length >= 2, `${module.id}/${lesson.id} has meaningful assessment`);
+    lesson.exercises.forEach(exercise => {
+      assert(exercise.id && !exerciseIds.has(exercise.id), `${module.id}/${lesson.id} has a unique exercise id`);
+      exerciseIds.add(exercise.id);
+      exerciseTypes.add(exercise.type);
+      assert(skillIds.has(exercise.skill), `${exercise.id} assesses a declared skill`);
+      assert(exercise.expected_answer !== undefined, `${exercise.id} declares an expected answer`);
+      assert(Array.isArray(exercise.hints) && exercise.hints.length >= 2, `${exercise.id} has progressive hints`);
+      assert(exercise.explanation, `${exercise.id} explains the answer`);
+      assert(Number(exercise.difficulty) >= 1, `${exercise.id} declares difficulty`);
+      if (exercise.referenced_rule) {
+        assert(ruleIds.has(exercise.referenced_rule), `${exercise.id} references existing rule ${exercise.referenced_rule}`);
+      }
+    });
   });
-  (module.examples || []).forEach(example => {
-    if (example.fixture) {
-      assert(fixtureNames.has(example.fixture), `${module.id} references fixture ${example.fixture}`);
-    }
-  });
+  assert(module.assessment && Array.isArray(module.assessment.exercise_ids), `${module.id} defines a competency assessment`);
+  module.assessment.exercise_ids.forEach(id => assert(exerciseIds.has(id), `${module.id} assessment references ${id}`));
 });
+
+['knowledge', 'recognition', 'application', 'field_builder', 'error_detection', 'reasoning', 'automation_judgment', 'cataloguer_judgment', 'record_construction']
+  .forEach(type => assert(exerciseTypes.has(type), `curriculum supports ${type} questions`));
+
+assert.strictEqual(guide.modules[guide.modules.length - 1].certification, true, 'final module is a competency certification');
+const titleLab = guide.modules.find(module => module.id === 'title-responsibility').lessons[0].exercises
+  .find(exercise => exercise.id === 'title-fix-245');
+assert.strictEqual(titleLab.expected_answer.subfields[0].value, 'The great Gatsby', 'training preserves prefix-on-current title boundary convention');
+assert(/^:\s/.test(titleLab.expected_answer.subfields[1].value), 'training stores the colon prefix on 245$b');
+assert(/^\/\s/.test(titleLab.expected_answer.subfields[2].value), 'training stores the responsibility slash prefix on 245$c');
 
 console.log('guide_consistency: ok');

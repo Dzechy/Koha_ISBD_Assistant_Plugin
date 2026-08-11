@@ -24,7 +24,7 @@ use Koha::Patrons;
 use C4::Context;
 use CGI;
 use Digest::SHA  qw(sha1_hex);
-use Scalar::Util qw(looks_like_number);
+use Scalar::Util qw(looks_like_number blessed);
 
 sub _guide_progress_key {
     my ( $self, $user_key ) = @_;
@@ -227,6 +227,70 @@ sub _sanitize_progress_label {
     return $text;
 }
 
+sub _normalize_progress_label_list {
+    my ( $value, $limit, $max_length ) = @_;
+    return [] unless $value && ref $value eq 'ARRAY';
+    $limit      = 30  unless defined $limit      && looks_like_number($limit);
+    $max_length = 240 unless defined $max_length && looks_like_number($max_length);
+    my @items;
+    for my $item ( @{$value} ) {
+        last if @items >= $limit;
+        next if ref $item;
+        my $label = _sanitize_progress_label( $item, $max_length );
+        push @items, $label if $label ne '';
+    }
+    return \@items;
+}
+
+sub _bounded_training_value {
+    my ( $value, $depth ) = @_;
+    $depth ||= 0;
+    return undef if $depth > 7;
+    if ( blessed($value) ) {
+        return $value ? JSON::true : JSON::false;
+    }
+    if ( ref $value eq 'HASH' ) {
+        my %copy;
+        my $count = 0;
+        for my $key ( sort keys %{$value} ) {
+            last if $count++ >= 200;
+            my $safe_key = _sanitize_progress_label( $key, 120 );
+            next unless $safe_key ne '';
+            $copy{$safe_key} = _bounded_training_value( $value->{$key}, $depth + 1 );
+        }
+        return \%copy;
+    }
+    if ( ref $value eq 'ARRAY' ) {
+        my @copy;
+        for my $item ( @{$value} ) {
+            last if @copy >= 100;
+            push @copy, _bounded_training_value( $item, $depth + 1 );
+        }
+        return \@copy;
+    }
+    return undef if ref $value;
+    return $value if defined $value && looks_like_number($value);
+    return _sanitize_progress_label( $value, 2000 );
+}
+
+sub _normalize_training_progress {
+    my ( $self, $value ) = @_;
+    return {} unless $value && ref $value eq 'HASH';
+    my %allowed = map { $_ => 1 } qw(
+      engine_version course_version guide_version rules_version onboarding
+      current_module current_lesson current_step module_progress lesson_progress
+      exercise_attempts quiz_results hint_usage revealed_answers skill_mastery
+      mistakes review_recommendations requires_review assessment_results
+      recent_activity last_activity advanced_mode
+    );
+    my %normalized;
+    for my $key ( sort keys %{$value} ) {
+        next unless $allowed{$key};
+        $normalized{$key} = _bounded_training_value( $value->{$key}, 0 );
+    }
+    return \%normalized;
+}
+
 sub _completion_tier_label {
     my ($completion_percent) = @_;
     my $percent =
@@ -343,6 +407,16 @@ sub _normalize_progress_summary {
       _sanitize_progress_label( $summary->{current_step_key}, 160 );
     my $current_step_title =
       _sanitize_progress_label( $summary->{current_step_title}, 240 );
+    my $mastery_percentage = looks_like_number( $summary->{mastery_percentage} )
+      ? int( $summary->{mastery_percentage} )
+      : 0;
+    $mastery_percentage = 0   if $mastery_percentage < 0;
+    $mastery_percentage = 100 if $mastery_percentage > 100;
+    my $assessment_score = looks_like_number( $summary->{assessment_score} )
+      ? int( $summary->{assessment_score} )
+      : 0;
+    $assessment_score = 0   if $assessment_score < 0;
+    $assessment_score = 100 if $assessment_score > 100;
 
     return {
         steps_total        => $counts->{total},
@@ -358,7 +432,22 @@ sub _normalize_progress_summary {
         current_step_title => $current_step_title,
         modules_total      => $modules_total,
         modules_completed  => $modules_completed,
-        module_breakdown   => $module_breakdown
+        module_breakdown   => $module_breakdown,
+        mastery_percentage => $mastery_percentage,
+        trainee_level => _sanitize_progress_label( $summary->{trainee_level}, 80 ),
+        current_lesson => _sanitize_progress_label( $summary->{current_lesson}, 240 ),
+        skills_mastered => _normalize_progress_label_list( $summary->{skills_mastered}, 50, 160 ),
+        weak_skills => _normalize_progress_label_list( $summary->{weak_skills}, 50, 160 ),
+        exercise_attempts => looks_like_number( $summary->{exercise_attempts} ) ? int( $summary->{exercise_attempts} ) : 0,
+        failed_questions => looks_like_number( $summary->{failed_questions} ) ? int( $summary->{failed_questions} ) : 0,
+        review_recommendations => _normalize_progress_label_list( $summary->{review_recommendations}, 50, 300 ),
+        assessment_status => _sanitize_progress_label( $summary->{assessment_status}, 80 ) || 'not_started',
+        assessment_score => $assessment_score,
+        requires_review => _normalize_progress_label_list( $summary->{requires_review}, 50, 160 ),
+        course_version => _sanitize_progress_label( $summary->{course_version}, 40 ),
+        guide_version => _sanitize_progress_label( $summary->{guide_version}, 40 ),
+        rules_version => _sanitize_progress_label( $summary->{rules_version}, 40 ),
+        last_activity => looks_like_number( $summary->{last_activity} ) ? int( $summary->{last_activity} ) : 0
     };
 }
 
@@ -430,6 +519,17 @@ sub guide_progress_update {
             $response = {
                 ok    => 0,
                 error => 'Invalid summary_counts type. Expected object.'
+            };
+            $status = '422 Unprocessable Entity';
+            return;
+        }
+        if (   exists $payload->{training_progress}
+            && ref $payload->{training_progress}
+            && ref $payload->{training_progress} ne 'HASH' )
+        {
+            $response = {
+                ok    => 0,
+                error => 'Invalid training_progress type. Expected object.'
             };
             $status = '422 Unprocessable Entity';
             return;
@@ -511,7 +611,8 @@ sub guide_progress_update {
         if (   !exists $payload->{completed}
             && !exists $payload->{skipped}
             && !exists $payload->{summary}
-            && !exists $payload->{summary_counts} )
+            && !exists $payload->{summary_counts}
+            && !exists $payload->{training_progress} )
         {
             $response = { ok => 0, error => 'Missing progress data.' };
             $status   = '422 Unprocessable Entity';
@@ -524,7 +625,10 @@ sub guide_progress_update {
             completed      => $completed,
             skipped        => $skipped,
             summary_counts => $summary_counts,
-            summary        => $summary
+            summary        => $summary,
+            training_progress => _normalize_training_progress(
+                $self, $payload->{training_progress}
+            )
         };
 
         my $ok = 1;
