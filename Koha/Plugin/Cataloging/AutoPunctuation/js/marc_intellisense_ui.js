@@ -52,7 +52,8 @@
             guideCurrentStep: null,
             guideRefresh: null,
             lastFocusedField: null,
-            aiSuggestions: { classification: '', subjects: [], confidence: null, rationale: { ai: '', system: '' }, errors: [], authorityStatus: 'unverified', evidenceVerification: null, requiresHumanReview: true, status: '', parseStatus: '', authorityLookupStatus: '' },
+            aiSuggestions: { classification: '', subjects: [], confidence: null, rationale: { ai: '', system: '' }, errors: [], authorityStatus: 'unverified', evidenceVerification: null, requiresHumanReview: true, status: '', parseStatus: '', authorityLookupStatus: '', requestCompleted: false, requested: { classification: false, subjects: false }, task: '' },
+            aiCatalogingPending: null,
             aiPunctuation: { findings: [], patches: [], summary: '', meta: null },
             lastChangeMeta: null,
             lastChangeAt: 0,
@@ -332,6 +333,9 @@
         }
         req.inFlight = false;
         req.controller = null;
+        if (context === 'cataloging' && state) {
+            state.aiCatalogingPending = null;
+        }
         if (!silent) {
             const message = reason || 'Cancelled.';
             setAiRequestStatus(state, context, message, 'warning');
@@ -439,14 +443,18 @@
             .isbd-indicator.info { background: #eaf3ff; color: #245f8f; }
             .isbd-indicator.warning { background: #fff3cd; color: #7a6000; }
             .isbd-indicator.error { background: #f8d7da; color: #a94442; }
-            .isbd-ghost-text { color: #9aa7b8; font-style: italic; margin-left: 6px; cursor: pointer; }
-            .isbd-toast { position: fixed; right: 20px; bottom: 20px; z-index: 10000; min-width: 250px; max-width: 420px; padding: 12px 14px; border-radius: 6px; margin-top: 10px; color: #1f2937; font-size: 12px; line-height: 1.45; box-shadow: 0 6px 12px rgba(0,0,0,0.2); border-left: 5px solid transparent; border-top: 2px solid transparent; }
+            .isbd-ghost-text { appearance: none; background: #f4f7fa; border: 1px dashed #94a3b8; border-radius: 4px; color: #64748b; font-family: inherit; font-size: 11px; font-style: italic; line-height: 1.4; margin-left: 6px; padding: 2px 6px; cursor: pointer; vertical-align: middle; }
+            .isbd-ghost-text:hover, .isbd-ghost-text:focus { background: #eaf3ff; border-color: #2f6f9f; color: #245f8f; outline: none; }
+            .isbd-toast-stack { position: fixed; right: 20px; bottom: 20px; z-index: 10004; width: min(420px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+            .isbd-toast { position: relative; width: 100%; padding: 11px 38px 11px 14px; border-radius: 6px; color: #1f2937; font-size: 12px; line-height: 1.45; box-shadow: 0 6px 16px rgba(0,0,0,0.18); border-left: 5px solid transparent; pointer-events: auto; }
+            .isbd-toast-close { position: absolute; top: 4px; right: 6px; border: 0; background: transparent; color: inherit; font-size: 18px; line-height: 1; opacity: .7; padding: 3px 6px; }
+            .isbd-toast-close:hover, .isbd-toast-close:focus { opacity: 1; outline: 1px dotted currentColor; }
             .isbd-toast.info { background: #eef5ff; border-left-color: #2f6f9f; border-top-color: #2f6f9f; color: #1f3d5a; }
             .isbd-toast.warning { background: #fff8e1; border-left-color: #f0c419; border-top-color: #f0c419; color: #5f4b00; }
             .isbd-toast.error { background: #fdeaea; border-left-color: #b33a3a; border-top-color: #b33a3a; color: #7f1d1d; }
             .isbd-toast.action { background: #eaf6ea; border-left-color: #408540; border-top-color: #408540; color: #1f5b1f; }
             .isbd-toast.success { background: #eaf6ea; border-left-color: #408540; border-top-color: #408540; color: #1f5b1f; }
-            .isbd-panel { position: fixed; right: 20px; top: 120px; width: 610px; height: 670px; max-height: calc(100vh - 24px); background: #ffffff; border: 1px solid #d1d9e0; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15); border-radius: 6px; z-index: 9998; display: flex; flex-direction: column; resize: both; overflow: auto; min-width: 280px; min-height: 180px; }
+            .isbd-panel { position: fixed; right: 20px; top: 120px; width: 610px; height: 670px; max-height: calc(100vh - 24px); background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18); border-radius: 10px; z-index: 9998; display: flex; flex-direction: column; resize: both; overflow: hidden; min-width: 280px; min-height: 180px; }
             .isbd-panel header { padding: 10px 12px; background: #408540; color: #fff; font-weight: 700; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; cursor: move; }
             .isbd-panel header > div,
             .isbd-ai-panel header > div,
@@ -494,7 +502,9 @@
             .isbd-panel .btn-primary:hover,
             .isbd-ai-panel .btn-primary:hover,
             .isbd-guide-modal .btn-primary:hover { background: #377637; border-color: #2a622a; color: #fff; }
-            .isbd-panel .body { padding: 14px 16px; overflow-y: auto; font-size: 12px; }
+            .isbd-panel .body { padding: 14px 16px; overflow-y: auto; font-size: 12px; background: #f8fafc; }
+            .isbd-panel-intro { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; }
+            .isbd-panel-count { white-space: nowrap; font-weight: 700; color: #334155; }
             .isbd-panel.minimized { min-height: 0; height: auto; resize: none; overflow: hidden; }
             .isbd-panel.minimized .body { display: none; }
             .isbd-panel .finding { border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 10px; cursor: default; }
@@ -514,9 +524,9 @@
             .isbd-preview { font-family: monospace; background: #f8fafc; padding: 4px 6px; border-radius: 4px; display: inline-block; margin-top: 6px; }
             .isbd-raw-wrapper { margin-top: 6px; }
             .isbd-raw-output { display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px; font-size: 11px; max-height: 140px; overflow: auto; white-space: pre-wrap; }
-            .isbd-ai-panel { position: fixed; right: 24px; bottom: 24px; width: 610px; height: 670px; background: #ffffff; border: 1px solid #d1d9e0; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2); border-radius: 6px; z-index: 10002; display: flex; flex-direction: column; resize: both; overflow: auto; min-width: 300px; min-height: 200px; }
+            .isbd-ai-panel { position: fixed; right: 24px; bottom: 24px; width: 640px; height: 700px; max-height: calc(100vh - 24px); background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 14px 32px rgba(15, 23, 42, 0.22); border-radius: 10px; z-index: 10002; display: flex; flex-direction: column; resize: both; overflow: hidden; min-width: 300px; min-height: 200px; }
             .isbd-ai-panel header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; cursor: move; padding: 8px 10px; background: #408540; color: #fff; font-weight: 700; }
-            .isbd-ai-panel .body { padding: 14px 16px; font-size: 12px; }
+            .isbd-ai-panel .body { padding: 14px 16px; font-size: 12px; overflow-y: auto; background: #f8fafc; }
             .isbd-ai-panel.minimized { min-height: 0; height: auto; resize: none; overflow: hidden; }
             .isbd-ai-panel.minimized .body { display: none; }
             .isbd-ai-panel .meta { color: #5b6b7c; font-size: 11px; margin-bottom: 6px; }
@@ -531,17 +541,24 @@
             .isbd-ai-debug { margin-top: 6px; }
             .isbd-ai-debug summary { cursor: pointer; font-weight: 600; color: #1f2937; }
             .isbd-ai-debug pre { margin: 6px 0 0 0; padding: 6px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; max-height: 180px; overflow: auto; white-space: pre-wrap; }
-            .isbd-ai-results { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-top: 8px; }
+            .isbd-ai-results { background: #ffffff; border: 1px solid #dbe3ec; border-radius: 8px; padding: 12px; margin-top: 10px; }
+            .isbd-ai-result-grid { display: grid; grid-template-columns: minmax(120px, .7fr) minmax(180px, 1.3fr); gap: 7px 12px; align-items: start; }
+            .isbd-ai-result-label { color: #64748b; font-size: 11px; font-weight: 600; }
+            .isbd-ai-result-value { color: #1f2937; min-width: 0; word-break: break-word; }
+            .isbd-ai-empty { color: #64748b; font-style: italic; }
             .isbd-ai-result-item { border-bottom: 1px dashed #e2e8f0; padding: 8px 0; }
             .isbd-ai-result-item:last-child { border-bottom: none; }
             .isbd-ai-result-meta { color: #6b7280; font-size: 11px; margin-top: 2px; }
             .isbd-ai-result-actions { margin-top: 6px; display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
             .isbd-ai-result-checkbox { margin-right: 6px; }
-            .isbd-ai-panel .options label { display: block; margin-top: 4px; font-weight: 400; }
+            .isbd-ai-panel .options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+            .isbd-ai-panel .options label { display: flex; align-items: center; gap: 7px; margin: 0; padding: 9px 10px; border: 1px solid #dbe3ec; border-radius: 6px; background: #fff; font-weight: 600; cursor: pointer; }
+            .isbd-ai-panel .options label:hover { border-color: #94a3b8; background: #f8fafc; }
             .isbd-ai-panel .actions { margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
-            .isbd-ai-section { border-bottom: 1px dashed #e2e8f0; padding-bottom: 12px; margin-bottom: 12px; }
+            .isbd-ai-section { border-bottom: 1px solid #dbe3ec; padding-bottom: 16px; margin-bottom: 16px; }
             .isbd-ai-section:last-child { border-bottom: none; margin-bottom: 0; }
-            .isbd-ai-section-title { font-weight: 700; font-size: 12px; margin-bottom: 6px; color: #212529; text-transform: uppercase; letter-spacing: 0.3px; }
+            .isbd-ai-section-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; color: #1e293b; }
+            .isbd-ai-section-help { color: #64748b; font-size: 11px; margin-bottom: 8px; }
             .isbd-ai-inline { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
             .isbd-ai-inline input { flex: 1 1 auto; min-width: 160px; }
             .isbd-ai-prefix-options { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px 10px; }
@@ -556,9 +573,15 @@
             .isbd-guide-highlight { border: 2px solid #3b82f6 !important; box-shadow: 0 0 10px rgba(59,130,246,0.4) !important; }
             .isbd-focus-flash { border: 2px solid #408540 !important; box-shadow: 0 0 8px rgba(64,133,64,0.4) !important; }
             .isbd-about-modal { position: fixed; top: 22%; left: 50%; transform: translateX(-50%); background: #ffffff; border: 1px solid #d1d9e0; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2); border-radius: 6px; padding: 14px; z-index: 10001; width: 420px; }
-            .isbd-about-dialog { position: fixed; top: 14%; left: 50%; transform: translateX(-50%); background: #ffffff; border: 1px solid #d1d9e0; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2); border-radius: 6px; padding: 0; z-index: 10003; width: 560px; max-width: 94vw; max-height: 82vh; overflow: auto; min-width: 320px; min-height: 220px; display: flex; flex-direction: column; resize: both; }
+            .isbd-about-dialog { position: fixed; top: 14%; left: 50%; transform: translateX(-50%); background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 14px 32px rgba(15, 23, 42, 0.22); border-radius: 10px; padding: 0; z-index: 10003; width: 600px; max-width: 94vw; max-height: 82vh; overflow: hidden; min-width: 320px; min-height: 220px; display: flex; flex-direction: column; resize: both; }
             .isbd-about-dialog header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; cursor: move; padding: 8px 10px; background: #408540; color: #ffffff; font-weight: 700; }
-            .isbd-about-dialog .body { padding: 12px 14px; font-size: 12px; }
+            .isbd-about-dialog .body { padding: 16px 18px; font-size: 12px; overflow-y: auto; background: #f8fafc; }
+            .isbd-about-lead { font-size: 14px; color: #334155; margin: 0 0 14px; }
+            .isbd-about-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
+            .isbd-about-card { background: #fff; border: 1px solid #dbe3ec; border-radius: 7px; padding: 10px; }
+            .isbd-about-card strong { display: block; color: #1e293b; margin-bottom: 4px; }
+            .isbd-about-section { background: #fff; border: 1px solid #dbe3ec; border-radius: 7px; padding: 12px; margin-top: 10px; }
+            .isbd-about-section h5 { margin: 0 0 8px; color: #1e293b; }
             .isbd-ai-preview-modal { position: fixed; top: 18%; left: 50%; transform: translateX(-50%); background: #ffffff; border: 1px solid #d1d9e0; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2); border-radius: 6px; padding: 14px; z-index: 10002; width: 520px; max-width: 90vw; max-height: 70vh; overflow: auto; }
             .isbd-ai-preview-modal pre { background: #f8fafc; padding: 8px; border-radius: 4px; font-size: 11px; white-space: pre-wrap; word-break: break-word; }
             .isbd-guide-modal.minimized .isbd-guide-content { display: none; }
@@ -602,6 +625,8 @@
                     bottom: 8px !important;
                     max-height: 78vh;
                 }
+                .isbd-ai-panel .options, .isbd-about-grid, .isbd-ai-result-grid { grid-template-columns: 1fr; }
+                .isbd-toast-stack { right: 8px; bottom: 8px; width: calc(100vw - 16px); }
             }
         `;
         $('head').append(`<style id="isbd-intellisense-styles">${styles}</style>`);
@@ -668,9 +693,10 @@
         }
     }
 
-    const toastState = { lastKey: '', lastAt: 0 };
+    const toastState = { active: new Map() };
     function toast(type, message) {
-        const rawMessage = (message === undefined || message === null) ? '' : String(message);
+        const rawMessage = (message === undefined || message === null) ? '' : String(message).trim();
+        if (!rawMessage) return;
         let normalizedType = (type || 'info').toString().toLowerCase();
         if (normalizedType === 'info' && /\b(applied|apply|inserted|ignored|undo|undone|redo|redone|saved|updated|cleared)\b/i.test(rawMessage)) {
             normalizedType = 'action';
@@ -678,15 +704,29 @@
         if (!['info', 'warning', 'error', 'success', 'action'].includes(normalizedType)) {
             normalizedType = 'info';
         }
-        const now = Date.now();
         const key = `${normalizedType}:${rawMessage}`;
-        if (toastState.lastKey === key && (now - toastState.lastAt) < 2000) {
+        if (toastState.active.has(key)) {
             return;
         }
-        toastState.lastKey = key;
-        toastState.lastAt = now;
-        const $toast = $(`<div class="isbd-toast ${normalizedType}">${rawMessage}</div>`).appendTo('body');
-        setTimeout(() => $toast.fadeOut(() => $toast.remove()), 4000);
+        let $stack = $('.isbd-toast-stack');
+        if (!$stack.length) {
+            $stack = $('<div class="isbd-toast-stack" aria-live="polite" aria-atomic="false"></div>').appendTo('body');
+        }
+        const $toast = $(`<div class="isbd-toast ${normalizedType}" role="status"><span class="isbd-toast-message"></span><button type="button" class="isbd-toast-close" aria-label="Dismiss notification">&times;</button></div>`);
+        $toast.find('.isbd-toast-message').text(rawMessage);
+        $stack.append($toast);
+        toastState.active.set(key, $toast);
+        let dismissTimer = null;
+        const dismiss = () => {
+            if (dismissTimer) clearTimeout(dismissTimer);
+            toastState.active.delete(key);
+            $toast.fadeOut(150, () => {
+                $toast.remove();
+                if (!$stack.children().length) $stack.remove();
+            });
+        };
+        $toast.find('.isbd-toast-close').on('click', dismiss);
+        dismissTimer = setTimeout(dismiss, normalizedType === 'error' ? 6500 : 4500);
     }
 
     function truncateToastText(text, maxLen) {
@@ -918,17 +958,20 @@
                 <header>
                     <span>Cataloging Assistant</span>
                     <div>
-                        <button type="button" class="btn btn-xs isbd-btn-yellow" id="isbd-panel-applyall" ${readOnlyAttr}>Apply all</button>
+                        <button type="button" class="btn btn-xs isbd-btn-yellow" id="isbd-panel-applyall" ${readOnlyAttr}>Apply all fixes</button>
                         <button type="button" class="btn btn-xs isbd-btn-yellow" id="isbd-panel-undo" ${readOnlyAttr}>Undo</button>
                         <button type="button" class="btn btn-xs isbd-btn-yellow" id="isbd-panel-redo" ${readOnlyAttr}>Redo</button>
-                        <button type="button" class="btn btn-xs isbd-btn-yellow" id="isbd-panel-undoall" ${readOnlyAttr}>Undo all</button>
-                        <button type="button" class="btn btn-xs isbd-btn-danger" id="isbd-panel-ignoreall">Ignore all</button>
+                        <button type="button" class="btn btn-xs isbd-btn-yellow" id="isbd-panel-undoall" ${readOnlyAttr}>Undo all changes</button>
+                        <button type="button" class="btn btn-xs isbd-btn-danger" id="isbd-panel-ignoreall">Ignore all findings</button>
                         <button type="button" class="btn btn-xs isbd-btn-yellow" id="isbd-panel-minimize">Minimize</button>
                         <button type="button" class="btn btn-xs isbd-btn-danger" id="isbd-panel-close">Close</button>
                     </div>
                 </header>
                 <div class="body">
-                    <div class="meta">ISBD rules and punctuation findings appear here. Click Apply to accept suggestions.</div>
+                    <div class="isbd-panel-intro">
+                        <span class="meta">Review rule-based MARC and ISBD findings, then apply only the fixes you want.</span>
+                        <span class="isbd-panel-count" id="isbd-panel-count">0 open</span>
+                    </div>
                     <div id="isbd-findings"></div>
                 </div>
             </div>
@@ -1414,11 +1457,26 @@
             const expected = $ghost.data('expected');
             if (!expected) return;
             event.preventDefault();
-            $(this).val(expected);
-            $ghost.remove();
-            markFieldForRevalidation(state, parseFieldMeta(this));
-            toast('info', 'ISBD ghost suggestion applied.');
+            applyGhostSuggestion(this, expected, state);
         });
+    }
+
+    function applyGhostSuggestion(element, expectedValue, state) {
+        if (!element) return false;
+        const expected = expectedValue === undefined || expectedValue === null ? '' : String(expectedValue);
+        const $field = $(element);
+        if (($field.val() || '').toString() === expected) {
+            $field.siblings('.isbd-ghost-text').remove();
+            return false;
+        }
+        const meta = parseFieldMeta(element);
+        $field.val(expected);
+        $field.siblings('.isbd-ghost-text').remove();
+        markFieldForRevalidation(state, meta);
+        $field.trigger('input').trigger('change');
+        const target = meta ? `${meta.tag}$${meta.code}` : 'field';
+        toast('action', `Suggestion applied to ${target}.`);
+        return true;
     }
 
     function bindPanelInteractionGuards() {
@@ -2651,7 +2709,9 @@
                     : '';
                 const patch = finding.proposed_fixes && finding.proposed_fixes[0] && finding.proposed_fixes[0].patch[0];
                 const hasPatch = !!patch;
-                const applyAttr = hasPatch ? readOnlyAttr : 'disabled title="No automatic fix available."';
+                const applyButton = hasPatch
+                    ? `<button type="button" class="btn btn-xs btn-primary isbd-apply" ${readOnlyAttr}>Apply fix</button>`
+                    : '';
                 const item = $(`
                     <div class="finding ${severityClass}">
                         <div><strong>${finding.tag}$${finding.subfield}</strong> · ${finding.severity} ${helpIcon}</div>
@@ -2661,8 +2721,8 @@
                         ${rawHtml}
                         <div class="actions">
                             <button type="button" class="btn btn-xs isbd-btn-yellow isbd-go-field" data-tag="${finding.tag}" data-sub="${finding.subfield}" data-occ="${normalizeOccurrenceKey(finding.occurrence)}">Go to field</button>
-                            <button type="button" class="btn btn-xs btn-primary isbd-apply" ${applyAttr}>Apply</button>
-                            <button type="button" class="btn btn-xs isbd-btn-danger isbd-ignore">Ignore</button>
+                            ${applyButton}
+                            <button type="button" class="btn btn-xs isbd-btn-danger isbd-ignore">Ignore finding</button>
                         </div>
                     </div>
                 `);
@@ -2699,8 +2759,9 @@
             });
         });
         if (!total) {
-            $container.append('<div class="meta">No ISBD findings yet.</div>');
+            $container.append('<div class="meta">No open findings. The record is clear under the enabled checks.</div>');
         }
+        $('#isbd-panel-count').text(`${total} open`);
         recordPerformance(state, 'side_panel_render', renderStartedAt);
     }
 
@@ -2890,13 +2951,10 @@
         if (!candidate) return;
         const ghostText = computeGhostText(candidate.current_value, candidate.expected_value);
         if (!ghostText) return;
-        const $ghost = $(`<span class="isbd-ghost-text" title="Accept ISBD suggestion">${ghostText}</span>`);
+        const $ghost = $(`<button type="button" class="isbd-ghost-text" title="Apply suggestion" aria-label="Apply suggested field value">${ghostText}</button>`);
         $ghost.data('expected', candidate.expected_value);
         $ghost.on('click', () => {
-            $(element).val(candidate.expected_value);
-            $ghost.remove();
-            markFieldForRevalidation(state, parseFieldMeta(element));
-            toast('info', 'ISBD ghost suggestion applied.');
+            applyGhostSuggestion(element, candidate.expected_value, state);
         });
         $(element).after($ghost);
     }
@@ -3068,8 +3126,10 @@
         const issues = Array.isArray(result && result.issues) ? result.issues : [];
         const patches = collectAiPunctuationPatches(findings);
         const assistantText = (result && result.assistant_message ? String(result.assistant_message).trim() : '');
-        const summaryText = summarizeIssues(issues) || summarizeFindings(findings) || 'No deterministic punctuation finding.';
-        const summary = `Verified rule: ${summaryText}${assistantText ? `\nAI explanation (review required): ${assistantText}` : ''}`;
+        const findingCount = Math.max(issues.length, findings.length);
+        const summary = findingCount || patches.length
+            ? `${findingCount} rule finding${findingCount === 1 ? '' : 's'} · ${patches.length} available fix${patches.length === 1 ? '' : 'es'}`
+            : 'No rule-based punctuation changes found.';
 
         if (state) {
             state.aiPunctuation = {
@@ -3082,6 +3142,10 @@
 
         if ($summary.length) $summary.text(summary);
         $list.empty();
+
+        if (assistantText) {
+            $list.append(`<div class="isbd-ai-result-item"><strong>AI explanation</strong><div class="isbd-ai-result-meta">${escapeAttr(assistantText)}</div><div class="isbd-ai-result-meta">Review before applying.</div></div>`);
+        }
 
         if (issues.length) {
             const grouped = groupIssuesByField(issues);
@@ -3105,7 +3169,7 @@
         }
         if (patches.length) {
             if (issues.length) {
-                $list.append('<div class="meta" style="margin-top:6px;">Applyable patches:</div>');
+                $list.append('<div class="meta" style="margin-top:6px;">Available fixes:</div>');
             }
             patches.forEach((item, index) => {
                 const label = formatAiPatchLabel(item) || (item.finding && item.finding.message) || 'Suggested update';
@@ -3137,7 +3201,7 @@
             });
             $actions.hide();
         } else if (!issues.length && !patches.length) {
-            $list.append('<div class="meta">(none)</div>');
+            if (!assistantText) $list.append('<div class="meta">No suggestions.</div>');
             $actions.hide();
         } else if (!patches.length) {
             $actions.hide();
@@ -3168,7 +3232,7 @@
             if (applyAiPatch(item.patch, item.finding)) applied += 1;
         });
         if (applied) {
-            toast('info', `Applied ${applied} AI punctuation suggestion${applied > 1 ? 's' : ''}.`);
+                toast('action', `Applied ${applied} AI punctuation fix${applied > 1 ? 'es' : ''}.`);
         }
     }
 
@@ -3188,7 +3252,7 @@
             if (applyAiPatch(item.patch, item.finding)) applied += 1;
         });
         if (applied) {
-            toast('info', `Applied ${applied} AI punctuation suggestion${applied > 1 ? 's' : ''}.`);
+                toast('action', `Applied ${applied} AI punctuation fix${applied > 1 ? 'es' : ''}.`);
         }
     }
 
@@ -3250,7 +3314,7 @@
 
     function formatCatalogingResponseHtml(text) {
         const raw = (text || '').toString().replace(/\r\n?/g, '\n').trim();
-        if (!raw) return 'No safe cataloguing rationale was available.';
+        if (!raw) return 'No safe cataloging rationale was available.';
         return raw.split('\n').map(line => {
             const escaped = escapeAttr(line || '');
             return escaped.replace(
@@ -3351,6 +3415,15 @@
         const readOnly = !!(state && state.readOnly);
         const catalogingAllowed = isInternFeatureAllowed(state, 'aiCataloging');
         const aiApplyAllowed = isInternFeatureAllowed(state, 'aiApplyActions');
+        const requestState = getAiRequestState(state, 'cataloging');
+        const pending = state && state.aiCatalogingPending ? state.aiCatalogingPending : null;
+        const requestCompleted = !!aiSuggestions.requestCompleted;
+        const requested = aiSuggestions.requested && typeof aiSuggestions.requested === 'object'
+            ? aiSuggestions.requested
+            : catalogingRequestFlags(aiSuggestions.task || '');
+        const classificationRequested = !!requested.classification;
+        const normalizedSubjects = normalizeSubjectObjects(aiSuggestions.subjects || []);
+        const hasCatalogingSuggestions = !!(aiSuggestions.classification || normalizedSubjects.length);
 
         $panel.find('#isbd-ai-title').text(evidenceMeta
             ? `${evidenceMeta.tag}$${evidenceMeta.code || ''} (current field)`
@@ -3360,7 +3433,23 @@
         $panel.find('#isbd-ai-year').text(year || '(n/a)');
         const previewText = rangeMessage ? '(range not allowed)' : (callNumber || '(waiting for classification)');
         $panel.find('#isbd-ai-callnumber-preview').text(previewText);
-        $panel.find('#isbd-ai-classification').text(aiSuggestions.classification || 'No safe classification suggestion');
+        let classificationText = aiSuggestions.classification || '';
+        let classificationEmpty = false;
+        if (!classificationText) {
+            classificationEmpty = true;
+            if (requestState && requestState.inFlight && pending && pending.classification && !requestCompleted) {
+                classificationText = 'Awaiting response…';
+            } else if (requestCompleted && classificationRequested) {
+                classificationText = 'No safe suggestion returned';
+            } else if (requestCompleted) {
+                classificationText = 'Not requested in the last run';
+            } else {
+                classificationText = 'Not requested yet';
+            }
+        }
+        $panel.find('#isbd-ai-classification')
+            .text(classificationText)
+            .toggleClass('isbd-ai-empty', classificationEmpty);
         const $classError = $panel.find('#isbd-ai-classification-error');
         if ($classError.length) {
             if (rangeMessage) {
@@ -3369,11 +3458,10 @@
                 $classError.text('').hide();
             }
         }
-        const confidence = typeof aiSuggestions.confidence === 'string'
+        const confidence = typeof aiSuggestions.confidence === 'string' && aiSuggestions.confidence
             ? aiSuggestions.confidence
-            : '(evidence not assessed)';
+            : (requestCompleted && classificationRequested ? 'not applicable' : 'not requested');
         $panel.find('#isbd-ai-confidence').text(confidence);
-        const normalizedSubjects = normalizeSubjectObjects(aiSuggestions.subjects || []);
         if (state && state.aiSuggestions) {
             state.aiSuggestions.subjects = normalizedSubjects;
         }
@@ -3381,19 +3469,23 @@
         const evidenceVerification = aiSuggestions.evidenceVerification && typeof aiSuggestions.evidenceVerification === 'object'
             ? aiSuggestions.evidenceVerification
             : null;
-        const evidenceTrustLabel = evidenceVerification && evidenceVerification.status === 'verified'
+        const evidenceTrustLabel = !classificationRequested
+            ? 'Classification not included in this response'
+            : !aiSuggestions.classification
+            ? 'No safe classification candidate'
+            : evidenceVerification && evidenceVerification.status === 'verified'
             ? 'LCCS 2024 schedule verified'
-            : (evidenceVerification && evidenceVerification.status === 'no_match'
-                ? 'No exact LCCS schedule match'
-                : (evidenceVerification && evidenceVerification.status === 'unavailable'
-                    ? 'LCCS verification unavailable'
-                    : (evidenceVerification && evidenceVerification.status === 'invalid_candidate'
-                        ? 'Invalid LCC candidate'
-                        : (normalizedClassification ? 'LCCS not verified' : 'Classification not requested'))));
+            : evidenceVerification && evidenceVerification.status === 'no_match'
+            ? 'No exact LCCS schedule match'
+            : evidenceVerification && evidenceVerification.status === 'unavailable'
+            ? 'LCCS verification unavailable'
+            : evidenceVerification && evidenceVerification.status === 'invalid_candidate'
+            ? 'Invalid LCC candidate'
+            : 'LCCS not verified';
         const trustLabels = [
-            '<strong>AI suggestion</strong>',
+            hasCatalogingSuggestions ? '<strong>AI suggestions</strong>' : '<strong>AI response</strong>',
             evidenceTrustLabel,
-            aiSuggestions.requiresHumanReview ? 'Review required' : ''
+            aiSuggestions.requiresHumanReview && hasCatalogingSuggestions ? 'Review before applying' : ''
         ].filter(Boolean).join(' · ');
         const rationale = aiSuggestions.rationale && typeof aiSuggestions.rationale === 'object'
             ? aiSuggestions.rationale
@@ -3405,10 +3497,17 @@
         if ((rationale.system || '').toString().trim()) {
             rationaleBlocks.push(`<strong>System note</strong><br>${formatCatalogingResponseHtml(rationale.system)}`);
         }
-        if (!rationaleBlocks.length) {
-            rationaleBlocks.push('<strong>System note</strong><br>No safe cataloguing rationale was available.');
+        if (!rationaleBlocks.length && requestCompleted) {
+            rationaleBlocks.push('<strong>System note</strong><br>No safe cataloging rationale was available.');
         }
-        $panel.find('#isbd-ai-response').html(`${trustLabels}<br>${rationaleBlocks.join('<br>')}`);
+        if (!requestCompleted) {
+            const pendingText = requestState && requestState.inFlight
+                ? 'Request in progress. Results and verification details will appear here.'
+                : 'Run cataloging suggestions to see rationale and verification details.';
+            $panel.find('#isbd-ai-response').text(pendingText).addClass('isbd-ai-empty');
+        } else {
+            $panel.find('#isbd-ai-response').html(`${trustLabels}<br>${rationaleBlocks.join('<br>')}`).removeClass('isbd-ai-empty');
+        }
         const authorityUnavailable = aiSuggestions.authorityLookupStatus === 'service_unavailable'
             || aiSuggestions.authorityLookupStatus === 'invalid_authority_response';
         $panel.find('#isbd-ai-retry-authority').toggle(!!authorityUnavailable);
@@ -3424,16 +3523,14 @@
         } else {
             status = 'Suggestions use bounded bibliographic evidence from the current record when requested.';
         }
-        const requestState = getAiRequestState(state, 'cataloging');
         const inFlight = requestState && requestState.inFlight;
         if (!inFlight) {
             updateAiCatalogingStatus($panel, status, 'info');
         }
         const $useSuggested = $panel.find('#isbd-ai-use-suggested-class');
         if ($useSuggested.length) {
-            const hasManualClass = !!classificationInput.toString().trim() && !inputRangeMessage;
             const hasSuggestedClass = !!(aiSuggestions.classification || '').toString().trim() && !suggestionRangeMessage;
-            $useSuggested.prop('disabled', !!(readOnly || !aiApplyAllowed || (!hasSuggestedClass && !hasManualClass)));
+            $useSuggested.prop('disabled', !!(readOnly || !aiApplyAllowed || !hasSuggestedClass));
         }
         const $applyCall = $panel.find('#isbd-ai-apply-callnumber');
         if ($applyCall.length) {
@@ -3481,6 +3578,19 @@
         if (!classificationEnabled && subjectsEnabled) label = 'Suggest subjects';
         if (!classificationEnabled && !subjectsEnabled) label = 'Select cataloging options';
         return { classificationEnabled, subjectsEnabled, hasFeature, label };
+    }
+
+    function catalogingRequestFlags(task, features) {
+        if (features && typeof features === 'object') {
+            return {
+                classification: !!features.call_number_guidance,
+                subjects: !!features.subject_guidance
+            };
+        }
+        return {
+            classification: task === 'cataloging_classification' || task === 'cataloging_review',
+            subjects: task === 'subject_heading_suggestion' || task === 'cataloging_review'
+        };
     }
 
     function updateAiCatalogingControls($panel, settings) {
@@ -3531,6 +3641,7 @@
                     <div class="body">
                         <div class="isbd-ai-section">
                             <div class="isbd-ai-section-title">Cataloging Suggestions</div>
+                            <div class="isbd-ai-section-help">Choose one or both outputs. Suggestions are advisory and never change the record until you apply them.</div>
                             <div class="meta">Primary record evidence: <strong id="isbd-ai-title">None</strong></div>
                             <div class="meta">Cutter source: <span id="isbd-ai-cutter-source">Title</span></div>
                             <div class="options">
@@ -3546,18 +3657,22 @@
                                 <button type="button" class="btn btn-xs btn-primary" id="isbd-ai-run-cataloging">Suggest classification &amp; subjects</button>
                             </div>
                             <div class="isbd-ai-results">
-                                <div class="meta">Classification (LC): <span id="isbd-ai-classification">No suggestion requested yet</span></div>
-                                <div class="meta">Confidence: <span id="isbd-ai-confidence">(n/a)</span></div>
-                                <div class="meta">Subjects:</div>
-                                <div id="isbd-ai-subjects" class="isbd-ai-text-output">No suggestion requested yet</div>
+                                <div class="isbd-ai-result-grid">
+                                    <div class="isbd-ai-result-label">LC classification</div>
+                                    <div class="isbd-ai-result-value" id="isbd-ai-classification">Not requested yet</div>
+                                    <div class="isbd-ai-result-label">Classification confidence</div>
+                                    <div class="isbd-ai-result-value" id="isbd-ai-confidence">not requested</div>
+                                </div>
+                                <div class="isbd-ai-result-label" style="margin-top:10px;">Subject suggestions</div>
+                                <div id="isbd-ai-subjects" class="isbd-ai-text-output isbd-ai-empty">Not requested yet</div>
                                 <div class="actions" style="justify-content: flex-start;">
                                     <label style="font-weight: normal;">
                                         <input type="checkbox" id="isbd-ai-subjects-replace"/>
                                         Replace existing subjects
                                     </label>
                                 </div>
-                                <div class="meta" style="margin-top: 6px;">AI rationale:</div>
-                                <div id="isbd-ai-response" class="isbd-ai-text-output">No suggestion requested yet</div>
+                                <div class="isbd-ai-result-label" style="margin-top:10px;">Rationale and verification</div>
+                                <div id="isbd-ai-response" class="isbd-ai-text-output isbd-ai-empty">Run cataloging suggestions to see rationale and verification details.</div>
                                 <div class="actions" style="justify-content:flex-start;">
                                     <button type="button" class="btn btn-xs btn-default" id="isbd-ai-retry-authority" style="display:none;">Retry authority verification</button>
                                 </div>
@@ -3568,9 +3683,10 @@
                             </div>
                             <div class="isbd-ai-callnumber">
                                 <label for="isbd-ai-classification-input">Manual classification number</label>
+                                <div class="meta">Enter a value yourself, or copy the latest AI candidate into this field.</div>
                                 <div class="isbd-ai-inline">
                                     <input type="text" id="isbd-ai-classification-input" class="form-control input-sm" placeholder="Enter classification"/>
-                                    <button type="button" class="btn btn-xs btn-primary" id="isbd-ai-use-suggested-class">Apply</button>
+                                    <button type="button" class="btn btn-xs btn-default" id="isbd-ai-use-suggested-class">Use AI suggestion</button>
                                 </div>
                                 <div class="meta" style="margin-top: 6px;">Collection prefix:</div>
                                 <div class="isbd-ai-prefix-options">
@@ -3606,6 +3722,7 @@
                         <hr/>
                         <div class="isbd-ai-section">
                             <div class="isbd-ai-section-title">Rules &amp; Punctuation Suggestions</div>
+                            <div class="isbd-ai-section-help">Checks the selected MARC field with deterministic rules and, when enabled, adds an AI explanation.</div>
                             <div class="meta">Selected field: <strong id="isbd-ai-selected">None</strong></div>
                             <div class="meta">Field value:</div>
                             <div class="isbd-ai-field-value" id="isbd-ai-current"></div>
@@ -3624,8 +3741,8 @@
                                 <div class="meta" id="isbd-ai-punctuation-summary">No rules or punctuation suggestions yet.</div>
                                 <div id="isbd-ai-punctuation-list"></div>
                                 <div class="isbd-ai-result-actions" id="isbd-ai-punctuation-actions" style="display:none;">
-                                    <button type="button" class="btn btn-xs btn-primary" id="isbd-ai-apply-selected">Apply selected</button>
-                                    <button type="button" class="btn btn-xs btn-default" id="isbd-ai-apply-all">Apply all</button>
+                                    <button type="button" class="btn btn-xs btn-primary" id="isbd-ai-apply-selected">Apply selected fixes</button>
+                                    <button type="button" class="btn btn-xs btn-default" id="isbd-ai-apply-all">Apply all fixes</button>
                                 </div>
                                 <details class="isbd-ai-debug" id="isbd-ai-punctuation-debug" style="display:none;">
                                     <summary>Advanced/Debug</summary>
@@ -3783,20 +3900,19 @@
                     toast('warning', 'AI apply actions are disabled in internship mode.');
                     return;
                 }
-                const manualValue = ($panel.find('#isbd-ai-classification-input').val() || '').toString().trim();
-                if (manualValue) {
-                    updateAiCatalogingContext($panel, settings, state);
-                    toast('info', 'Manual classification retained.');
-                    return;
-                }
                 const suggested = state && state.aiSuggestions ? (state.aiSuggestions.classification || '') : '';
                 if (!suggested) {
                     toast('info', 'No suggested classification is available yet.');
                     return;
                 }
+                const manualValue = ($panel.find('#isbd-ai-classification-input').val() || '').toString().trim();
+                if (manualValue === suggested) {
+                    toast('info', 'The AI classification is already in use.');
+                    return;
+                }
                 $panel.find('#isbd-ai-classification-input').val(suggested);
                 updateAiCatalogingContext($panel, settings, state);
-                toast('info', 'Suggested classification applied.');
+                toast('action', 'AI classification copied to the call number builder.');
             });
             $panel.find('input[name="isbd-ai-prefix-type"]').on('change', function() {
                 updateAiCatalogingContext($panel, settings, state);
@@ -4096,26 +4212,29 @@
         return 'cataloging_classification';
     }
 
-    function catalogingToastState(result, classification, subjects) {
+    function catalogingToastState(result, classification, subjects, requested) {
         const hasSuggestions = !!classification || (Array.isArray(subjects) && subjects.length > 0);
         const parseStatus = (result && result.ai_parse_status) || '';
         const authorityStatus = (result && result.authority_lookup_status) || '';
         if (parseStatus === 'degraded_recovery' && hasSuggestions) {
-            return { type: 'warning', message: 'Cataloguing suggestions were recovered from non-structured AI output. Review them carefully before applying.' };
+            return { type: 'warning', message: 'Cataloging suggestions were recovered from non-structured AI output. Review them carefully before applying.' };
         }
         if (hasSuggestions && (authorityStatus === 'service_unavailable' || authorityStatus === 'invalid_authority_response')) {
             return { type: 'warning', message: 'AI suggestions are available, but authority verification is temporarily unavailable.' };
         }
         if (parseStatus === 'truncated' || (result && result.status === 'incomplete')) {
-            return { type: 'warning', message: 'The AI response was incomplete; no unsafe cataloguing suggestion was accepted.' };
+            return { type: 'warning', message: 'The AI response was incomplete; no unsafe cataloging suggestion was accepted.' };
         }
         if (parseStatus === 'malformed') {
-            return { type: 'warning', message: 'The AI response could not be safely parsed into cataloguing suggestions.' };
+            return { type: 'warning', message: 'The AI response could not be safely parsed into cataloging suggestions.' };
         }
         if (!hasSuggestions) {
-            return { type: 'info', message: 'AI could not produce a safe cataloguing suggestion from the available evidence.' };
+            if (requested && requested.classification && !requested.subjects) {
+                return { type: 'info', message: 'Classification was requested, but no safe suggestion was returned from the available evidence.' };
+            }
+            return { type: 'info', message: 'AI could not produce a safe cataloging suggestion from the available evidence.' };
         }
-        return { type: 'success', message: 'Cataloguing suggestions ready.' };
+        return { type: 'success', message: 'Cataloging suggestions ready.' };
     }
 
     async function requestAiCatalogingAssist(settings, state, options) {
@@ -4139,10 +4258,11 @@
             return;
         }
         const task = catalogingTaskFromFeatures(features);
+        const requested = catalogingRequestFlags(task, features);
         const evidenceContext = buildCatalogingEvidenceRequestContext(settings, state, task);
         const tagContext = evidenceContext.tagContext;
         if (!tagContext) {
-            const message = 'No meaningful bibliographic evidence is available for AI cataloguing guidance.';
+            const message = 'No meaningful bibliographic evidence is available for AI cataloging guidance.';
             toast('warning', message);
             if (onStatus) onStatus(`Error: ${message}`, 'error');
             return;
@@ -4159,6 +4279,7 @@
             payload.record_context = catalogingRecordContext;
         }
         const requestId = startAiRequest(state, 'cataloging');
+        state.aiCatalogingPending = { ...requested, task };
         const signal = getAiRequestSignal(state, 'cataloging', requestId);
         const setStatus = (message, type) => {
             if (!isLatestAiRequest(state, 'cataloging', requestId)) return;
@@ -4166,6 +4287,7 @@
             if (onStatus) onStatus(message, type);
         };
         const progress = startAiRequestProgress(state, 'cataloging', requestId, setStatus, 'Sending request');
+        updateAiCatalogingContext($('#isbd-ai-panel'), settings, state);
         toast('info', 'Running cataloging suggestions...');
         try {
             progress.setPhase('Waiting for AI response');
@@ -4197,9 +4319,18 @@
                 }
             }
             const candidate = result.candidate || result.classification_candidate || null;
-            const confidence = candidate && typeof candidate.confidence === 'string'
-                ? candidate.confidence
-                : (result.status === 'insufficient_evidence' ? 'insufficient evidence' : 'low');
+            const classificationDetail = result.classification_detail && typeof result.classification_detail === 'object'
+                ? result.classification_detail
+                : null;
+            const confidence = classification
+                ? candidate && typeof candidate.confidence === 'string'
+                    ? candidate.confidence
+                    : classificationDetail && typeof classificationDetail.confidence === 'string'
+                    ? classificationDetail.confidence
+                    : 'low'
+                : requested.classification
+                    ? 'not applicable'
+                    : 'not requested';
             state.aiSuggestions = {
                 classification,
                 subjects,
@@ -4215,20 +4346,19 @@
                 requiresHumanReview: result.requires_human_review !== false,
                 status: result.status || '',
                 parseStatus: result.ai_parse_status || '',
-                authorityLookupStatus: result.authority_lookup_status || ''
+                authorityLookupStatus: result.authority_lookup_status || '',
+                requestCompleted: true,
+                requested: { ...requested },
+                task
             };
             state.aiSubjectHistory = {};
             const $panel = $('#isbd-ai-panel');
-            const $classInput = $panel.find('#isbd-ai-classification-input');
-            if ($classInput.length && classification && !String($classInput.val() || '').trim()) {
-                $classInput.val(classification);
-            }
             updateAiCatalogingContext($panel, settings, state);
             renderAiDebug($('#isbd-ai-panel'), 'cataloging', result);
             progress.stop();
-            const toastState = catalogingToastState(result, classification, subjects);
+            const toastState = catalogingToastState(result, classification, subjects, requested);
             toast(toastState.type, toastState.message);
-            setStatus('Done', classification || subjects.length ? 'success' : 'info');
+            setStatus(classification || subjects.length ? 'Suggestions ready' : 'Complete · no safe suggestion', classification || subjects.length ? 'success' : 'info');
         } catch (err) {
             if (!isLatestAiRequest(state, 'cataloging', requestId)) return;
             if (isAbortError(err)) {
@@ -4244,6 +4374,7 @@
         } finally {
             progress.stop();
             if (isLatestAiRequest(state, 'cataloging', requestId)) {
+                state.aiCatalogingPending = null;
                 finishAiRequest(state, 'cataloging', requestId);
             }
         }
@@ -4618,14 +4749,28 @@
             subjects: subjects || [],
             history,
             readOnly: !!state.readOnly,
-            canApply: internFeatureAllowed(state, 'aiApplyActions')
+            canApply: internFeatureAllowed(state, 'aiApplyActions'),
+            requestCompleted: !!(state.aiSuggestions && state.aiSuggestions.requestCompleted),
+            subjectsRequested: !!(state.aiSuggestions && state.aiSuggestions.requested && state.aiSuggestions.requested.subjects),
+            pendingSubjects: !!(state.aiCatalogingPending && state.aiCatalogingPending.subjects),
+            requestInFlight: !!(state.aiRequests && state.aiRequests.cataloging && state.aiRequests.cataloging.inFlight)
         });
         if (state.aiSubjectListFingerprint === fingerprint) return;
         state.aiSubjectListFingerprint = fingerprint;
         if (!Array.isArray(subjects) || !subjects.length) {
-            $list.text('No safe subject suggestion was produced.');
+            const suggestionState = state.aiSuggestions || {};
+            const completed = !!suggestionState.requestCompleted;
+            const requested = !!(suggestionState.requested && suggestionState.requested.subjects);
+            const inFlight = !!(state.aiRequests && state.aiRequests.cataloging && state.aiRequests.cataloging.inFlight);
+            const pendingSubjects = !!(state.aiCatalogingPending && state.aiCatalogingPending.subjects);
+            let emptyText = 'Not requested yet';
+            if (inFlight && pendingSubjects && !completed) emptyText = 'Awaiting response…';
+            else if (completed && requested) emptyText = 'No safe subject suggestion returned';
+            else if (completed) emptyText = 'Not requested in the last run';
+            $list.text(emptyText).addClass('isbd-ai-empty');
             return;
         }
+        $list.removeClass('isbd-ai-empty');
         const formatter = global.ISBDAiTextExtract && typeof global.ISBDAiTextExtract.formatSubjectDisplay === 'function'
             ? global.ISBDAiTextExtract.formatSubjectDisplay
             : null;
@@ -4749,13 +4894,10 @@
         const current = $(element).val() || '';
         const ghostText = computeGhostText(current, patch.replacement_text || '');
         if (!ghostText) return;
-        const $ghost = $(`<span class="isbd-ghost-text" title="Accept AI suggestion">${ghostText}</span>`);
+        const $ghost = $(`<button type="button" class="isbd-ghost-text" title="Apply suggestion" aria-label="Apply suggested field value">${ghostText}</button>`);
         $ghost.data('expected', patch.replacement_text || '');
         $ghost.on('click', () => {
-            $(element).val(patch.replacement_text || '');
-            $ghost.remove();
-            markFieldForRevalidation(state, parseFieldMeta(element));
-            toast('info', 'AI ghost suggestion applied.');
+            applyGhostSuggestion(element, patch.replacement_text || '', state);
         });
         $(element).after($ghost);
     }
@@ -7585,42 +7727,52 @@
             <div class="isbd-guide-backdrop"></div>
             <div class="isbd-about-modal isbd-about-dialog">
                 <header>
-                    <span>About Koha_ISBD_Cataloging_Assistant</span>
+                    <span>About Koha ISBD Cataloging Assistant</span>
                     <div>
                         <button type="button" class="btn btn-xs isbd-btn-danger" id="isbd-about-close">Close</button>
                     </div>
                 </header>
                 <div class="body">
-                    <p>ISBD-focused MARC21 assistant for Koha with guardrails, training guidance, and optional AI suggestions.</p>
-                    <ul>
-                        <li>ISBD punctuation checks and quick fixes</li>
-                        <li>Cataloging guide progress tracking</li>
-                        <li>Optional AI suggestions for classification and subjects</li>
-                    </ul>
-                    <p><strong>Author:</strong> Duke Chijimaka Jonathan, University of Port Harcourt, Nigeria</p>
-                    <p><strong>Email:</strong> djonathan002@uniport.edu.ng</p>
-                    <p><strong>LinkedIn:</strong> <a href="https://linkedin.com/in/duke-j-a1a9b0260" target="_blank" rel="noopener">linkedin.com/in/duke-j-a1a9b0260</a></p>
-                    <p><strong>Plugin GitHub:</strong> <a href="https://github.com/build-with-duke/Koha_ISBD_Assistant_Plugin/" target="_blank" rel="noopener">github.com/Dzechy/Koha_ISBD_Assistant_Plugin</a></p>
-                    <p><strong>Acknowledgements:</strong></p>
-                    <ul class="isbd-ack-list">
-                        <li>Prof. Helen Uzoezi Emasealu (helen.emasealu@uniport.edu.ng)</li>
-                        <li>Dr. Millie Nne Horsfall (millie.horsfall@uniport.edu.ng)</li>
-                        <li>Mr. Stanislaus Richard Ezeonye (stanislaus.ezeonye@uniport.edu.ng)</li>
-                    </ul>
-                    <p><strong>AI provider:</strong> ${settings.llmApiProvider || 'OpenRouter'}</p>
-                    <p><strong>Model:</strong> ${settings.aiModel || 'Not set'}</p>
-                    <hr/>
-                    <h5 style="margin: 0 0 6px;">Buy Me a Coffee</h5>
-                    <p style="margin-bottom: 8px;">If this plugin saved you from one more ISBD MARC rules headache, coffee keeps the devs and fixes coming.</p>
-                    <p><a href="https://selfany.com/kohaISBDplugindonation" target="_blank" rel="noopener">Non-crypto donation link</a></p>
-                    <div class="meta" style="margin-top: 6px;">Crypto:</div>
-                    <ul class="isbd-ack-list" style="margin-top: 6px;">
-                        <li>BTC: <code>19JSzRPB5qp3TKZVBeVUR8xmgntxKui5cc</code></li>
-                        <li>ETH (ERC20): <code>0x5cc9f67d0f8328a46b9f9e12a1cfbf1a379e5947</code></li>
-                        <li>USDT (ERC20): <code>0x5cc9f67d0f8328a46b9f9e12a1cfbf1a379e5947</code></li>
-                        <li>USDC (ERC20): <code>0x5cc9f67d0f8328a46b9f9e12a1cfbf1a379e5947</code></li>
-                        <li>LTC: <code>LesDgPh9BVp8SgbXqk8GbyCzHwnrgn7tDv</code></li>
-                    </ul>
+                    <p class="isbd-about-lead">A focused MARC21 workspace for safer ISBD punctuation, guided cataloging, and optional AI-assisted decisions.</p>
+                    <div class="isbd-about-grid">
+                        <div class="isbd-about-card"><strong>Check</strong><span>ISBD punctuation and MARC guardrails</span></div>
+                        <div class="isbd-about-card"><strong>Learn</strong><span>Guided cataloging with progress tracking</span></div>
+                        <div class="isbd-about-card"><strong>Assist</strong><span>Reviewable classification and subject suggestions</span></div>
+                    </div>
+                    <div class="isbd-about-section">
+                        <h5>Plugin details</h5>
+                        <div class="isbd-ai-result-grid">
+                            <div class="isbd-ai-result-label">Version</div><div>${escapeAttr(settings.currentVersion || 'Not available')}</div>
+                            <div class="isbd-ai-result-label">AI provider</div><div>${escapeAttr(settings.llmApiProvider || 'OpenRouter')}</div>
+                            <div class="isbd-ai-result-label">Model</div><div>${escapeAttr(settings.aiModel || 'Not configured')}</div>
+                            <div class="isbd-ai-result-label">Source</div><div><a href="${escapeAttr(settings.pluginRepoUrl || 'https://github.com/build-with-duke/Koha_ISBD_Assistant_Plugin/')}" target="_blank" rel="noopener noreferrer">GitHub repository</a></div>
+                        </div>
+                    </div>
+                    <div class="isbd-about-section">
+                        <h5>Author and acknowledgements</h5>
+                        <p><strong>Duke Chijimaka Jonathan</strong><br>University of Port Harcourt, Nigeria · <a href="mailto:djonathan002@uniport.edu.ng">Email</a> · <a href="https://linkedin.com/in/duke-j-a1a9b0260" target="_blank" rel="noopener noreferrer">LinkedIn</a></p>
+                        <details>
+                            <summary>Acknowledgements</summary>
+                            <ul class="isbd-ack-list">
+                                <li>Prof. Helen Uzoezi Emasealu</li>
+                                <li>Dr. Millie Nne Horsfall</li>
+                                <li>Mr. Stanislaus Richard Ezeonye</li>
+                            </ul>
+                        </details>
+                    </div>
+                    <div class="isbd-about-section">
+                        <h5>Support development</h5>
+                        <p style="margin-bottom: 8px;">Help fund maintenance, compatibility updates, and new cataloging checks.</p>
+                        <p><a href="https://selfany.com/kohaISBDplugindonation" target="_blank" rel="noopener noreferrer">Buy me a coffee</a></p>
+                        <details>
+                            <summary>Cryptocurrency addresses</summary>
+                            <ul class="isbd-ack-list" style="margin-top: 6px;">
+                                <li>BTC: <code>19JSzRPB5qp3TKZVBeVUR8xmgntxKui5cc</code></li>
+                                <li>ETH / USDT / USDC (ERC20): <code>0x5cc9f67d0f8328a46b9f9e12a1cfbf1a379e5947</code></li>
+                                <li>LTC: <code>LesDgPh9BVp8SgbXqk8GbyCzHwnrgn7tDv</code></li>
+                            </ul>
+                        </details>
+                    </div>
                 </div>
             </div>
         `);
@@ -7658,6 +7810,8 @@
         isMeaningfulCatalogingValue,
         prioritizeCatalogingFields,
         sanitizeAiClassificationSuggestion,
+        catalogingRequestFlags,
+        catalogingToastState,
         performanceSummary,
         buildPluginUrl
     };

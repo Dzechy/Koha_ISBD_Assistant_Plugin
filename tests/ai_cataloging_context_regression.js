@@ -66,4 +66,24 @@ const catalogingProjection = source.slice(catalogingProjectionStart, catalogingP
 assert(catalogingProjection.includes('const titleInfo = getTitleWithSubtitle();'),
     'AI cataloguing projection declares titleInfo before returning it');
 
+assert.deepStrictEqual(
+    { ...hooks.catalogingRequestFlags('cataloging_classification') },
+    { classification: true, subjects: false },
+    'classification task records that classification was requested');
+assert.deepStrictEqual(
+    { ...hooks.catalogingRequestFlags('subject_heading_suggestion') },
+    { classification: false, subjects: true },
+    'subject-only task does not claim classification was requested');
+assert.deepStrictEqual(
+    { ...hooks.catalogingRequestFlags('cataloging_review') },
+    { classification: true, subjects: true },
+    'combined review records both requested outputs');
+const emptyClassificationToast = hooks.catalogingToastState(
+    { status: 'insufficient_evidence' }, '', [], { classification: true, subjects: false }
+);
+assert.strictEqual(
+    emptyClassificationToast.message,
+    'Classification was requested, but no safe suggestion was returned from the available evidence.',
+    'safe empty classification response is not presented as an unrequested task');
+
 console.log('ai_cataloging_context_regression: ok');

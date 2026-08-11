@@ -611,6 +611,7 @@ sub intranet_js {
         }
         $current_user_id ||= $cgi->remote_user || $ENV{REMOTE_USER} || '';
         my $settings_blob = {
+            currentVersion => $Koha::Plugin::Cataloging::AutoPunctuation::VERSION,
             enabled => $settings->{enabled} ? JSON::true : JSON::false,
             autoApplyPunctuation => $settings->{auto_apply_punctuation}
             ? JSON::true
