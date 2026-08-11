@@ -27,7 +27,7 @@ use Koha::Plugin::Cataloging::AutoPunctuation::AI::Prompt ();
 use Koha::Plugin::Cataloging::AutoPunctuation::AI::LCCS ();
 use Koha::Plugin::Cataloging::AutoPunctuation::AI::LinkedData::LOC ();
 
-our $CLIENT_RESPONSE_VERSION = '2.1.0';
+our $CLIENT_RESPONSE_VERSION = '2.2.0';
 
 sub _semantic_subfields {
     my ( $tag, $subfields, $pack ) = @_;
@@ -289,6 +289,13 @@ s/([\"\']?authorization[\"\']?\s*[:=]\s*[\"\']?bearer\s+)([^\"\'\s,}]+)/${1}[RED
         $cutoff = 0 if $cutoff < 0;
         $value  = substr( $value, 0, $cutoff ) . $suffix;
     }
+    return $value;
+}
+
+sub _cataloging_provider_response_text {
+    my ( $self, $text ) = @_;
+    my $value = _sanitize_debug_text( $self, $text, 4000 );
+    $value =~ s/^\s+|\s+$//g;
     return $value;
 }
 
@@ -735,7 +742,7 @@ sub ai_suggest {
             my $cache_key = sha256_hex(
                 join( '|',
                     $task,
-                    'generation-cache:3',
+                    'generation-cache:4',
                     'schema:1.0.0',
                     $tag,
                     ( $tag_context->{ind1} // '' ),
@@ -762,7 +769,7 @@ sub ai_suggest {
             );
             if ( my $cached = $self->_cache_get( $settings, $cache_key ) ) {
                 if ( ref $cached eq 'HASH'
-                    && ( $cached->{cache_format} || '' ) eq 'canonical-ai:1'
+                    && ( $cached->{cache_format} || '' ) eq 'canonical-ai:2'
                     && ref $cached->{result} eq 'HASH' )
                 {
                     my $cached_result = _clone_json_value( $cached->{result} );
@@ -890,11 +897,24 @@ sub ai_suggest {
                   :                                     'structured';
             }
 
+            # The provider's assistant text is part of the cataloguer-facing
+            # result even when no candidate survives parsing or validation.
+            # It is display-only, bounded, and secret-redacted; applicability
+            # remains gated by the structured candidate fields below.
+            if ($cataloging_mode) {
+                my $assistant_response = _cataloging_provider_response_text(
+                    $self,
+                    $provider_result->{raw_text} || $initial_raw_text
+                );
+                $result->{assistant_response} = $assistant_response
+                  if $assistant_response ne '';
+            }
+
             if ( ( $result->{ai_parse_status} || '' ) =~ /^(?:structured|structured_partial|degraded_recovery)$/ ) {
                 $self->_cache_set(
                     $settings, $cache_key,
                     {
-                        cache_format => 'canonical-ai:1',
+                        cache_format => 'canonical-ai:2',
                         result       => _clone_json_value($result),
                     }
                 );

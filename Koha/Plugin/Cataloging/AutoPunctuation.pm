@@ -45,7 +45,7 @@ our $PLUGIN_REPO_URL = "https://github.com/build-with-duke/Koha_ISBD_Assistant_P
 our $PLUGIN_RELEASES_API =
 "https://api.github.com/repos/build-with-duke/Koha_ISBD_Assistant_Plugin/releases/latest";
 our $AUTHOR_LINKEDIN   = "https://linkedin.com/in/duke-j-a1a9b0260";
-our $AI_PROMPT_VERSION = "3.0.0";
+our $AI_PROMPT_VERSION = "3.1.0";
 
 our $metadata = {
     name            => 'Koha_ISBD_Cataloging_Assistant',

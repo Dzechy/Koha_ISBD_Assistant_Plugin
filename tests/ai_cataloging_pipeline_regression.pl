@@ -76,7 +76,7 @@ is( $subject_projection->{subjects}[0]{authority_status}, 'verified',
     'server normalization preserves independently verified authority status' );
 like( $subject_projection->{subjects}[0]{rationale}{ai}, qr/central topic/,
     'subject AI rationale reaches the client projection' );
-is( $subject_projection->{client_response_version}, '2.1.0',
+is( $subject_projection->{client_response_version}, '2.2.0',
     'client response projection is independently versioned' );
 
 my $malformed = {
@@ -84,11 +84,21 @@ my $malformed = {
     status => 'insufficient_evidence', findings => [], warnings => [],
     subject_candidates => [], requires_human_review => JSON::true,
     ai_parse_status => 'malformed',
+    assistant_response => 'I would place this work broadly in Z665, but the JSON wrapper was malformed.',
 };
 my $malformed_projection =
   Koha::Plugin::Cataloging::AutoPunctuation::Api::_task_response_for_client(
     $payload, $malformed, [] );
 like( $malformed_projection->{rationale}{system}, qr/could not be safely parsed/i,
     'malformed is distinct from an empty evidence response' );
+is( $malformed_projection->{assistant_response},
+    'I would place this work broadly in Z665, but the JSON wrapper was malformed.',
+    'original assistant output survives projection even when it is not applicable' );
+is(
+    Koha::Plugin::Cataloging::AutoPunctuation::Api::_cataloging_provider_response_text(
+        $harness, 'token=provider-secret Classification: Z665' ),
+    'token=[REDACTED] Classification: Z665',
+    'cataloguer-visible provider output redacts secret-like values'
+);
 
 done_testing();

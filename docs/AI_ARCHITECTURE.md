@@ -2,7 +2,7 @@
 
 The AI subsystem is advisory. Browser code sends an explicit task to `ai_suggest` through one canonical plugin API client; it never receives provider credentials and never calls OpenAI or OpenRouter. The server normalizes MARC context, selects semantically related fields, builds a bounded prompt, invokes the provider adapter, validates the task schema and semantics, applies deterministic guardrails, and returns a provider-independent, trust-labelled result.
 
-The supported tasks are `punctuation_explanation`, `cataloging_classification`, `subject_heading_suggestion`, `cataloging_review`, and `training_tutor`. Their provider response contract remains `1.0.0`; the prompt version is `3.0.0`, and the independently versioned browser projection is `2.1.0`.
+The supported tasks are `punctuation_explanation`, `cataloging_classification`, `subject_heading_suggestion`, `cataloging_review`, and `training_tutor`. Their provider response contract remains `1.0.0`; the prompt version is `3.1.0`, and the independently versioned browser projection is `2.2.0`. Cataloging projections include a bounded, secret-redacted `assistant_response` so the cataloguer can always see provider output even when no candidate is applicable.
 
 `AI::Provider::generate(settings, task, context, schema, options)` is the single provider interface. Options contain the system policy. OpenAI uses Responses; OpenRouter uses Chat Completions. Model parameters are selected by `rules/ai_model_capabilities.json`, not guessed from substrings. Unknown models use strict textual JSON and the validated fallback path until an administrator adds a verified registry entry or supplies `ai_model_capabilities`.
 

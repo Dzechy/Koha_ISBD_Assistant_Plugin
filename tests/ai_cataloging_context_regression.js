@@ -83,7 +83,7 @@ const emptyClassificationToast = hooks.catalogingToastState(
 );
 assert.strictEqual(
     emptyClassificationToast.message,
-    'Classification was requested, but no safe suggestion was returned from the available evidence.',
-    'safe empty classification response is not presented as an unrequested task');
+    'AI responded without a usable classification candidate. Its response is displayed for the cataloguer.',
+    'empty classification response remains visible and is not presented as an unrequested task');
 
 console.log('ai_cataloging_context_regression: ok');

@@ -190,6 +190,26 @@ my $valid_class = {
     authority_status => 'unverified', evidence => ['title'], warnings => [], requires_human_review => JSON::true
 };
 is_deeply( Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_validate_ai_task_response($ai, $normalized, $valid_class), [], 'valid classification response passes schema and semantics' );
+my $captioned_class =
+  Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_canonicalize_ai_provider_response(
+    $ai, $normalized,
+    {
+        status => 'ok',
+        candidate => {
+            value => 'QA76.73 — Computer programming languages',
+            confidence => 'low',
+            basis => 'The title identifies a programming-language work.'
+        },
+        warnings => []
+    } );
+is( $captioned_class->{candidate}{value}, 'QA76.73',
+    'a valid LC class is salvaged from a captioned model value' );
+my $ranged_class =
+  Koha::Plugin::Cataloging::AutoPunctuation::AI::Contract::_canonicalize_ai_provider_response(
+    $ai, $normalized,
+    { status => 'ok', candidate => { value => 'QA76-QA77', confidence => 'low', basis => 'Broad range' } } );
+ok( !exists $ranged_class->{candidate},
+    'classification ranges remain non-applicable rather than selecting an arbitrary endpoint' );
 my $legacy_review_payload = { %{$normalized}, task => 'cataloging_review' };
 my $legacy_review = {
     schema_version => '2', task => 'cataloging_review', status => 'success',

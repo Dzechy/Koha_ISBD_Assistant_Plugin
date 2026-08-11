@@ -52,6 +52,35 @@ sub _confidence_label {
     return 'low';
 }
 
+sub _normalized_classification_value {
+    my ($raw_value) = @_;
+    my $value = uc( _bounded_text( $raw_value, 240 ) );
+    $value =~ s/\r\n?/\n/g;
+    $value =~ s/^\s+|\s+$//g;
+    return '' if $value eq '';
+    return ''
+      if $value =~
+/\b[A-Z]{1,3}\s*\d{1,4}(?:\s*\.\s*\d+)?\s*(?:[-–—]|\bTO\b)\s*(?:[A-Z]{1,3}\s*)?\d{1,4}/i;
+
+    my @values = ($value);
+    while ( $value =~
+/\b([A-Z]{1,3}\s*\d{1,4}(?:\s*\.\s*\d+)?(?:\s*\.\s*[A-Z]\d+(?:\s*\.\s*\d+)?)*(?:\s+\.?[A-Z]\d+(?:\.\d+)?)*(?:\s+[12]\d{3}[A-Z]?)?)\b/g
+      )
+    {
+        push @values, $1;
+    }
+    for my $candidate (@values) {
+        $candidate =~ s/\s*\.\s*/./g;
+        $candidate =~ s/^([A-Z]{1,3})\s+(\d)/$1$2/;
+        $candidate =~ s/\s+/ /g;
+        $candidate =~ s/^\s+|\s+$//g;
+        return $candidate
+          if Koha::Plugin::Cataloging::AutoPunctuation::AI::LCCS::_valid_lccs_candidate(
+            $candidate);
+    }
+    return '';
+}
+
 sub _classification_candidate {
     my ($result) = @_;
     my $source =
@@ -76,11 +105,8 @@ sub _classification_candidate {
             last;
         }
     }
-    $value = uc( _bounded_text( $value, 64 ) );
-    $value =~ s/\s+/ /g;
-    return undef
-      unless Koha::Plugin::Cataloging::AutoPunctuation::AI::LCCS::_valid_lccs_candidate(
-        $value);
+    $value = _normalized_classification_value($value);
+    return undef unless $value ne '';
 
     $source ||= {};
     my $basis = _bounded_text(

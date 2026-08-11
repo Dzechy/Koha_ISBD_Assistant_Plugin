@@ -455,7 +455,7 @@
             .isbd-toast.action { background: #eaf6ea; border-left-color: #408540; border-top-color: #408540; color: #1f5b1f; }
             .isbd-toast.success { background: #eaf6ea; border-left-color: #408540; border-top-color: #408540; color: #1f5b1f; }
             .isbd-panel { position: fixed; right: 20px; top: 120px; width: 610px; height: 670px; max-height: calc(100vh - 24px); background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18); border-radius: 10px; z-index: 9998; display: flex; flex-direction: column; resize: both; overflow: hidden; min-width: 280px; min-height: 180px; }
-            .isbd-panel header { padding: 10px 12px; background: #408540; color: #fff; font-weight: 700; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; cursor: move; }
+            .isbd-panel header { padding: 10px 12px; background: #408540; color: #fff; font-weight: 700; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; cursor: move; touch-action: none; }
             .isbd-panel header > div,
             .isbd-ai-panel header > div,
             .isbd-guide-modal header > div,
@@ -502,7 +502,7 @@
             .isbd-panel .btn-primary:hover,
             .isbd-ai-panel .btn-primary:hover,
             .isbd-guide-modal .btn-primary:hover { background: #377637; border-color: #2a622a; color: #fff; }
-            .isbd-panel .body { padding: 14px 16px; overflow-y: auto; font-size: 12px; background: #f8fafc; }
+            .isbd-panel .body { flex: 1 1 auto; min-height: 0; padding: 14px 16px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; font-size: 12px; background: #f8fafc; }
             .isbd-panel-intro { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; }
             .isbd-panel-count { white-space: nowrap; font-weight: 700; color: #334155; }
             .isbd-panel.minimized { min-height: 0; height: auto; resize: none; overflow: hidden; }
@@ -525,16 +525,17 @@
             .isbd-raw-wrapper { margin-top: 6px; }
             .isbd-raw-output { display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px; font-size: 11px; max-height: 140px; overflow: auto; white-space: pre-wrap; }
             .isbd-ai-panel { position: fixed; right: 24px; bottom: 24px; width: 640px; height: 700px; max-height: calc(100vh - 24px); background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 14px 32px rgba(15, 23, 42, 0.22); border-radius: 10px; z-index: 10002; display: flex; flex-direction: column; resize: both; overflow: hidden; min-width: 300px; min-height: 200px; }
-            .isbd-ai-panel header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; cursor: move; padding: 8px 10px; background: #408540; color: #fff; font-weight: 700; }
-            .isbd-ai-panel .body { padding: 14px 16px; font-size: 12px; overflow-y: auto; background: #f8fafc; }
+            .isbd-ai-panel header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; cursor: move; touch-action: none; padding: 8px 10px; background: #408540; color: #fff; font-weight: 700; }
+            .isbd-ai-panel .body { flex: 1 1 auto; min-height: 0; padding: 14px 16px; font-size: 12px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; background: #f8fafc; }
             .isbd-ai-panel.minimized { min-height: 0; height: auto; resize: none; overflow: hidden; }
             .isbd-ai-panel.minimized .body { display: none; }
             .isbd-ai-panel .meta { color: #5b6b7c; font-size: 11px; margin-bottom: 6px; }
             .isbd-ai-field-value { font-family: monospace; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px; margin-top: 4px; white-space: pre-wrap; word-break: break-word; }
             .isbd-ai-text-output { font-family: monospace; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px; white-space: pre-wrap; word-break: break-word; max-height: 140px; overflow: auto; }
             .isbd-ai-text-output strong { font-weight: 700; color: #1f2937; }
-            .isbd-ai-subject-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px dashed #dbe3ec; padding: 6px 0; }
-            .isbd-ai-subject-row:last-child { border-bottom: none; }
+            #isbd-ai-subjects, #isbd-ai-response { max-height: none; font-family: inherit; white-space: normal; overflow: visible; }
+            .isbd-ai-subject-row { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 8px; border: 1px solid #e2e8f0; border-radius: 7px; background: #fff; padding: 10px; margin-top: 8px; }
+            .isbd-ai-subject-row:last-child { margin-bottom: 0; }
             .isbd-ai-subject-label { flex: 1 1 auto; white-space: normal; word-break: break-word; }
             .isbd-ai-subject-apply { flex: 0 0 auto; }
             .isbd-ai-error { color: #a94442; font-weight: 600; margin-top: 4px; }
@@ -542,6 +543,17 @@
             .isbd-ai-debug summary { cursor: pointer; font-weight: 600; color: #1f2937; }
             .isbd-ai-debug pre { margin: 6px 0 0 0; padding: 6px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; max-height: 180px; overflow: auto; white-space: pre-wrap; }
             .isbd-ai-results { background: #ffffff; border: 1px solid #dbe3ec; border-radius: 8px; padding: 12px; margin-top: 10px; }
+            .isbd-ai-result-cards { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(110px, .8fr)); gap: 8px; }
+            .isbd-ai-result-card { min-width: 0; border: 1px solid #e2e8f0; border-radius: 7px; background: #f8fafc; padding: 10px; }
+            .isbd-ai-result-card-title { color: #64748b; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 5px; }
+            .isbd-ai-result-value-large { color: #172033; font-family: monospace; font-size: 15px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
+            .isbd-ai-badge { display: inline-flex; align-items: center; width: fit-content; border: 1px solid #cbd5e1; border-radius: 999px; background: #eef2f6; color: #475569; font-size: 10px; font-weight: 700; line-height: 1.2; padding: 3px 7px; }
+            .isbd-ai-badge.success { border-color: #a7d7aa; background: #e9f5ea; color: #2d6f2d; }
+            .isbd-ai-badge.warning { border-color: #ead277; background: #fff8dc; color: #735c00; }
+            .isbd-ai-badge.info { border-color: #b8d5ec; background: #eaf3ff; color: #245f8f; }
+            .isbd-ai-result-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; color: #334155; font-size: 11px; font-weight: 700; }
+            .isbd-ai-provider-response { margin-top: 8px; border-left: 3px solid #408540; border-radius: 4px; background: #f1f8f1; padding: 8px 10px; }
+            .isbd-ai-provider-response pre { margin: 5px 0 0; max-height: 220px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; color: #243445; font-family: inherit; font-size: 11px; }
             .isbd-ai-result-grid { display: grid; grid-template-columns: minmax(120px, .7fr) minmax(180px, 1.3fr); gap: 7px 12px; align-items: start; }
             .isbd-ai-result-label { color: #64748b; font-size: 11px; font-weight: 600; }
             .isbd-ai-result-value { color: #1f2937; min-width: 0; word-break: break-word; }
@@ -574,8 +586,8 @@
             .isbd-focus-flash { border: 2px solid #408540 !important; box-shadow: 0 0 8px rgba(64,133,64,0.4) !important; }
             .isbd-about-modal { position: fixed; top: 22%; left: 50%; transform: translateX(-50%); background: #ffffff; border: 1px solid #d1d9e0; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2); border-radius: 6px; padding: 14px; z-index: 10001; width: 420px; }
             .isbd-about-dialog { position: fixed; top: 14%; left: 50%; transform: translateX(-50%); background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 14px 32px rgba(15, 23, 42, 0.22); border-radius: 10px; padding: 0; z-index: 10003; width: 600px; max-width: 94vw; max-height: 82vh; overflow: hidden; min-width: 320px; min-height: 220px; display: flex; flex-direction: column; resize: both; }
-            .isbd-about-dialog header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; cursor: move; padding: 8px 10px; background: #408540; color: #ffffff; font-weight: 700; }
-            .isbd-about-dialog .body { padding: 16px 18px; font-size: 12px; overflow-y: auto; background: #f8fafc; }
+            .isbd-about-dialog header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; cursor: move; touch-action: none; padding: 8px 10px; background: #408540; color: #ffffff; font-weight: 700; }
+            .isbd-about-dialog .body { flex: 1 1 auto; min-height: 0; padding: 16px 18px; font-size: 12px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; background: #f8fafc; }
             .isbd-about-lead { font-size: 14px; color: #334155; margin: 0 0 14px; }
             .isbd-about-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
             .isbd-about-card { background: #fff; border: 1px solid #dbe3ec; border-radius: 7px; padding: 10px; }
@@ -586,8 +598,8 @@
             .isbd-ai-preview-modal pre { background: #f8fafc; padding: 8px; border-radius: 4px; font-size: 11px; white-space: pre-wrap; word-break: break-word; }
             .isbd-guide-modal.minimized .isbd-guide-content { display: none; }
             .isbd-guide-modal.minimized { min-height: 0; height: auto; resize: none; overflow: hidden; }
-            .isbd-guide-modal header { display: flex; justify-content: space-between; align-items: center; cursor: move; padding: 8px 10px; background: #408540; color: #ffffff; font-weight: 700; }
-            .isbd-guide-content { padding: 14px 16px; font-size: 12px; }
+            .isbd-guide-modal header { display: flex; justify-content: space-between; align-items: center; cursor: move; touch-action: none; padding: 8px 10px; background: #408540; color: #ffffff; font-weight: 700; }
+            .isbd-guide-content { flex: 1 1 auto; min-height: 0; padding: 14px 16px; font-size: 12px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
             .isbd-guide-steps { max-height: 160px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; margin-top: 8px; }
             .isbd-guide-steps button { width: 100%; text-align: left; margin-bottom: 4px; }
             .isbd-guide-progress { margin-top: 8px; font-size: 12px; color: #5b6b7c; }
@@ -607,7 +619,7 @@
             .isbd-progress-bar span { display: block; height: 100%; background: #408540; }
             .isbd-about-modal .isbd-ack-list { margin: 6px 0 12px 18px; }
             .isbd-about-modal .isbd-ack-list li { margin-bottom: 4px; }
-            .isbd-top-resize-handle { position: absolute; top: 0; left: 0; right: 0; height: 8px; cursor: n-resize; z-index: 4; }
+            .isbd-top-resize-handle { position: absolute; top: 0; left: 0; right: 0; height: 8px; cursor: n-resize; touch-action: none; z-index: 4; }
             .isbd-panel.resizing,
             .isbd-ai-panel.resizing,
             .isbd-guide-modal.resizing,
@@ -619,13 +631,13 @@
                 .isbd-about-dialog {
                     width: calc(100vw - 16px);
                     max-width: calc(100vw - 16px);
-                    left: 8px !important;
-                    right: 8px !important;
-                    top: auto !important;
-                    bottom: 8px !important;
+                    left: 8px;
+                    right: 8px;
+                    top: auto;
+                    bottom: 8px;
                     max-height: 78vh;
                 }
-                .isbd-ai-panel .options, .isbd-about-grid, .isbd-ai-result-grid { grid-template-columns: 1fr; }
+                .isbd-ai-panel .options, .isbd-about-grid, .isbd-ai-result-grid, .isbd-ai-result-cards { grid-template-columns: 1fr; }
                 .isbd-toast-stack { right: 8px; bottom: 8px; width: calc(100vw - 16px); }
             }
         `;
@@ -925,7 +937,7 @@
                     state.guideActive = false;
                     state.guideRefresh = null;
                     state.guideCurrentStep = null;
-                    $(document).off('mousemove.isbdguideDrag mouseup.isbdguideDrag');
+                    $(document).off('.isbdguideDrag');
                     $modal.remove();
                     $('.isbd-guide-highlight').removeClass('isbd-guide-highlight');
                     updateGuideToggleButton();
@@ -1027,27 +1039,65 @@
         const $panel = $('.isbd-panel');
         if (!$panel.length || $panel.data('draggable')) return;
         $panel.data('draggable', true);
-        let dragging = false;
+        bindFloatingPanelDrag($panel, 'isbdpanel');
+    }
+
+    function bindFloatingPanelDrag($panel, namespace, options) {
+        if (!$panel || !$panel.length || !$panel[0]) return;
+        const opts = options || {};
+        const $header = $panel.find('header').first();
+        if (!$header.length) return;
+        const eventNamespace = (namespace || 'isbdFloatingDrag').replace(/[^a-zA-Z0-9_-]/g, '');
+        let pointerId = null;
         let offsetX = 0;
         let offsetY = 0;
-        $panel.find('header').on('mousedown', function(event) {
-            if ($(event.target).closest('button').length) return;
-            dragging = true;
+
+        $header.off(`pointerdown.${eventNamespace}`).on(`pointerdown.${eventNamespace}`, function(event) {
+            const original = event.originalEvent || event;
+            if (original.isPrimary === false || (original.button !== undefined && original.button !== 0)) return;
+            if ($(event.target).closest('button, a, input, select, textarea, label').length) return;
             const rect = $panel[0].getBoundingClientRect();
-            offsetX = event.clientX - rect.left;
-            offsetY = event.clientY - rect.top;
-            $panel.css({ right: 'auto' });
+            pointerId = original.pointerId;
+            offsetX = original.clientX - rect.left;
+            offsetY = original.clientY - rect.top;
+            $panel.css({
+                transform: opts.clearTransform ? 'none' : ($panel[0].style.transform || ''),
+                right: 'auto',
+                bottom: 'auto',
+                left: `${rect.left}px`,
+                top: `${rect.top}px`
+            });
             $panel.addClass('dragging');
+            if (this.setPointerCapture && pointerId !== undefined) {
+                try { this.setPointerCapture(pointerId); } catch (error) { /* capture is optional */ }
+            }
             event.preventDefault();
         });
-        $(document).on('mousemove.isbdpanel', function(event) {
-            if (!dragging) return;
-            const left = Math.max(0, event.clientX - offsetX);
-            const top = Math.max(0, event.clientY - offsetY);
-            $panel.css({ left: `${left}px`, top: `${top}px` });
+
+        $(document).off(`pointermove.${eventNamespace} pointerup.${eventNamespace} pointercancel.${eventNamespace}`);
+        $(document).on(`pointermove.${eventNamespace}`, function(event) {
+            const original = event.originalEvent || event;
+            if (pointerId === null || (original.pointerId !== undefined && original.pointerId !== pointerId)) return;
+            const rect = $panel[0].getBoundingClientRect();
+            const viewportWidth = Math.max(window.innerWidth || 0, 240);
+            const viewportHeight = Math.max(window.innerHeight || 0, 240);
+            const visibleWidth = Math.min(Math.max(rect.width, 64), viewportWidth);
+            const headerHeight = Math.max($header.outerHeight() || 0, 36);
+            const left = Math.min(
+                Math.max(0, original.clientX - offsetX),
+                Math.max(0, viewportWidth - visibleWidth)
+            );
+            const top = Math.min(
+                Math.max(0, original.clientY - offsetY),
+                Math.max(0, viewportHeight - headerHeight)
+            );
+            $panel.css({ left: `${Math.round(left)}px`, top: `${Math.round(top)}px` });
+            event.preventDefault();
         });
-        $(document).on('mouseup.isbdpanel', function() {
-            dragging = false;
+        $(document).on(`pointerup.${eventNamespace} pointercancel.${eventNamespace}`, function(event) {
+            const original = event.originalEvent || event;
+            if (pointerId === null || (original.pointerId !== undefined && original.pointerId !== pointerId)) return;
+            pointerId = null;
             $panel.removeClass('dragging');
             saveFloatingPanelState($panel);
         });
@@ -1072,11 +1122,15 @@
         let startTop = 0;
         let startHeight = 0;
 
-        $handle.on('mousedown', function(event) {
+        let pointerId = null;
+        $handle.off(`pointerdown.${namespace}`).on(`pointerdown.${namespace}`, function(event) {
             if ($panel.hasClass('minimized')) return;
+            const original = event.originalEvent || event;
+            if (original.isPrimary === false || (original.button !== undefined && original.button !== 0)) return;
             resizing = true;
+            pointerId = original.pointerId;
             const rect = $panel[0].getBoundingClientRect();
-            startY = event.clientY;
+            startY = original.clientY;
             startTop = rect.top;
             startHeight = rect.height;
             $panel.css({
@@ -1086,14 +1140,20 @@
                 top: `${rect.top}px`
             });
             $panel.addClass('resizing');
+            if (this.setPointerCapture && pointerId !== undefined) {
+                try { this.setPointerCapture(pointerId); } catch (error) { /* capture is optional */ }
+            }
             event.preventDefault();
             event.stopPropagation();
         });
 
-        $(document).on(`mousemove.${namespace}`, function(event) {
+        $(document).off(`pointermove.${namespace} pointerup.${namespace} pointercancel.${namespace}`);
+        $(document).on(`pointermove.${namespace}`, function(event) {
             if (!resizing) return;
+            const original = event.originalEvent || event;
+            if (pointerId !== null && original.pointerId !== undefined && original.pointerId !== pointerId) return;
             const viewportHeight = Math.max(window.innerHeight || 0, 240);
-            const delta = event.clientY - startY;
+            const delta = original.clientY - startY;
             let nextTop = startTop + delta;
             let nextHeight = startHeight - delta;
 
@@ -1115,11 +1175,15 @@
                 top: `${Math.round(nextTop)}px`,
                 height: `${Math.round(nextHeight)}px`
             });
+            event.preventDefault();
         });
 
-        $(document).on(`mouseup.${namespace}`, function() {
+        $(document).on(`pointerup.${namespace} pointercancel.${namespace}`, function(event) {
             if (!resizing) return;
+            const original = event.originalEvent || event;
+            if (pointerId !== null && original.pointerId !== undefined && original.pointerId !== pointerId) return;
             resizing = false;
+            pointerId = null;
             $panel.removeClass('resizing');
             saveFloatingPanelState($panel);
         });
@@ -1261,30 +1325,7 @@
         if (!$modal.length || $modal.data('draggable')) return;
         $modal.data('draggable', true);
         attachTopResizeHandle($modal, { minHeight: 220, namespace: 'isbdguideTopResize' });
-        let dragging = false;
-        let offsetX = 0;
-        let offsetY = 0;
-        $modal.find('header').on('mousedown', function(event) {
-            if ($(event.target).closest('button').length) return;
-            dragging = true;
-            const rect = $modal[0].getBoundingClientRect();
-            offsetX = event.clientX - rect.left;
-            offsetY = event.clientY - rect.top;
-            $modal.css({ right: 'auto', left: `${rect.left}px`, top: `${rect.top}px` });
-            $modal.addClass('dragging');
-            event.preventDefault();
-        });
-        $(document).on('mousemove.isbdguideDrag', function(event) {
-            if (!dragging) return;
-            const left = Math.max(0, event.clientX - offsetX);
-            const top = Math.max(0, event.clientY - offsetY);
-            $modal.css({ left: `${left}px`, top: `${top}px` });
-        });
-        $(document).on('mouseup.isbdguideDrag', function() {
-            dragging = false;
-            $modal.removeClass('dragging');
-            saveFloatingPanelState($modal);
-        });
+        bindFloatingPanelDrag($modal, 'isbdguideDrag');
     }
 
     function makeAiPanelDraggable() {
@@ -1292,67 +1333,16 @@
         if (!$panel.length || $panel.data('draggable')) return;
         $panel.data('draggable', true);
         attachTopResizeHandle($panel, { minHeight: 220, namespace: 'isbdaiTopResize' });
-        let dragging = false;
-        let offsetX = 0;
-        let offsetY = 0;
-        $panel.find('header').on('mousedown', function(event) {
-            if ($(event.target).closest('button').length) return;
-            dragging = true;
-            const rect = $panel[0].getBoundingClientRect();
-            offsetX = event.clientX - rect.left;
-            offsetY = event.clientY - rect.top;
-            $panel.css({ right: 'auto', left: `${rect.left}px`, top: `${rect.top}px` });
-            $panel.addClass('dragging');
-            event.preventDefault();
-        });
-        $(document).on('mousemove.isbdaipanel', function(event) {
-            if (!dragging) return;
-            const left = Math.max(0, event.clientX - offsetX);
-            const top = Math.max(0, event.clientY - offsetY);
-            $panel.css({ left: `${left}px`, top: `${top}px` });
-        });
-        $(document).on('mouseup.isbdaipanel', function() {
-            dragging = false;
-            $panel.removeClass('dragging');
-            saveFloatingPanelState($panel);
-        });
+        bindFloatingPanelDrag($panel, 'isbdaipanel');
     }
 
     function makeAboutDialogDraggable() {
         const $dialog = $('.isbd-about-dialog');
         if (!$dialog.length || $dialog.data('draggable')) return;
         $dialog.data('draggable', true);
-        $(document).off('mousemove.isbdaboutDrag mouseup.isbdaboutDrag');
+        $(document).off('.isbdaboutDrag');
         attachTopResizeHandle($dialog, { minHeight: 220, namespace: 'isbdaboutTopResize' });
-        let dragging = false;
-        let offsetX = 0;
-        let offsetY = 0;
-        $dialog.find('header').on('mousedown', function(event) {
-            if ($(event.target).closest('button, a').length) return;
-            dragging = true;
-            const rect = $dialog[0].getBoundingClientRect();
-            offsetX = event.clientX - rect.left;
-            offsetY = event.clientY - rect.top;
-            $dialog.css({
-                transform: 'none',
-                right: 'auto',
-                left: `${rect.left}px`,
-                top: `${rect.top}px`
-            });
-            $dialog.addClass('dragging');
-            event.preventDefault();
-        });
-        $(document).on('mousemove.isbdaboutDrag', function(event) {
-            if (!dragging) return;
-            const left = Math.max(0, event.clientX - offsetX);
-            const top = Math.max(0, event.clientY - offsetY);
-            $dialog.css({ left: `${left}px`, top: `${top}px` });
-        });
-        $(document).on('mouseup.isbdaboutDrag', function() {
-            dragging = false;
-            $dialog.removeClass('dragging');
-            saveFloatingPanelState($dialog);
-        });
+        bindFloatingPanelDrag($dialog, 'isbdaboutDrag', { clearTransform: true });
     }
 
     function setGuideMinimized($modal, minimized) {
@@ -3440,7 +3430,7 @@
             if (requestState && requestState.inFlight && pending && pending.classification && !requestCompleted) {
                 classificationText = 'Awaiting response…';
             } else if (requestCompleted && classificationRequested) {
-                classificationText = 'No safe suggestion returned';
+                classificationText = 'No usable candidate';
             } else if (requestCompleted) {
                 classificationText = 'Not requested in the last run';
             } else {
@@ -3461,7 +3451,15 @@
         const confidence = typeof aiSuggestions.confidence === 'string' && aiSuggestions.confidence
             ? aiSuggestions.confidence
             : (requestCompleted && classificationRequested ? 'not applicable' : 'not requested');
-        $panel.find('#isbd-ai-confidence').text(confidence);
+        const confidenceType = /^(?:high|medium)$/i.test(confidence)
+            ? 'success'
+            : /^(?:low|insufficient)/i.test(confidence)
+            ? 'warning'
+            : 'info';
+        $panel.find('#isbd-ai-confidence')
+            .text(confidence)
+            .removeClass('success warning info')
+            .addClass(confidenceType);
         if (state && state.aiSuggestions) {
             state.aiSuggestions.subjects = normalizedSubjects;
         }
@@ -3482,8 +3480,17 @@
             : evidenceVerification && evidenceVerification.status === 'invalid_candidate'
             ? 'Invalid LCC candidate'
             : 'LCCS not verified';
+        const verificationType = evidenceVerification && evidenceVerification.status === 'verified'
+            ? 'success'
+            : aiSuggestions.classification
+            ? 'warning'
+            : 'info';
+        $panel.find('#isbd-ai-class-verification')
+            .text(evidenceTrustLabel)
+            .removeClass('success warning info')
+            .addClass(verificationType);
         const trustLabels = [
-            hasCatalogingSuggestions ? '<strong>AI suggestions</strong>' : '<strong>AI response</strong>',
+            hasCatalogingSuggestions ? '<strong>AI suggestions received</strong>' : '<strong>AI response received</strong>',
             evidenceTrustLabel,
             aiSuggestions.requiresHumanReview && hasCatalogingSuggestions ? 'Review before applying' : ''
         ].filter(Boolean).join(' · ');
@@ -3497,8 +3504,15 @@
         if ((rationale.system || '').toString().trim()) {
             rationaleBlocks.push(`<strong>System note</strong><br>${formatCatalogingResponseHtml(rationale.system)}`);
         }
+        const assistantResponse = (aiSuggestions.assistantResponse || '').toString().trim();
+        if (assistantResponse) {
+            const responseNote = hasCatalogingSuggestions
+                ? 'Original AI response (display only)'
+                : 'Original AI response · no applicable candidate was extracted';
+            rationaleBlocks.push(`<div class="isbd-ai-provider-response"><strong>${responseNote}</strong><pre>${escapeAttr(assistantResponse)}</pre></div>`);
+        }
         if (!rationaleBlocks.length && requestCompleted) {
-            rationaleBlocks.push('<strong>System note</strong><br>No safe cataloging rationale was available.');
+            rationaleBlocks.push('<strong>System note</strong><br>The request completed without displayable assistant text or an applicable candidate.');
         }
         if (!requestCompleted) {
             const pendingText = requestState && requestState.inFlight
@@ -3657,13 +3671,21 @@
                                 <button type="button" class="btn btn-xs btn-primary" id="isbd-ai-run-cataloging">Suggest classification &amp; subjects</button>
                             </div>
                             <div class="isbd-ai-results">
-                                <div class="isbd-ai-result-grid">
-                                    <div class="isbd-ai-result-label">LC classification</div>
-                                    <div class="isbd-ai-result-value" id="isbd-ai-classification">Not requested yet</div>
-                                    <div class="isbd-ai-result-label">Classification confidence</div>
-                                    <div class="isbd-ai-result-value" id="isbd-ai-confidence">not requested</div>
+                                <div class="isbd-ai-result-cards">
+                                    <div class="isbd-ai-result-card">
+                                        <div class="isbd-ai-result-card-title">LC classification</div>
+                                        <div class="isbd-ai-result-value-large isbd-ai-empty" id="isbd-ai-classification">Not requested yet</div>
+                                    </div>
+                                    <div class="isbd-ai-result-card">
+                                        <div class="isbd-ai-result-card-title">Confidence</div>
+                                        <div class="isbd-ai-badge" id="isbd-ai-confidence">Not requested</div>
+                                    </div>
+                                    <div class="isbd-ai-result-card">
+                                        <div class="isbd-ai-result-card-title">Verification</div>
+                                        <div class="isbd-ai-badge" id="isbd-ai-class-verification">Not checked</div>
+                                    </div>
                                 </div>
-                                <div class="isbd-ai-result-label" style="margin-top:10px;">Subject suggestions</div>
+                                <div class="isbd-ai-result-heading"><span>Subject suggestions</span><span class="isbd-ai-badge" id="isbd-ai-subject-count">0</span></div>
                                 <div id="isbd-ai-subjects" class="isbd-ai-text-output isbd-ai-empty">Not requested yet</div>
                                 <div class="actions" style="justify-content: flex-start;">
                                     <label style="font-weight: normal;">
@@ -3671,7 +3693,7 @@
                                         Replace existing subjects
                                     </label>
                                 </div>
-                                <div class="isbd-ai-result-label" style="margin-top:10px;">Rationale and verification</div>
+                                <div class="isbd-ai-result-heading"><span>Response, rationale and verification</span></div>
                                 <div id="isbd-ai-response" class="isbd-ai-text-output isbd-ai-empty">Run cataloging suggestions to see rationale and verification details.</div>
                                 <div class="actions" style="justify-content:flex-start;">
                                     <button type="button" class="btn btn-xs btn-default" id="isbd-ai-retry-authority" style="display:none;">Retry authority verification</button>
@@ -4223,16 +4245,16 @@
             return { type: 'warning', message: 'AI suggestions are available, but authority verification is temporarily unavailable.' };
         }
         if (parseStatus === 'truncated' || (result && result.status === 'incomplete')) {
-            return { type: 'warning', message: 'The AI response was incomplete; no unsafe cataloging suggestion was accepted.' };
+            return { type: 'warning', message: 'The AI response was incomplete and is displayed for review; no incomplete candidate was made applicable.' };
         }
         if (parseStatus === 'malformed') {
-            return { type: 'warning', message: 'The AI response could not be safely parsed into cataloging suggestions.' };
+            return { type: 'warning', message: 'The AI response is displayed, but it could not be parsed into applicable cataloging suggestions.' };
         }
         if (!hasSuggestions) {
             if (requested && requested.classification && !requested.subjects) {
-                return { type: 'info', message: 'Classification was requested, but no safe suggestion was returned from the available evidence.' };
+                return { type: 'info', message: 'AI responded without a usable classification candidate. Its response is displayed for the cataloguer.' };
             }
-            return { type: 'info', message: 'AI could not produce a safe cataloging suggestion from the available evidence.' };
+            return { type: 'info', message: 'AI responded without an applicable cataloging candidate. Its response is displayed for the cataloguer.' };
         }
         return { type: 'success', message: 'Cataloging suggestions ready.' };
     }
@@ -4347,6 +4369,7 @@
                 status: result.status || '',
                 parseStatus: result.ai_parse_status || '',
                 authorityLookupStatus: result.authority_lookup_status || '',
+                assistantResponse: (result.assistant_response || '').toString(),
                 requestCompleted: true,
                 requested: { ...requested },
                 task
@@ -4358,7 +4381,7 @@
             progress.stop();
             const toastState = catalogingToastState(result, classification, subjects, requested);
             toast(toastState.type, toastState.message);
-            setStatus(classification || subjects.length ? 'Suggestions ready' : 'Complete · no safe suggestion', classification || subjects.length ? 'success' : 'info');
+            setStatus(classification || subjects.length ? 'Suggestions ready' : 'Complete · response available', classification || subjects.length ? 'success' : 'info');
         } catch (err) {
             if (!isLatestAiRequest(state, 'cataloging', requestId)) return;
             if (isAbortError(err)) {
@@ -4741,6 +4764,11 @@
     function renderAiSubjectList($panel, subjects) {
         const $list = $panel.find('#isbd-ai-subjects');
         if (!$list.length) return;
+        const subjectCount = Array.isArray(subjects) ? subjects.length : 0;
+        $panel.find('#isbd-ai-subject-count')
+            .text(subjectCount)
+            .removeClass('success warning info')
+            .addClass(subjectCount ? 'success' : 'info');
         const state = global.ISBDIntellisenseState || {};
         const history = (state && state.aiSubjectHistory && typeof state.aiSubjectHistory === 'object')
             ? state.aiSubjectHistory
@@ -4765,7 +4793,7 @@
             const pendingSubjects = !!(state.aiCatalogingPending && state.aiCatalogingPending.subjects);
             let emptyText = 'Not requested yet';
             if (inFlight && pendingSubjects && !completed) emptyText = 'Awaiting response…';
-            else if (completed && requested) emptyText = 'No safe subject suggestion returned';
+            else if (completed && requested) emptyText = 'No applicable subject candidate was extracted; review the AI response below.';
             else if (completed) emptyText = 'Not requested in the last run';
             $list.text(emptyText).addClass('isbd-ai-empty');
             return;
@@ -7658,7 +7686,7 @@
             state.guideActive = false;
             state.guideRefresh = null;
             state.guideCurrentStep = null;
-            $(document).off('mousemove.isbdguideDrag mouseup.isbdguideDrag');
+            $(document).off('.isbdguideDrag');
             $('.isbd-guide-modal').remove();
             $('.isbd-guide-highlight').removeClass('isbd-guide-highlight');
             updateGuideToggleButton();
