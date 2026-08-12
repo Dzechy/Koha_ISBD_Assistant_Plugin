@@ -169,11 +169,71 @@ const lessonSpecs = {
   ]
 };
 
+const coreChallengeSpecs = {
+  'records-evidence-judgment': [
+    'A vendor record conflicts with the preferred source. What is the defensible action?',
+    'Retain the source evidence, resolve what the rules determine, and escalate unresolved judgment',
+    ['Accept the vendor record because it already exists', 'Let punctuation software choose the facts', 'Remove every conflicting element']
+  ],
+  'marc-anatomy': [
+    'Two 245 fields appear in a draft record. What should be checked before editing?',
+    'Field repeatability, occurrence identity, indicators, and ordered subfield roles',
+    ['Only the first visible value', 'Only whether both fields end in a point', 'The alphabetical order of their text']
+  ],
+  'areas-and-relationships': [
+    'A colon appears in a title statement. What proves that it is prescribed?',
+    'It expresses a verified relationship between title proper and other title information',
+    ['Every title contains a colon', 'The interface colored it green', 'The colon is the final character']
+  ],
+  'title-relationship-lab': [
+    'A 245 contains $a, two $b occurrences, and $c. What is the safe review method?',
+    'Evaluate the ordered title elements and each boundary once before changing punctuation',
+    ['Apply the same suffix to every subfield', 'Delete repeated $b automatically', 'Move $c before $b']
+  ],
+  'edition-abbreviations': [
+    'An edition abbreviation ends at a generated boundary. What must normalization preserve?',
+    'The intrinsic abbreviation point and the separately justified prescribed separator',
+    ['Only the last punctuation character', 'A universal single-point rule', 'The shortest possible value']
+  ],
+  'publication-functions': [
+    'A record has 264 #1 and 264 #4 fields. How should they be reviewed?',
+    'As separate publication and copyright functions determined by indicator 2',
+    ['Merge them into one publication statement', 'Apply publication punctuation to both', 'Ignore both indicators']
+  ],
+  'physical-relationships': [
+    'Why can “ill. ; 24 cm” be correct rather than duplicate punctuation?',
+    'The point is intrinsic to the abbreviation and the semicolon introduces dimensions',
+    ['All adjacent punctuation is acceptable', 'The semicolon is part of “ill.”', 'Dimensions require two terminators']
+  ],
+  'series-transcription-access': [
+    'A transcribed 490 differs from an authorized 830. What should happen?',
+    'Preserve the transcription and verify the controlled access form with authority evidence',
+    ['Force both fields to identical wording', 'Delete the 490', 'Treat punctuation as authority evidence']
+  ],
+  'notes-and-standard-numbers': [
+    'A note ends in an abbreviation point and an ISBN has a qualifier. What is safe?',
+    'Preserve semantic note punctuation and keep identifier qualifiers in their proper subfields',
+    ['Strip all points and qualifiers', 'Move the qualifier into the note', 'Normalize both as plain numbers']
+  ],
+  'safe-automation-boundaries': [
+    'An AI suggestion changes a subject and fixes a duplicate point. How should it be handled?',
+    'Separate the deterministic punctuation fix from the authority-sensitive subject proposal',
+    ['Apply both because they arrived together', 'Reject both without review', 'Treat model confidence as authority verification']
+  ],
+  'final-competency-assessment': [
+    'A whole-record review contains safe fixes and unresolved descriptive judgments. What demonstrates competency?',
+    'Apply only evidenced reversible fixes and document or escalate unresolved judgments',
+    ['Apply every available suggestion', 'Complete the progress bar without review', 'Remove uncertain data to finish quickly']
+  ]
+};
+
 function makeExercise(lessonId, index, spec, skill, difficulty) {
   const [prompt, answer, wrong] = spec;
+  const suffixes = ['check', 'apply', 'challenge'];
+  const types = ['recognition', 'reasoning', 'application'];
   return {
-    id: `${lessonId}-${index === 0 ? 'check' : 'apply'}`,
-    type: index === 0 ? 'recognition' : 'reasoning',
+    id: `${lessonId}-${suffixes[index] || `practice-${index + 1}`}`,
+    type: types[index] || 'application',
     prompt,
     options: [answer].concat(wrong),
     expected_answer: answer,
@@ -208,28 +268,54 @@ function makeLesson(module, spec, position, baseDifficulty) {
     },
     exercises: [
       makeExercise(id, 0, firstCheck, skill, baseDifficulty + position),
-      makeExercise(id, 1, secondCheck, skill, baseDifficulty + position + 1)
+      makeExercise(id, 1, secondCheck, skill, baseDifficulty + position + 1),
+      makeExercise(id, 2, [
+        `A proposed change involves ${concept}, but the record evidence is incomplete. What should the cataloguer do?`,
+        `Pause the change, verify the ${concept} evidence, and record or escalate the unresolved judgment`,
+        ['Apply the change because the interface suggested it', 'Delete the uncertain element', 'Copy the decision from an unrelated record']
+      ], skill, baseDifficulty + position + 2)
     ]
   };
 }
 
-curriculum.schema_version = '4.0.0';
-curriculum.guide_version = '4.0.0';
-curriculum.course_version = '4.0.0';
-curriculum.course.version = '4.0.0';
-curriculum.course.description = 'A 33-lesson path in MARC21, ISBD reasoning, safe automation, and professional cataloguer judgment, sequenced from foundation to independent assessment.';
+function addCoreChallenge(module, lesson) {
+  lesson.exercises = (lesson.exercises || []).filter(exercise => !exercise.generated_v41);
+  if (lesson.id === 'title-relationship-lab') {
+    lesson.exercises.sort((left, right) => Number(left.difficulty || 0) - Number(right.difficulty || 0));
+  }
+  const spec = coreChallengeSpecs[lesson.id];
+  if (!spec) throw new Error(`Missing advanced challenge specification for core lesson ${lesson.id}`);
+  const maxDifficulty = Math.max(...lesson.exercises.map(exercise => Number(exercise.difficulty) || 1));
+  const skill = (lesson.exercises[lesson.exercises.length - 1] || {}).skill || module.skills[0];
+  const challenge = makeExercise(lesson.id, 2, spec, skill, maxDifficulty + 1);
+  challenge.id = `${lesson.id}-advanced-challenge`;
+  challenge.generated_v41 = true;
+  lesson.exercises.push(challenge);
+  return lesson;
+}
+
+curriculum.schema_version = '4.1.0';
+curriculum.guide_version = '4.1.0';
+curriculum.course_version = '4.1.0';
+curriculum.course.version = '4.1.0';
+curriculum.course.description = 'A 33-lesson path with 101 scored exercises in MARC21, ISBD reasoning, safe automation, and professional cataloguer judgment, sequenced from foundation to independent assessment.';
 
 curriculum.modules.forEach((module, moduleIndex) => {
-  const coreLessons = (module.lessons || []).filter(lesson => !lesson.generated_v4);
+  const coreLessons = (module.lessons || []).filter(lesson => !lesson.generated_v4)
+    .map(lesson => addCoreChallenge(module, lesson));
   const specs = lessonSpecs[module.id] || [];
   const baseDifficulty = module.id === 'practical-assessment'
     ? 3
     : Math.max(...coreLessons.flatMap(lesson => (lesson.exercises || []).map(exercise => Number(exercise.difficulty) || 1)), 1);
   const generated = specs.map((spec, position) => makeLesson(module, spec, position, baseDifficulty));
   module.lessons = module.id === 'practical-assessment' ? generated.concat(coreLessons) : coreLessons.concat(generated);
-  const generatedAssessmentIds = generated.map(lesson => lesson.exercises[1].id);
+  const generatedAssessmentIds = generated.flatMap(lesson => [lesson.exercises[1].id, lesson.exercises[2].id]);
+  const coreChallengeIds = coreLessons.map(lesson => lesson.exercises[lesson.exercises.length - 1].id);
   const coreExerciseIds = new Set(coreLessons.flatMap(lesson => (lesson.exercises || []).map(exercise => exercise.id)));
-  module.assessment.exercise_ids = (module.assessment.exercise_ids || []).filter(id => coreExerciseIds.has(id)).concat(generatedAssessmentIds);
+  module.assessment.exercise_ids = Array.from(new Set(
+    (module.assessment.exercise_ids || []).filter(id => coreExerciseIds.has(id))
+      .concat(coreChallengeIds, generatedAssessmentIds)
+  ));
   module.objectives = Array.from(new Set((module.objectives || []).concat(['Apply concepts in staged interactive practice', 'Explain decisions from evidence'])));
   module.order = moduleIndex + 1;
 });

@@ -1,12 +1,12 @@
 # Training System Design
 
-The ISBD training system is a professional cataloguing competency course embedded in the Koha cataloguing page. It uses curriculum schema `4.0.0` in `Koha/Plugin/Cataloging/AutoPunctuation/rules/intern_guide_v2.json` and the pure browser/Node model in `js/training_engine.js`.
+The ISBD training system is a professional cataloguing competency course embedded in the Koha cataloguing page. It uses curriculum schema `4.1.0` in `Koha/Plugin/Cataloging/AutoPunctuation/rules/intern_guide_v2.json` and the pure browser/Node model in `js/training_engine.js`.
 
 ## Learning model
 
 The course follows **Learn → See → Try → Check → Understand → Practice → Master**. It teaches bibliographic concepts and relationships rather than plugin controls or isolated punctuation marks. Lessons support introduction, why it matters, learning content, annotated examples, interactive practice, feedback, explanation, reflection, and mastery evidence.
 
-The learning path contains eleven ordered modules and thirty-three lessons. Every module has three lessons sequenced from concept recognition to applied judgment:
+The learning path contains eleven ordered modules, thirty-three lessons, and 101 scored exercises. Every module has three lessons sequenced from concept recognition to applied judgment, and every lesson has at least three required exercises in non-decreasing difficulty order:
 
 1. Foundations
 2. MARC Structure

@@ -27,6 +27,7 @@ engine.setAdvancedMode(progress, false, 1600);
 
 const foundationKnowledge = firstLesson.exercises[0];
 const foundationJudgment = firstLesson.exercises[1];
+const foundationChallenge = firstLesson.exercises[2];
 const wrong = engine.recordExerciseAttempt(curriculum, progress, foundationKnowledge.id, 'The plugin configuration', {}, 1700);
 assert.strictEqual(wrong.result.correct, false, 'incorrect answer fails');
 assert.strictEqual(progress.mistakes['cataloguing-foundations'], 1, 'failed exercise is recorded by skill');
@@ -49,6 +50,7 @@ engine.recordExerciseAttempt(curriculum, progress, foundationJudgment.id, founda
 engine.recordExerciseAttempt(curriculum, progress, foundationKnowledge.id, foundationKnowledge.expected_answer, {}, 2510);
 engine.recordExerciseAttempt(curriculum, progress, foundationJudgment.id, foundationJudgment.expected_answer, {}, 2520);
 engine.recordExerciseAttempt(curriculum, progress, foundationKnowledge.id, foundationKnowledge.expected_answer, {}, 2530);
+engine.recordExerciseAttempt(curriculum, progress, foundationChallenge.id, foundationChallenge.expected_answer, {}, 2540);
 assert.strictEqual(engine.calculateSkillMastery(curriculum, progress, 'cataloguing-foundations').status, 'mastered', 'meaningful independent demonstrations award skill mastery');
 
 const completion = engine.completeLesson(curriculum, progress, firstLesson.id, 2600);

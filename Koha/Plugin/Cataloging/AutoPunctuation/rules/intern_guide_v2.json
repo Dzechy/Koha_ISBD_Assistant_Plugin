@@ -1,13 +1,13 @@
 {
-  "schema_version": "4.0.0",
-  "guide_version": "4.0.0",
-  "course_version": "4.0.0",
+  "schema_version": "4.1.0",
+  "guide_version": "4.1.0",
+  "course_version": "4.1.0",
   "rules_version": "1.0.0",
   "course": {
     "id": "isbd-cataloguing-competency",
     "title": "ISBD Cataloguing Competency",
-    "version": "4.0.0",
-    "description": "A 33-lesson path in MARC21, ISBD reasoning, safe automation, and professional cataloguer judgment, sequenced from foundation to independent assessment.",
+    "version": "4.1.0",
+    "description": "A 33-lesson path with 101 scored exercises in MARC21, ISBD reasoning, safe automation, and professional cataloguer judgment, sequenced from foundation to independent assessment.",
     "learning_model": [
       "learn",
       "see",
@@ -307,6 +307,27 @@
               "referenced_concept": "transcription",
               "skill": "cataloguing-foundations",
               "difficulty": 3
+            },
+            {
+              "id": "records-evidence-judgment-advanced-challenge",
+              "type": "application",
+              "prompt": "A vendor record conflicts with the preferred source. What is the defensible action?",
+              "options": [
+                "Retain the source evidence, resolve what the rules determine, and escalate unresolved judgment",
+                "Accept the vendor record because it already exists",
+                "Let punctuation software choose the facts",
+                "Remove every conflicting element"
+              ],
+              "expected_answer": "Retain the source evidence, resolve what the rules determine, and escalate unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the cataloguing foundations principle."
+              ],
+              "explanation": "Retain the source evidence, resolve what the rules determine, and escalate unresolved judgment. This follows from the lesson's evidence-first treatment of cataloguing foundations.",
+              "referenced_concept": "cataloguing foundations",
+              "skill": "cataloguing-foundations",
+              "difficulty": 4,
+              "generated_v41": true
             }
           ]
         },
@@ -344,7 +365,7 @@
               "explanation": "Transcribe the prescribed source and record uncertainty. This follows from the lesson's evidence-first treatment of cataloguing foundations.",
               "referenced_concept": "cataloguing foundations",
               "skill": "cataloguing-foundations",
-              "difficulty": 3
+              "difficulty": 4
             },
             {
               "id": "sources-and-transcription-apply",
@@ -364,7 +385,27 @@
               "explanation": "Escalate the judgment and document the evidence. This follows from the lesson's evidence-first treatment of cataloguing foundations.",
               "referenced_concept": "cataloguing foundations",
               "skill": "cataloguing-foundations",
-              "difficulty": 4
+              "difficulty": 5
+            },
+            {
+              "id": "sources-and-transcription-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves transcription evidence, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the transcription evidence evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the transcription evidence evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the cataloguing foundations principle."
+              ],
+              "explanation": "Pause the change, verify the transcription evidence evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of cataloguing foundations.",
+              "referenced_concept": "cataloguing foundations",
+              "skill": "cataloguing-foundations",
+              "difficulty": 6
             }
           ]
         },
@@ -402,7 +443,7 @@
               "explanation": "Choosing between conflicting publication dates. This follows from the lesson's evidence-first treatment of cataloguing foundations.",
               "referenced_concept": "cataloguing foundations",
               "skill": "cataloguing-foundations",
-              "difficulty": 4
+              "difficulty": 5
             },
             {
               "id": "decisions-and-notes-apply",
@@ -422,7 +463,27 @@
               "explanation": "Evidence, an applicable rule, and a recorded rationale. This follows from the lesson's evidence-first treatment of cataloguing foundations.",
               "referenced_concept": "cataloguing foundations",
               "skill": "cataloguing-foundations",
-              "difficulty": 5
+              "difficulty": 6
+            },
+            {
+              "id": "decisions-and-notes-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves professional judgment, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the professional judgment evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the professional judgment evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the cataloguing foundations principle."
+              ],
+              "explanation": "Pause the change, verify the professional judgment evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of cataloguing foundations.",
+              "referenced_concept": "cataloguing foundations",
+              "skill": "cataloguing-foundations",
+              "difficulty": 7
             }
           ]
         }
@@ -431,8 +492,11 @@
         "exercise_ids": [
           "foundation-knowledge-1",
           "foundation-judgment-1",
+          "records-evidence-judgment-advanced-challenge",
           "sources-and-transcription-apply",
-          "decisions-and-notes-apply"
+          "sources-and-transcription-challenge",
+          "decisions-and-notes-apply",
+          "decisions-and-notes-challenge"
         ],
         "mastery_threshold": 0.85
       }
@@ -537,6 +601,27 @@
               "referenced_concept": "MARC field structure",
               "skill": "marc-structure",
               "difficulty": 3
+            },
+            {
+              "id": "marc-anatomy-advanced-challenge",
+              "type": "application",
+              "prompt": "Two 245 fields appear in a draft record. What should be checked before editing?",
+              "options": [
+                "Field repeatability, occurrence identity, indicators, and ordered subfield roles",
+                "Only the first visible value",
+                "Only whether both fields end in a point",
+                "The alphabetical order of their text"
+              ],
+              "expected_answer": "Field repeatability, occurrence identity, indicators, and ordered subfield roles",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the marc structure principle."
+              ],
+              "explanation": "Field repeatability, occurrence identity, indicators, and ordered subfield roles. This follows from the lesson's evidence-first treatment of marc structure.",
+              "referenced_concept": "marc structure",
+              "skill": "marc-structure",
+              "difficulty": 4,
+              "generated_v41": true
             }
           ]
         },
@@ -574,7 +659,7 @@
               "explanation": "The exact field occurrence and subfield order. This follows from the lesson's evidence-first treatment of marc structure.",
               "referenced_concept": "marc structure",
               "skill": "marc-structure",
-              "difficulty": 3
+              "difficulty": 4
             },
             {
               "id": "repeatability-and-order-apply",
@@ -594,7 +679,27 @@
               "explanation": "A record may contain multiple occurrences with different functions. This follows from the lesson's evidence-first treatment of marc structure.",
               "referenced_concept": "marc structure",
               "skill": "marc-structure",
-              "difficulty": 4
+              "difficulty": 5
+            },
+            {
+              "id": "repeatability-and-order-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves MARC field structure, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the MARC field structure evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the MARC field structure evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the marc structure principle."
+              ],
+              "explanation": "Pause the change, verify the MARC field structure evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of marc structure.",
+              "referenced_concept": "marc structure",
+              "skill": "marc-structure",
+              "difficulty": 6
             }
           ]
         },
@@ -632,7 +737,7 @@
               "explanation": "The number of nonfiling characters. This follows from the lesson's evidence-first treatment of marc structure.",
               "referenced_concept": "marc structure",
               "skill": "marc-structure",
-              "difficulty": 4
+              "difficulty": 5
             },
             {
               "id": "indicators-and-nonfiling-apply",
@@ -652,7 +757,27 @@
               "explanation": "The tag definition and the bibliographic content. This follows from the lesson's evidence-first treatment of marc structure.",
               "referenced_concept": "marc structure",
               "skill": "marc-structure",
-              "difficulty": 5
+              "difficulty": 6
+            },
+            {
+              "id": "indicators-and-nonfiling-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves indicator semantics, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the indicator semantics evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the indicator semantics evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the marc structure principle."
+              ],
+              "explanation": "Pause the change, verify the indicator semantics evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of marc structure.",
+              "referenced_concept": "marc structure",
+              "skill": "marc-structure",
+              "difficulty": 7
             }
           ]
         }
@@ -661,8 +786,11 @@
         "exercise_ids": [
           "marc-recognition-245c",
           "marc-application-field",
+          "marc-anatomy-advanced-challenge",
           "repeatability-and-order-apply",
-          "indicators-and-nonfiling-apply"
+          "repeatability-and-order-challenge",
+          "indicators-and-nonfiling-apply",
+          "indicators-and-nonfiling-challenge"
         ],
         "mastery_threshold": 0.85
       }
@@ -746,6 +874,27 @@
               "referenced_concept": "prescribed punctuation",
               "skill": "isbd-areas",
               "difficulty": 3
+            },
+            {
+              "id": "areas-and-relationships-advanced-challenge",
+              "type": "application",
+              "prompt": "A colon appears in a title statement. What proves that it is prescribed?",
+              "options": [
+                "It expresses a verified relationship between title proper and other title information",
+                "Every title contains a colon",
+                "The interface colored it green",
+                "The colon is the final character"
+              ],
+              "expected_answer": "It expresses a verified relationship between title proper and other title information",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the isbd areas principle."
+              ],
+              "explanation": "It expresses a verified relationship between title proper and other title information. This follows from the lesson's evidence-first treatment of isbd areas.",
+              "referenced_concept": "isbd areas",
+              "skill": "isbd-areas",
+              "difficulty": 4,
+              "generated_v41": true
             }
           ]
         },
@@ -783,7 +932,7 @@
               "explanation": "Area 2. This follows from the lesson's evidence-first treatment of isbd areas.",
               "referenced_concept": "isbd areas",
               "skill": "isbd-areas",
-              "difficulty": 3
+              "difficulty": 4
             },
             {
               "id": "area-sequence-apply",
@@ -803,7 +952,27 @@
               "explanation": "The bibliographic roles on both sides of the boundary. This follows from the lesson's evidence-first treatment of isbd areas.",
               "referenced_concept": "isbd areas",
               "skill": "isbd-areas",
-              "difficulty": 4
+              "difficulty": 5
+            },
+            {
+              "id": "area-sequence-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves ISBD area sequence, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the ISBD area sequence evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the ISBD area sequence evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the isbd areas principle."
+              ],
+              "explanation": "Pause the change, verify the ISBD area sequence evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of isbd areas.",
+              "referenced_concept": "isbd areas",
+              "skill": "isbd-areas",
+              "difficulty": 6
             }
           ]
         },
@@ -841,7 +1010,7 @@
               "explanation": "It prevents meaningful punctuation from being removed as generated noise. This follows from the lesson's evidence-first treatment of isbd areas.",
               "referenced_concept": "isbd areas",
               "skill": "isbd-areas",
-              "difficulty": 4
+              "difficulty": 5
             },
             {
               "id": "punctuation-provenance-apply",
@@ -861,7 +1030,27 @@
               "explanation": "The point in the abbreviation “ed.”. This follows from the lesson's evidence-first treatment of isbd areas.",
               "referenced_concept": "isbd areas",
               "skill": "isbd-areas",
-              "difficulty": 5
+              "difficulty": 6
+            },
+            {
+              "id": "punctuation-provenance-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves punctuation provenance, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the punctuation provenance evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the punctuation provenance evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the isbd areas principle."
+              ],
+              "explanation": "Pause the change, verify the punctuation provenance evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of isbd areas.",
+              "referenced_concept": "isbd areas",
+              "skill": "isbd-areas",
+              "difficulty": 7
             }
           ]
         }
@@ -870,8 +1059,11 @@
         "exercise_ids": [
           "isbd-area-recognition",
           "isbd-reasoning-boundary",
+          "areas-and-relationships-advanced-challenge",
           "area-sequence-apply",
-          "punctuation-provenance-apply"
+          "area-sequence-challenge",
+          "punctuation-provenance-apply",
+          "punctuation-provenance-challenge"
         ],
         "mastery_threshold": 0.85
       }
@@ -970,6 +1162,27 @@
               "difficulty": 3
             },
             {
+              "id": "title-why-slash",
+              "type": "reasoning",
+              "prompt": "Why does the slash appear before 245$c?",
+              "options": [
+                "$c contains the statement of responsibility",
+                "Every 245 requires a slash",
+                "$c is always last",
+                "The plugin inserts it automatically"
+              ],
+              "expected_answer": "$c contains the statement of responsibility",
+              "hints": [
+                "Identify the role of $c.",
+                "The punctuation introduces a bibliographic element."
+              ],
+              "explanation": "The slash is prescribed because $c introduces the statement of responsibility, not because of its physical position.",
+              "referenced_rule": "ISBD_TITLE_245C_001",
+              "referenced_concept": "statement of responsibility",
+              "skill": "semantic-relationships",
+              "difficulty": 3
+            },
+            {
               "id": "title-detect-errors",
               "type": "error_detection",
               "prompt": "Find every problem in: 245 10 $a The great Gatsby $b : a novel. $c / F. Scott Fitzgerald..",
@@ -994,25 +1207,25 @@
               "difficulty": 4
             },
             {
-              "id": "title-why-slash",
-              "type": "reasoning",
-              "prompt": "Why does the slash appear before 245$c?",
+              "id": "title-relationship-lab-advanced-challenge",
+              "type": "application",
+              "prompt": "A 245 contains $a, two $b occurrences, and $c. What is the safe review method?",
               "options": [
-                "$c contains the statement of responsibility",
-                "Every 245 requires a slash",
-                "$c is always last",
-                "The plugin inserts it automatically"
+                "Evaluate the ordered title elements and each boundary once before changing punctuation",
+                "Apply the same suffix to every subfield",
+                "Delete repeated $b automatically",
+                "Move $c before $b"
               ],
-              "expected_answer": "$c contains the statement of responsibility",
+              "expected_answer": "Evaluate the ordered title elements and each boundary once before changing punctuation",
               "hints": [
-                "Identify the role of $c.",
-                "The punctuation introduces a bibliographic element."
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the terminal punctuation principle."
               ],
-              "explanation": "The slash is prescribed because $c introduces the statement of responsibility, not because of its physical position.",
-              "referenced_rule": "ISBD_TITLE_245C_001",
-              "referenced_concept": "statement of responsibility",
-              "skill": "semantic-relationships",
-              "difficulty": 3
+              "explanation": "Evaluate the ordered title elements and each boundary once before changing punctuation. This follows from the lesson's evidence-first treatment of terminal punctuation.",
+              "referenced_concept": "terminal punctuation",
+              "skill": "terminal-punctuation",
+              "difficulty": 5,
+              "generated_v41": true
             }
           ]
         },
@@ -1050,7 +1263,7 @@
               "explanation": "246. This follows from the lesson's evidence-first treatment of semantic relationships.",
               "referenced_concept": "semantic relationships",
               "skill": "semantic-relationships",
-              "difficulty": 4
+              "difficulty": 5
             },
             {
               "id": "parallel-and-variant-titles-apply",
@@ -1070,7 +1283,27 @@
               "explanation": "They serve descriptive and access functions differently. This follows from the lesson's evidence-first treatment of semantic relationships.",
               "referenced_concept": "semantic relationships",
               "skill": "semantic-relationships",
-              "difficulty": 5
+              "difficulty": 6
+            },
+            {
+              "id": "parallel-and-variant-titles-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves title relationships, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the title relationships evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the title relationships evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the semantic relationships principle."
+              ],
+              "explanation": "Pause the change, verify the title relationships evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of semantic relationships.",
+              "referenced_concept": "semantic relationships",
+              "skill": "semantic-relationships",
+              "difficulty": 7
             }
           ]
         },
@@ -1108,7 +1341,7 @@
               "explanation": "Rewriting names or assigning unsupported roles. This follows from the lesson's evidence-first treatment of semantic relationships.",
               "referenced_concept": "semantic relationships",
               "skill": "semantic-relationships",
-              "difficulty": 5
+              "difficulty": 6
             },
             {
               "id": "compound-responsibility-apply",
@@ -1128,7 +1361,27 @@
               "explanation": "With one appropriate terminal mark. This follows from the lesson's evidence-first treatment of semantic relationships.",
               "referenced_concept": "semantic relationships",
               "skill": "semantic-relationships",
-              "difficulty": 6
+              "difficulty": 7
+            },
+            {
+              "id": "compound-responsibility-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves responsibility relationships, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the responsibility relationships evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the responsibility relationships evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the semantic relationships principle."
+              ],
+              "explanation": "Pause the change, verify the responsibility relationships evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of semantic relationships.",
+              "referenced_concept": "semantic relationships",
+              "skill": "semantic-relationships",
+              "difficulty": 8
             }
           ]
         }
@@ -1138,8 +1391,11 @@
           "title-fix-245",
           "title-detect-errors",
           "title-why-slash",
+          "title-relationship-lab-advanced-challenge",
           "parallel-and-variant-titles-apply",
-          "compound-responsibility-apply"
+          "parallel-and-variant-titles-challenge",
+          "compound-responsibility-apply",
+          "compound-responsibility-challenge"
         ],
         "mastery_threshold": 0.85
       }
@@ -1224,6 +1480,27 @@
               "referenced_concept": "abbreviation punctuation",
               "skill": "edition-250",
               "difficulty": 4
+            },
+            {
+              "id": "edition-abbreviations-advanced-challenge",
+              "type": "application",
+              "prompt": "An edition abbreviation ends at a generated boundary. What must normalization preserve?",
+              "options": [
+                "The intrinsic abbreviation point and the separately justified prescribed separator",
+                "Only the last punctuation character",
+                "A universal single-point rule",
+                "The shortest possible value"
+              ],
+              "expected_answer": "The intrinsic abbreviation point and the separately justified prescribed separator",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the edition 250 principle."
+              ],
+              "explanation": "The intrinsic abbreviation point and the separately justified prescribed separator. This follows from the lesson's evidence-first treatment of edition 250.",
+              "referenced_concept": "edition 250",
+              "skill": "edition-250",
+              "difficulty": 5,
+              "generated_v41": true
             }
           ]
         },
@@ -1261,7 +1538,7 @@
               "explanation": "250$b. This follows from the lesson's evidence-first treatment of edition 250.",
               "referenced_concept": "edition 250",
               "skill": "edition-250",
-              "difficulty": 4
+              "difficulty": 5
             },
             {
               "id": "edition-responsibility-apply",
@@ -1281,7 +1558,27 @@
               "explanation": "A slash relationship after the edition statement. This follows from the lesson's evidence-first treatment of edition 250.",
               "referenced_concept": "edition 250",
               "skill": "edition-250",
-              "difficulty": 5
+              "difficulty": 6
+            },
+            {
+              "id": "edition-responsibility-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves edition responsibility, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the edition responsibility evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the edition responsibility evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the edition 250 principle."
+              ],
+              "explanation": "Pause the change, verify the edition responsibility evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of edition 250.",
+              "referenced_concept": "edition 250",
+              "skill": "edition-250",
+              "difficulty": 7
             }
           ]
         },
@@ -1319,7 +1616,7 @@
               "explanation": "The bibliographic relationship represented by the subfield. This follows from the lesson's evidence-first treatment of edition 250.",
               "referenced_concept": "edition 250",
               "skill": "edition-250",
-              "difficulty": 5
+              "difficulty": 6
             },
             {
               "id": "parallel-edition-statements-apply",
@@ -1339,7 +1636,27 @@
               "explanation": "When the relationship of the edition wording is ambiguous. This follows from the lesson's evidence-first treatment of edition 250.",
               "referenced_concept": "edition 250",
               "skill": "edition-250",
-              "difficulty": 6
+              "difficulty": 7
+            },
+            {
+              "id": "parallel-edition-statements-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves complex edition relationships, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the complex edition relationships evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the complex edition relationships evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the edition 250 principle."
+              ],
+              "explanation": "Pause the change, verify the complex edition relationships evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of edition 250.",
+              "referenced_concept": "edition 250",
+              "skill": "edition-250",
+              "difficulty": 8
             }
           ]
         }
@@ -1348,8 +1665,11 @@
         "exercise_ids": [
           "edition-application",
           "edition-error-detection",
+          "edition-abbreviations-advanced-challenge",
           "edition-responsibility-apply",
-          "parallel-edition-statements-apply"
+          "edition-responsibility-challenge",
+          "parallel-edition-statements-apply",
+          "parallel-edition-statements-challenge"
         ],
         "mastery_threshold": 0.85
       }
@@ -1466,6 +1786,27 @@
               "referenced_concept": "publication statement",
               "skill": "publication-264",
               "difficulty": 4
+            },
+            {
+              "id": "publication-functions-advanced-challenge",
+              "type": "application",
+              "prompt": "A record has 264 #1 and 264 #4 fields. How should they be reviewed?",
+              "options": [
+                "As separate publication and copyright functions determined by indicator 2",
+                "Merge them into one publication statement",
+                "Apply publication punctuation to both",
+                "Ignore both indicators"
+              ],
+              "expected_answer": "As separate publication and copyright functions determined by indicator 2",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the publication 264 principle."
+              ],
+              "explanation": "As separate publication and copyright functions determined by indicator 2. This follows from the lesson's evidence-first treatment of publication 264.",
+              "referenced_concept": "publication 264",
+              "skill": "publication-264",
+              "difficulty": 5,
+              "generated_v41": true
             }
           ]
         },
@@ -1503,7 +1844,7 @@
               "explanation": "The order and pairing of places and agents. This follows from the lesson's evidence-first treatment of publication 264.",
               "referenced_concept": "publication 264",
               "skill": "publication-264",
-              "difficulty": 4
+              "difficulty": 5
             },
             {
               "id": "repeated-places-agents-apply",
@@ -1523,7 +1864,27 @@
               "explanation": "It destroys which agent is associated with which place. This follows from the lesson's evidence-first treatment of publication 264.",
               "referenced_concept": "publication 264",
               "skill": "publication-264",
-              "difficulty": 5
+              "difficulty": 6
+            },
+            {
+              "id": "repeated-places-agents-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves repeated publication elements, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the repeated publication elements evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the repeated publication elements evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the publication 264 principle."
+              ],
+              "explanation": "Pause the change, verify the repeated publication elements evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of publication 264.",
+              "referenced_concept": "publication 264",
+              "skill": "publication-264",
+              "difficulty": 7
             }
           ]
         },
@@ -1561,7 +1922,7 @@
               "explanation": "The second indicator. This follows from the lesson's evidence-first treatment of publication 264.",
               "referenced_concept": "publication 264",
               "skill": "publication-264",
-              "difficulty": 5
+              "difficulty": 6
             },
             {
               "id": "production-distribution-copyright-apply",
@@ -1581,7 +1942,27 @@
               "explanation": "A copyright notice is not an ordinary publication statement. This follows from the lesson's evidence-first treatment of publication 264.",
               "referenced_concept": "publication 264",
               "skill": "publication-264",
-              "difficulty": 6
+              "difficulty": 7
+            },
+            {
+              "id": "production-distribution-copyright-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves 264 function indicators, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the 264 function indicators evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the 264 function indicators evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the publication 264 principle."
+              ],
+              "explanation": "Pause the change, verify the 264 function indicators evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of publication 264.",
+              "referenced_concept": "publication 264",
+              "skill": "publication-264",
+              "difficulty": 8
             }
           ]
         }
@@ -1590,8 +1971,11 @@
         "exercise_ids": [
           "publication-indicator-recognition",
           "publication-build-264",
+          "publication-functions-advanced-challenge",
           "repeated-places-agents-apply",
-          "production-distribution-copyright-apply"
+          "repeated-places-agents-challenge",
+          "production-distribution-copyright-apply",
+          "production-distribution-copyright-challenge"
         ],
         "mastery_threshold": 0.85
       }
@@ -1670,6 +2054,27 @@
               "referenced_concept": "intrinsic punctuation",
               "skill": "physical-300",
               "difficulty": 4
+            },
+            {
+              "id": "physical-relationships-advanced-challenge",
+              "type": "application",
+              "prompt": "Why can “ill. ; 24 cm” be correct rather than duplicate punctuation?",
+              "options": [
+                "The point is intrinsic to the abbreviation and the semicolon introduces dimensions",
+                "All adjacent punctuation is acceptable",
+                "The semicolon is part of “ill.”",
+                "Dimensions require two terminators"
+              ],
+              "expected_answer": "The point is intrinsic to the abbreviation and the semicolon introduces dimensions",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the physical 300 principle."
+              ],
+              "explanation": "The point is intrinsic to the abbreviation and the semicolon introduces dimensions. This follows from the lesson's evidence-first treatment of physical 300.",
+              "referenced_concept": "physical 300",
+              "skill": "physical-300",
+              "difficulty": 5,
+              "generated_v41": true
             }
           ]
         },
@@ -1707,7 +2112,7 @@
               "explanation": "300$e. This follows from the lesson's evidence-first treatment of physical 300.",
               "referenced_concept": "physical 300",
               "skill": "physical-300",
-              "difficulty": 4
+              "difficulty": 5
             },
             {
               "id": "accompanying-material-apply",
@@ -1727,7 +2132,27 @@
               "explanation": "A plus sign relationship. This follows from the lesson's evidence-first treatment of physical 300.",
               "referenced_concept": "physical 300",
               "skill": "physical-300",
-              "difficulty": 5
+              "difficulty": 6
+            },
+            {
+              "id": "accompanying-material-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves accompanying material, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the accompanying material evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the accompanying material evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the physical 300 principle."
+              ],
+              "explanation": "Pause the change, verify the accompanying material evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of physical 300.",
+              "referenced_concept": "physical 300",
+              "skill": "physical-300",
+              "difficulty": 7
             }
           ]
         },
@@ -1765,7 +2190,7 @@
               "explanation": "The resource extent and carrier details. This follows from the lesson's evidence-first treatment of physical 300.",
               "referenced_concept": "physical 300",
               "skill": "physical-300",
-              "difficulty": 5
+              "difficulty": 6
             },
             {
               "id": "multipart-and-nonprint-apply",
@@ -1785,7 +2210,27 @@
               "explanation": "Request cataloguer review and preserve the supplied evidence. This follows from the lesson's evidence-first treatment of physical 300.",
               "referenced_concept": "physical 300",
               "skill": "physical-300",
-              "difficulty": 6
+              "difficulty": 7
+            },
+            {
+              "id": "multipart-and-nonprint-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves complex physical description, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the complex physical description evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the complex physical description evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the physical 300 principle."
+              ],
+              "explanation": "Pause the change, verify the complex physical description evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of physical 300.",
+              "referenced_concept": "physical 300",
+              "skill": "physical-300",
+              "difficulty": 8
             }
           ]
         }
@@ -1794,8 +2239,11 @@
         "exercise_ids": [
           "physical-application",
           "physical-reasoning",
+          "physical-relationships-advanced-challenge",
           "accompanying-material-apply",
-          "multipart-and-nonprint-apply"
+          "accompanying-material-challenge",
+          "multipart-and-nonprint-apply",
+          "multipart-and-nonprint-challenge"
         ],
         "mastery_threshold": 0.85
       }
@@ -1880,6 +2328,27 @@
               "referenced_concept": "authority control",
               "skill": "series",
               "difficulty": 4
+            },
+            {
+              "id": "series-transcription-access-advanced-challenge",
+              "type": "application",
+              "prompt": "A transcribed 490 differs from an authorized 830. What should happen?",
+              "options": [
+                "Preserve the transcription and verify the controlled access form with authority evidence",
+                "Force both fields to identical wording",
+                "Delete the 490",
+                "Treat punctuation as authority evidence"
+              ],
+              "expected_answer": "Preserve the transcription and verify the controlled access form with authority evidence",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the series principle."
+              ],
+              "explanation": "Preserve the transcription and verify the controlled access form with authority evidence. This follows from the lesson's evidence-first treatment of series.",
+              "referenced_concept": "series",
+              "skill": "series",
+              "difficulty": 5,
+              "generated_v41": true
             }
           ]
         },
@@ -1917,7 +2386,7 @@
               "explanation": "490$v. This follows from the lesson's evidence-first treatment of series.",
               "referenced_concept": "series",
               "skill": "series",
-              "difficulty": 4
+              "difficulty": 5
             },
             {
               "id": "series-numbering-issn-apply",
@@ -1937,7 +2406,27 @@
               "explanation": "490$x. This follows from the lesson's evidence-first treatment of series.",
               "referenced_concept": "series",
               "skill": "series",
-              "difficulty": 5
+              "difficulty": 6
+            },
+            {
+              "id": "series-numbering-issn-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves series elements, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the series elements evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the series elements evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the series principle."
+              ],
+              "explanation": "Pause the change, verify the series elements evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of series.",
+              "referenced_concept": "series",
+              "skill": "series",
+              "difficulty": 7
             }
           ]
         },
@@ -1975,7 +2464,7 @@
               "explanation": "A series tracing is made in an 8XX field. This follows from the lesson's evidence-first treatment of series.",
               "referenced_concept": "series",
               "skill": "series",
-              "difficulty": 5
+              "difficulty": 6
             },
             {
               "id": "series-authority-workflow-apply",
@@ -1995,7 +2484,27 @@
               "explanation": "The relevant authority evidence. This follows from the lesson's evidence-first treatment of series.",
               "referenced_concept": "series",
               "skill": "series",
-              "difficulty": 6
+              "difficulty": 7
+            },
+            {
+              "id": "series-authority-workflow-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves series authority control, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the series authority control evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the series authority control evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the series principle."
+              ],
+              "explanation": "Pause the change, verify the series authority control evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of series.",
+              "referenced_concept": "series",
+              "skill": "series",
+              "difficulty": 8
             }
           ]
         }
@@ -2004,8 +2513,11 @@
         "exercise_ids": [
           "series-recognition",
           "series-automation-judgment",
+          "series-transcription-access-advanced-challenge",
           "series-numbering-issn-apply",
-          "series-authority-workflow-apply"
+          "series-numbering-issn-challenge",
+          "series-authority-workflow-apply",
+          "series-authority-workflow-challenge"
         ],
         "mastery_threshold": 0.85
       }
@@ -2093,6 +2605,27 @@
               "referenced_concept": "structured notes",
               "skill": "notes-identifiers",
               "difficulty": 4
+            },
+            {
+              "id": "notes-and-standard-numbers-advanced-challenge",
+              "type": "application",
+              "prompt": "A note ends in an abbreviation point and an ISBN has a qualifier. What is safe?",
+              "options": [
+                "Preserve semantic note punctuation and keep identifier qualifiers in their proper subfields",
+                "Strip all points and qualifiers",
+                "Move the qualifier into the note",
+                "Normalize both as plain numbers"
+              ],
+              "expected_answer": "Preserve semantic note punctuation and keep identifier qualifiers in their proper subfields",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the notes identifiers principle."
+              ],
+              "explanation": "Preserve semantic note punctuation and keep identifier qualifiers in their proper subfields. This follows from the lesson's evidence-first treatment of notes identifiers.",
+              "referenced_concept": "notes identifiers",
+              "skill": "notes-identifiers",
+              "difficulty": 5,
+              "generated_v41": true
             }
           ]
         },
@@ -2130,7 +2663,7 @@
               "explanation": "The semantic purpose of the note. This follows from the lesson's evidence-first treatment of notes identifiers.",
               "referenced_concept": "notes identifiers",
               "skill": "notes-identifiers",
-              "difficulty": 4
+              "difficulty": 5
             },
             {
               "id": "note-types-and-scope-apply",
@@ -2150,7 +2683,27 @@
               "explanation": "Removing an exact duplicate generated terminal point. This follows from the lesson's evidence-first treatment of notes identifiers.",
               "referenced_concept": "notes identifiers",
               "skill": "notes-identifiers",
-              "difficulty": 5
+              "difficulty": 6
+            },
+            {
+              "id": "note-types-and-scope-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves note semantics, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the note semantics evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the note semantics evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the notes identifiers principle."
+              ],
+              "explanation": "Pause the change, verify the note semantics evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of notes identifiers.",
+              "referenced_concept": "notes identifiers",
+              "skill": "notes-identifiers",
+              "difficulty": 7
             }
           ]
         },
@@ -2188,7 +2741,7 @@
               "explanation": "020$q. This follows from the lesson's evidence-first treatment of notes identifiers.",
               "referenced_concept": "notes identifiers",
               "skill": "notes-identifiers",
-              "difficulty": 5
+              "difficulty": 6
             },
             {
               "id": "identifier-qualifiers-apply",
@@ -2208,7 +2761,27 @@
               "explanation": "020$z. This follows from the lesson's evidence-first treatment of notes identifiers.",
               "referenced_concept": "notes identifiers",
               "skill": "notes-identifiers",
-              "difficulty": 6
+              "difficulty": 7
+            },
+            {
+              "id": "identifier-qualifiers-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves identifier structure, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the identifier structure evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the identifier structure evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the notes identifiers principle."
+              ],
+              "explanation": "Pause the change, verify the identifier structure evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of notes identifiers.",
+              "referenced_concept": "notes identifiers",
+              "skill": "notes-identifiers",
+              "difficulty": 8
             }
           ]
         }
@@ -2217,8 +2790,11 @@
         "exercise_ids": [
           "identifier-error-detection",
           "complex-note-judgment",
+          "notes-and-standard-numbers-advanced-challenge",
           "note-types-and-scope-apply",
-          "identifier-qualifiers-apply"
+          "note-types-and-scope-challenge",
+          "identifier-qualifiers-apply",
+          "identifier-qualifiers-challenge"
         ],
         "mastery_threshold": 0.85
       }
@@ -2302,6 +2878,27 @@
               "referenced_concept": "AI-assisted review",
               "skill": "automation-boundaries",
               "difficulty": 4
+            },
+            {
+              "id": "safe-automation-boundaries-advanced-challenge",
+              "type": "application",
+              "prompt": "An AI suggestion changes a subject and fixes a duplicate point. How should it be handled?",
+              "options": [
+                "Separate the deterministic punctuation fix from the authority-sensitive subject proposal",
+                "Apply both because they arrived together",
+                "Reject both without review",
+                "Treat model confidence as authority verification"
+              ],
+              "expected_answer": "Separate the deterministic punctuation fix from the authority-sensitive subject proposal",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the automation boundaries principle."
+              ],
+              "explanation": "Separate the deterministic punctuation fix from the authority-sensitive subject proposal. This follows from the lesson's evidence-first treatment of automation boundaries.",
+              "referenced_concept": "automation boundaries",
+              "skill": "automation-boundaries",
+              "difficulty": 5,
+              "generated_v41": true
             }
           ]
         },
@@ -2339,7 +2936,7 @@
               "explanation": "Removing a known duplicated generated delimiter. This follows from the lesson's evidence-first treatment of automation boundaries.",
               "referenced_concept": "automation boundaries",
               "skill": "automation-boundaries",
-              "difficulty": 4
+              "difficulty": 5
             },
             {
               "id": "deterministic-versus-inferred-apply",
@@ -2359,7 +2956,27 @@
               "explanation": "A preview, provenance, and an undo path. This follows from the lesson's evidence-first treatment of automation boundaries.",
               "referenced_concept": "automation boundaries",
               "skill": "automation-boundaries",
-              "difficulty": 5
+              "difficulty": 6
+            },
+            {
+              "id": "deterministic-versus-inferred-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves automation risk, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the automation risk evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the automation risk evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the automation boundaries principle."
+              ],
+              "explanation": "Pause the change, verify the automation risk evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of automation boundaries.",
+              "referenced_concept": "automation boundaries",
+              "skill": "automation-boundaries",
+              "difficulty": 7
             }
           ]
         },
@@ -2397,7 +3014,7 @@
               "explanation": "Only the model’s reported confidence, not bibliographic correctness. This follows from the lesson's evidence-first treatment of automation boundaries.",
               "referenced_concept": "automation boundaries",
               "skill": "automation-boundaries",
-              "difficulty": 5
+              "difficulty": 6
             },
             {
               "id": "ai-verification-audit-apply",
@@ -2417,7 +3034,27 @@
               "explanation": "The request, response, verification state, and applied action. This follows from the lesson's evidence-first treatment of automation boundaries.",
               "referenced_concept": "automation boundaries",
               "skill": "automation-boundaries",
-              "difficulty": 6
+              "difficulty": 7
+            },
+            {
+              "id": "ai-verification-audit-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves AI-assisted review, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the AI-assisted review evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the AI-assisted review evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the automation boundaries principle."
+              ],
+              "explanation": "Pause the change, verify the AI-assisted review evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of automation boundaries.",
+              "referenced_concept": "automation boundaries",
+              "skill": "automation-boundaries",
+              "difficulty": 8
             }
           ]
         }
@@ -2426,8 +3063,11 @@
         "exercise_ids": [
           "automation-safe-choice",
           "ai-safety-review",
+          "safe-automation-boundaries-advanced-challenge",
           "deterministic-versus-inferred-apply",
-          "ai-verification-audit-apply"
+          "deterministic-versus-inferred-challenge",
+          "ai-verification-audit-apply",
+          "ai-verification-audit-challenge"
         ],
         "mastery_threshold": 0.85
       }
@@ -2512,6 +3152,26 @@
               "referenced_concept": "record review",
               "skill": "record-review",
               "difficulty": 4
+            },
+            {
+              "id": "field-audit-workflow-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves independent field review, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the independent field review evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the independent field review evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the record review principle."
+              ],
+              "explanation": "Pause the change, verify the independent field review evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of record review.",
+              "referenced_concept": "record review",
+              "skill": "record-review",
+              "difficulty": 5
             }
           ]
         },
@@ -2570,6 +3230,26 @@
               "referenced_concept": "record review",
               "skill": "record-review",
               "difficulty": 5
+            },
+            {
+              "id": "whole-record-risk-triage-challenge",
+              "type": "application",
+              "prompt": "A proposed change involves record-level review, but the record evidence is incomplete. What should the cataloguer do?",
+              "options": [
+                "Pause the change, verify the record-level review evidence, and record or escalate the unresolved judgment",
+                "Apply the change because the interface suggested it",
+                "Delete the uncertain element",
+                "Copy the decision from an unrelated record"
+              ],
+              "expected_answer": "Pause the change, verify the record-level review evidence, and record or escalate the unresolved judgment",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the record review principle."
+              ],
+              "explanation": "Pause the change, verify the record-level review evidence, and record or escalate the unresolved judgment. This follows from the lesson's evidence-first treatment of record review.",
+              "referenced_concept": "record review",
+              "skill": "record-review",
+              "difficulty": 6
             }
           ]
         },
@@ -2684,6 +3364,27 @@
               "referenced_concept": "cataloguer judgment",
               "skill": "record-review",
               "difficulty": 7
+            },
+            {
+              "id": "final-competency-assessment-advanced-challenge",
+              "type": "application",
+              "prompt": "A whole-record review contains safe fixes and unresolved descriptive judgments. What demonstrates competency?",
+              "options": [
+                "Apply only evidenced reversible fixes and document or escalate unresolved judgments",
+                "Apply every available suggestion",
+                "Complete the progress bar without review",
+                "Remove uncertain data to finish quickly"
+              ],
+              "expected_answer": "Apply only evidenced reversible fixes and document or escalate unresolved judgments",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the record review principle."
+              ],
+              "explanation": "Apply only evidenced reversible fixes and document or escalate unresolved judgments. This follows from the lesson's evidence-first treatment of record review.",
+              "referenced_concept": "record review",
+              "skill": "record-review",
+              "difficulty": 8,
+              "generated_v41": true
             }
           ]
         }
@@ -2693,8 +3394,11 @@
           "assessment-construct-title",
           "assessment-review-record",
           "assessment-automation-judgment",
+          "final-competency-assessment-advanced-challenge",
           "field-audit-workflow-apply",
-          "whole-record-risk-triage-apply"
+          "field-audit-workflow-challenge",
+          "whole-record-risk-triage-apply",
+          "whole-record-risk-triage-challenge"
         ],
         "mastery_threshold": 0.85,
         "hints_disqualify_attempt": true,
