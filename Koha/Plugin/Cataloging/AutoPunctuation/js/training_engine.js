@@ -11,7 +11,7 @@
 })(typeof window !== 'undefined' ? window : globalThis, function() {
     'use strict';
 
-    const ENGINE_VERSION = '1.0.0';
+    const ENGINE_VERSION = '1.1.0';
 
     function clone(value) {
         return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
@@ -270,12 +270,22 @@
             .some(attempt => attempt && attempt.correct && !attempt.answer_revealed);
     }
 
+    function lessonRequirements(curriculum, progress, lessonId) {
+        const lesson = indexCurriculum(curriculum).lessons[lessonId];
+        const required = lessonExerciseIds(lesson);
+        const missing = required.filter(id => !hasEligibleCorrectAttempt(progress, id));
+        return {
+            required,
+            missing,
+            completed: !!lesson && missing.length === 0
+        };
+    }
+
     function completeLesson(curriculum, progress, lessonId, now) {
         const index = indexCurriculum(curriculum);
         const lesson = index.lessons[lessonId];
         if (!lesson) return { ok: false, reason: 'lesson_not_found', progress };
-        const required = lessonExerciseIds(lesson);
-        const missing = required.filter(id => !hasEligibleCorrectAttempt(progress, id));
+        const { missing } = lessonRequirements(curriculum, progress, lessonId);
         if (missing.length) return { ok: false, reason: 'required_practice', missing, progress };
         progress.lesson_progress[lessonId] = {
             ...asObject(progress.lesson_progress[lessonId]),
@@ -300,12 +310,30 @@
         return stored.status || 'not_started';
     }
 
+    function lessonStatus(curriculum, progress, moduleId, lessonId, advancedMode) {
+        const index = indexCurriculum(curriculum);
+        const module = index.modules[moduleId];
+        if (!module || !index.lessons[lessonId]) return 'missing';
+        const moduleState = moduleStatus(curriculum, progress, moduleId, advancedMode);
+        if (moduleState === 'locked') return 'locked';
+        const lessons = asArray(module.lessons);
+        const position = lessons.findIndex(lesson => lesson && lesson.id === lessonId);
+        if (position < 0) return 'missing';
+        const bypass = advancedMode === true || progress.advanced_mode === true;
+        if (!bypass && lessons.slice(0, position).some(lesson =>
+            asObject(progress.lesson_progress[lesson.id]).status !== 'completed')) return 'locked';
+        return asObject(progress.lesson_progress[lessonId]).status || 'not_started';
+    }
+
     function selectLesson(curriculum, progress, moduleId, lessonId, now) {
         const index = indexCurriculum(curriculum);
         if (!index.modules[moduleId] || !index.lessons[lessonId]) return { ok: false, reason: 'not_found', progress };
         if (moduleStatus(curriculum, progress, moduleId) === 'locked') return { ok: false, reason: 'prerequisite_locked', progress };
         if (!asArray(index.modules[moduleId].lessons).some(lesson => lesson.id === lessonId)) {
             return { ok: false, reason: 'lesson_not_in_module', progress };
+        }
+        if (lessonStatus(curriculum, progress, moduleId, lessonId) === 'locked') {
+            return { ok: false, reason: 'lesson_locked', progress };
         }
         progress.current_module = moduleId;
         progress.current_lesson = lessonId;
@@ -654,6 +682,8 @@
         advanceOnboarding,
         setAdvancedMode,
         moduleStatus,
+        lessonStatus,
+        lessonRequirements,
         selectLesson,
         completeLesson,
         evaluateExercise,

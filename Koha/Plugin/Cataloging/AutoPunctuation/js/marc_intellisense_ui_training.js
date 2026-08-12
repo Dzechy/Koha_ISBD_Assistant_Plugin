@@ -199,12 +199,22 @@
             </button>
             <ol>${engine.modules(session.curriculum).map((module, index) => {
                 const status = engine.moduleStatus(session.curriculum, session.progress, module.id);
+                const isCurrent = session.progress.current_module === module.id;
                 return `<li>
-                    <button type="button" class="isbd-training-module ${status} ${session.progress.current_module === module.id ? 'current' : ''}"
+                    <button type="button" class="isbd-training-module ${status} ${isCurrent ? 'current' : ''}"
                         data-module-id="${html(module.id)}" ${status === 'locked' ? 'aria-disabled="true"' : ''}>
                         <span class="isbd-training-module-number">${String(index + 1).padStart(2, '0')}</span>
-                        <span><strong>${html(module.title)}</strong><small>${html(statusIcon(status))} ${html(statusLabel(status))}</small></span>
+                        <span><strong>${html(module.title)}</strong><small>${html(statusIcon(status))} ${html(statusLabel(status))} · ${(module.lessons || []).length} lessons</small></span>
                     </button>
+                    ${isCurrent ? `<ol class="isbd-training-lesson-list">${(module.lessons || []).map((lesson, lessonIndex) => {
+                        const lessonState = engine.lessonStatus(session.curriculum, session.progress, module.id, lesson.id);
+                        const current = session.progress.current_lesson === lesson.id && session.view === 'lesson';
+                        return `<li><button type="button" class="isbd-training-lesson-link ${lessonState} ${current ? 'current' : ''}"
+                            data-lesson-module="${html(module.id)}" data-lesson-id="${html(lesson.id)}"
+                            ${lessonState === 'locked' ? 'aria-disabled="true"' : ''}>
+                            <span>${lessonIndex + 1}</span><span>${html(lesson.title)}<small>${html(statusLabel(lessonState))}</small></span>
+                        </button></li>`;
+                    }).join('')}</ol>` : ''}
                 </li>`;
             }).join('')}</ol>
             <label class="isbd-training-advanced">
@@ -218,6 +228,10 @@
         });
         nav.querySelectorAll('[data-module-id]').forEach(button => {
             button.addEventListener('click', () => openModule(session, button.getAttribute('data-module-id')));
+        });
+        nav.querySelectorAll('[data-lesson-id]').forEach(button => {
+            button.addEventListener('click', () => openLesson(session,
+                button.getAttribute('data-lesson-module'), button.getAttribute('data-lesson-id')));
         });
         nav.querySelector('[data-training-advanced]').addEventListener('change', event => {
             engine.setAdvancedMode(session.progress, event.target.checked);
@@ -358,7 +372,9 @@
         const result = engine.selectLesson(session.curriculum, session.progress, moduleId, lessonId);
         if (!result.ok) {
             session.syncMessage = result.reason === 'prerequisite_locked'
-                ? 'This lesson is locked until its prerequisite is mastered.' : 'Unable to open that lesson.';
+                ? 'This module is locked until its prerequisite is mastered.'
+                : (result.reason === 'lesson_locked'
+                    ? 'Finish the earlier lessons in this module before continuing.' : 'Unable to open that lesson.');
             updateSyncStatus(session);
             return;
         }
@@ -392,6 +408,8 @@
         const exercise = exercises[session.exerciseIndex];
         const moduleNumber = engine.modules(session.curriculum).findIndex(item => item.id === context.module.id) + 1;
         const lessonNumber = (context.module.lessons || []).findIndex(item => item.id === lesson.id) + 1;
+        const readiness = engine.lessonRequirements(session.curriculum, session.progress, lesson.id);
+        const neighboring = neighboringLessons(session, context.module.id, lesson.id);
         main.innerHTML = `
             <section class="isbd-training-lesson" aria-labelledby="training-lesson-title">
                 <nav class="isbd-training-breadcrumb" aria-label="Current training location">
@@ -406,12 +424,20 @@
                     <article class="isbd-training-concept ${key}"><h2>${html(sectionLabel(key))}</h2><p>${html(lesson.sections[key])}</p></article>`).join('')}</div>
                 ${exercise ? renderExerciseMarkup(session, exercise, session.exerciseIndex, exercises.length) : '<p>No exercise is required for this lesson.</p>'}
                 <div class="isbd-training-lesson-footer">
-                    <button type="button" class="btn btn-default" data-training-dashboard>Back to dashboard</button>
-                    <button type="button" class="btn btn-primary" data-complete-lesson>Complete lesson</button>
+                    <button type="button" class="btn btn-default" data-prev-lesson ${neighboring.previous ? '' : 'disabled'}>← Previous lesson</button>
+                    <span class="isbd-training-readiness ${readiness.completed ? 'ready' : ''}">${readiness.completed ? 'Practice complete' : `${readiness.missing.length} practice ${readiness.missing.length === 1 ? 'item' : 'items'} remaining`}</span>
+                    <button type="button" class="btn btn-primary" data-complete-lesson>${(session.progress.lesson_progress[lesson.id] || {}).status === 'completed' ? 'Continue to next lesson' : 'Complete lesson'}</button>
                 </div>
             </section>`;
-        bindLesson(session, exercises, exercise);
+        bindLesson(session, exercises, exercise, neighboring);
         main.focus();
+    }
+
+    function neighboringLessons(session, moduleId, lessonId) {
+        const all = engine.modules(session.curriculum).flatMap(module =>
+            (module.lessons || []).map(lesson => ({ module, lesson })));
+        const index = all.findIndex(item => item.module.id === moduleId && item.lesson.id === lessonId);
+        return { previous: index > 0 ? all[index - 1] : null };
     }
 
     function renderExerciseMarkup(session, exercise, index, total) {
@@ -434,7 +460,7 @@
             </div>
             <div class="isbd-training-feedback" aria-live="polite">
                 ${session.hint && session.hint.exerciseId === exercise.id ? `<div class="hint"><strong>Hint ${session.hint.index}</strong><p>${html(session.hint.text)}</p></div>` : ''}
-                ${feedback ? `<div class="${feedback.correct ? 'correct' : 'incorrect'}"><strong>${feedback.correct ? 'Correct' : 'Try again'}</strong><p>${html(feedback.message)}</p>${feedback.showExplanation ? `<p>${html(feedback.explanation)}</p>` : ''}</div>` : ''}
+                ${feedback ? `<div class="${feedback.kind || (feedback.correct ? 'correct' : 'incorrect')}"><strong>${html(feedback.title || (feedback.correct ? 'Correct' : 'Try again'))}</strong><p>${html(feedback.message)}</p>${feedback.showExplanation ? `<p>${html(feedback.explanation)}</p>` : ''}</div>` : ''}
                 ${last && last.answer_revealed ? '<p class="isbd-training-notice">This revealed attempt is recorded for review and cannot award mastery.</p>' : ''}
             </div>
             <div class="isbd-training-exercise-nav">
@@ -539,13 +565,31 @@
         });
     }
 
-    function bindLesson(session, exercises, exercise) {
+    function bindAnswerDraft(session, exercise) {
+        const main = session.root.querySelector('.isbd-training-main');
+        if (!exercise || exercise.initial_record || exercise.type === 'field_builder' || exercise.type === 'record_construction') return;
+        const capture = () => { session.answers[exercise.id] = readAnswer(main, exercise); };
+        main.querySelectorAll('input[name="exercise-answer"], [data-text-answer]').forEach(control => {
+            control.addEventListener(control.matches('textarea') ? 'input' : 'change', capture);
+        });
+    }
+
+    function bindLesson(session, exercises, exercise, neighboring) {
         const main = session.root.querySelector('.isbd-training-main');
         main.querySelectorAll('[data-training-dashboard]').forEach(button => button.addEventListener('click', () => {
             session.view = 'dashboard';
             render(session);
         }));
+        main.querySelector('[data-prev-lesson]').addEventListener('click', () => {
+            if (neighboring.previous) openLesson(session, neighboring.previous.module.id, neighboring.previous.lesson.id);
+        });
         main.querySelector('[data-complete-lesson]').addEventListener('click', () => {
+            if ((session.progress.lesson_progress[session.progress.current_lesson] || {}).status === 'completed') {
+                const next = engine.nextLesson(session.curriculum, session.progress);
+                if (next) return openLesson(session, next.module.id, next.lesson.id);
+                session.view = 'dashboard';
+                return render(session);
+            }
             const result = engine.completeLesson(session.curriculum, session.progress, session.progress.current_lesson);
             if (!result.ok) {
                 session.syncMessage = `Complete the required practice first (${result.missing.length} remaining).`;
@@ -553,11 +597,14 @@
                 return;
             }
             persist(session);
+            const next = engine.nextLesson(session.curriculum, session.progress);
+            if (next) return openLesson(session, next.module.id, next.lesson.id);
             session.view = 'dashboard';
             render(session);
         });
         if (!exercise) return;
         if (exercise.initial_record || exercise.type === 'field_builder' || exercise.type === 'record_construction') bindFieldLab(session, exercise);
+        bindAnswerDraft(session, exercise);
         main.querySelector('[data-check-answer]').addEventListener('click', () => {
             const answer = readAnswer(main, exercise);
             session.answers[exercise.id] = answer;
@@ -581,6 +628,8 @@
         main.querySelector('[data-explain]').addEventListener('click', () => {
             session.feedback[exercise.id] = {
                 correct: false,
+                kind: 'explanation',
+                title: 'Rule explanation',
                 message: exercise.referenced_rule ? `Relevant rule: ${exercise.referenced_rule}` : `Relevant concept: ${exercise.referenced_concept || 'cataloguing judgment'}`,
                 explanation: exercise.explanation || '',
                 showExplanation: true
@@ -705,9 +754,9 @@
         const style = document.createElement('style');
         style.id = 'isbd-training-workspace-styles';
         style.textContent = `
-            .isbd-training-workspace{position:fixed;inset:4vh 3vw;z-index:10020;background:#f7f8f5;border:1px solid #bcc8bc;border-radius:10px;box-shadow:0 24px 70px rgba(15,23,42,.3);overflow:hidden;color:#243128}
-            .isbd-training-shell{height:100%;display:flex;flex-direction:column}.isbd-training-header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 20px;background:#245d3b;color:#fff}.isbd-training-header h2{font-size:20px;margin:1px 0 0}.isbd-training-eyebrow{text-transform:uppercase;letter-spacing:.08em;font-size:10px;font-weight:700;opacity:.78}.isbd-training-header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.isbd-training-header-progress{font-weight:700;margin-right:8px}.isbd-training-body{display:grid;grid-template-columns:250px minmax(0,1fr);flex:1;min-height:0}.isbd-training-path{background:#edf1eb;border-right:1px solid #d3ddd1;padding:14px 10px;overflow:auto}.isbd-training-path ol{list-style:none;margin:10px 0;padding:0}.isbd-training-home,.isbd-training-module{width:100%;border:0;background:transparent;text-align:left;border-radius:7px;padding:9px;color:#27372d}.isbd-training-home:hover,.isbd-training-home:focus,.isbd-training-module:hover,.isbd-training-module:focus,.isbd-training-module.current{background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.08)}.isbd-training-module{display:flex;gap:9px;align-items:flex-start}.isbd-training-module.locked{opacity:.62}.isbd-training-module small{display:block;color:#607065;margin-top:2px}.isbd-training-module-number{font:700 11px/1.7 monospace;color:#557160}.isbd-training-advanced{display:block;border-top:1px solid #ccd7ca;padding:12px 7px 0;font-weight:600}.isbd-training-advanced small{display:block;color:#68766c;font-weight:400;margin-left:20px}.isbd-training-main{overflow:auto;padding:24px 30px;outline:none}.isbd-training-footer{display:flex;justify-content:space-between;gap:16px;padding:7px 18px;background:#fff;border-top:1px solid #d9e0d7;color:#657268;font-size:11px}.isbd-training-minimized{height:54px;inset:auto 20px 20px auto;width:min(720px,calc(100vw - 40px))}.isbd-training-minimized .isbd-training-body,.isbd-training-minimized .isbd-training-footer{display:none}.isbd-training-onboarding{max-width:760px;margin:5vh auto;background:#fff;border:1px solid #dce4da;border-radius:12px;padding:38px;text-align:center}.isbd-training-onboarding h1{font-size:30px}.isbd-training-welcome-mark{display:inline-grid;place-items:center;width:86px;height:86px;border-radius:50%;background:#e4efe6;color:#245d3b;font-weight:800}.isbd-training-step-dots span{display:inline-block;width:9px;height:9px;border-radius:50%;background:#c8d2c7;margin:0 4px}.isbd-training-step-dots span.active{background:#2f754b}.isbd-training-outcomes{columns:2;text-align:left;list-style:none;padding:0}.isbd-training-outcomes li{padding:7px}.isbd-training-experience{display:grid;grid-template-columns:1fr 1fr;gap:10px;border:0}.isbd-training-experience label,.isbd-training-choices label{display:block;border:1px solid #ccd7ca;background:#fafbf9;border-radius:7px;padding:11px;text-align:left;font-weight:500}.isbd-training-model{display:flex;justify-content:center;flex-wrap:wrap;gap:8px}.isbd-training-model span{background:#e7efe7;border-radius:999px;padding:8px 13px;font-weight:700}.isbd-training-actions{display:flex;justify-content:center;gap:8px;margin-top:24px}.isbd-training-dashboard-hero{display:flex;justify-content:space-between;gap:24px;align-items:center;background:#fff;border:1px solid #dce4da;border-radius:10px;padding:22px}.isbd-training-dashboard-hero h1{margin:3px 0 8px}.isbd-training-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}.isbd-training-metrics article,.isbd-training-card{background:#fff;border:1px solid #dce4da;border-radius:9px;padding:16px}.isbd-training-metrics strong{display:block;font-size:28px;color:#245d3b}.isbd-training-metrics span{color:#617067}.isbd-training-dashboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.isbd-training-card h2{font-size:16px;margin-top:0}.isbd-training-card ul{padding-left:18px}.isbd-training-breadcrumb{display:flex;gap:7px;align-items:center;color:#607065;margin-bottom:12px}.isbd-training-breadcrumb button{border:0;background:transparent;color:#276947;padding:0;text-decoration:underline}.isbd-training-lesson-heading,.isbd-training-practice-heading{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.isbd-training-lesson-heading h1{margin:2px 0 15px}.isbd-training-level,.isbd-training-skill{background:#e5eee5;color:#275f3f;padding:6px 10px;border-radius:999px;font-size:11px;font-weight:700}.isbd-training-concept-sections{display:grid;grid-template-columns:1fr 1fr;gap:10px}.isbd-training-concept{background:#fff;border:1px solid #dce4da;border-radius:8px;padding:13px}.isbd-training-concept h2{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#37644a;margin:0 0 5px}.isbd-training-concept.see_it{font-family:monospace;background:#f1f5f0}.isbd-training-practice{background:#fff;border:1px solid #cbd9ca;border-left:5px solid #347c50;border-radius:9px;margin-top:16px;padding:18px}.isbd-training-practice-heading h2{font-size:18px;margin:3px 0 14px}.isbd-training-choices{border:0;padding:0;display:grid;gap:7px}.isbd-training-lab{border:1px solid #d4ded2;background:#f8faf7;border-radius:8px;padding:13px}.isbd-training-lab legend{font-size:13px;font-weight:700;border:0;width:auto;padding:0 5px}.isbd-training-field-meta{display:flex;gap:10px}.isbd-training-field-meta label:first-child{width:110px}.isbd-training-field-meta label{width:90px}.isbd-training-subfield{display:flex;align-items:flex-end;gap:8px;margin:8px 0}.isbd-training-subfield label{margin:0}.isbd-training-subfield label.value{flex:1}.isbd-training-subfield label span{display:block;font-size:11px}.isbd-training-row-actions{display:flex;gap:4px}.isbd-training-practice-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}.isbd-training-feedback>div,.isbd-training-notice{padding:10px;border-radius:7px;margin-top:10px}.isbd-training-feedback .correct{background:#e8f4ea;border-left:4px solid #347c50}.isbd-training-feedback .incorrect{background:#fff1e5;border-left:4px solid #b66b27}.isbd-training-feedback .hint{background:#edf3fa;border-left:4px solid #47799e}.isbd-training-notice{background:#fff8db}.isbd-training-exercise-nav,.isbd-training-lesson-footer{display:flex;justify-content:space-between;align-items:center;margin-top:15px}.isbd-training-tutor{margin-top:14px;border-top:1px solid #dae2d8;padding-top:10px}.isbd-training-tutor summary{cursor:pointer;font-weight:700}.isbd-training-tutor-actions{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.isbd-training-glossary{max-width:880px}.isbd-training-glossary-search{max-width:420px}.isbd-training-glossary dl{display:grid;grid-template-columns:1fr 1fr;gap:10px}.isbd-training-glossary dl div{background:#fff;border:1px solid #dce4da;border-radius:8px;padding:12px}.isbd-training-glossary dt{color:#275f3f}.isbd-training-glossary dd{margin:4px 0 0}.isbd-training-workspace button:focus,.isbd-training-workspace input:focus,.isbd-training-workspace textarea:focus,.isbd-training-workspace summary:focus{outline:3px solid #f0c419!important;outline-offset:2px}.isbd-training-workspace .isbd-progress-bar{height:7px;background:#e1e7df;border-radius:999px;overflow:hidden;margin-top:7px}.isbd-training-workspace .isbd-progress-bar span{display:block;height:100%;background:#347c50}
-            @media(max-width:900px){.isbd-training-workspace{inset:8px}.isbd-training-body{grid-template-columns:1fr}.isbd-training-path{border-right:0;border-bottom:1px solid #d3ddd1;max-height:175px}.isbd-training-path ol{display:flex;overflow:auto}.isbd-training-path li{min-width:210px}.isbd-training-advanced{display:none}.isbd-training-main{padding:16px}.isbd-training-concept-sections,.isbd-training-dashboard-grid,.isbd-training-glossary dl{grid-template-columns:1fr}.isbd-training-header-progress{display:none}}
+            .isbd-training-workspace{position:fixed;inset:4vh 3vw;z-index:10020;min-height:0;background:#f7f8f5;border:1px solid #bcc8bc;border-radius:10px;box-shadow:0 24px 70px rgba(15,23,42,.3);overflow:hidden;color:#243128}
+            .isbd-training-shell{height:100%;min-height:0;display:flex;flex-direction:column}.isbd-training-header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 20px;background:#245d3b;color:#fff}.isbd-training-header h2{font-size:20px;margin:1px 0 0}.isbd-training-eyebrow{text-transform:uppercase;letter-spacing:.08em;font-size:10px;font-weight:700;opacity:.78}.isbd-training-header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.isbd-training-header-progress{font-weight:700;margin-right:8px}.isbd-training-body{display:grid;grid-template-columns:250px minmax(0,1fr);grid-template-rows:minmax(0,1fr);flex:1 1 0;min-height:0}.isbd-training-path{min-height:0;background:#edf1eb;border-right:1px solid #d3ddd1;padding:14px 10px;overflow:auto;scrollbar-gutter:stable;overscroll-behavior:contain;touch-action:auto}.isbd-training-path ol{list-style:none;margin:10px 0;padding:0}.isbd-training-home,.isbd-training-module{width:100%;border:0;background:transparent;text-align:left;border-radius:7px;padding:9px;color:#27372d}.isbd-training-home:hover,.isbd-training-home:focus,.isbd-training-module:hover,.isbd-training-module:focus,.isbd-training-module.current{background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.08)}.isbd-training-module{display:flex;gap:9px;align-items:flex-start}.isbd-training-module.locked{opacity:.62}.isbd-training-module small{display:block;color:#607065;margin-top:2px}.isbd-training-module-number{font:700 11px/1.7 monospace;color:#557160}.isbd-training-lesson-list{margin:2px 0 8px 24px!important;border-left:1px solid #c4d0c2;padding-left:7px!important}.isbd-training-lesson-link{display:flex;width:100%;gap:7px;border:0;border-radius:5px;background:transparent;padding:6px;text-align:left;color:#34483b;font-size:11px}.isbd-training-lesson-link>span:first-child{font-family:monospace;color:#65806c}.isbd-training-lesson-link>span:last-child{min-width:0}.isbd-training-lesson-link small{display:block;color:#6c7a70}.isbd-training-lesson-link:hover,.isbd-training-lesson-link:focus,.isbd-training-lesson-link.current{background:#fff}.isbd-training-lesson-link.locked{opacity:.55}.isbd-training-advanced{display:block;border-top:1px solid #ccd7ca;padding:12px 7px 0;font-weight:600}.isbd-training-advanced small{display:block;color:#68766c;font-weight:400;margin-left:20px}.isbd-training-main{min-height:0;overflow:auto;scrollbar-gutter:stable;overscroll-behavior:contain;touch-action:auto;padding:24px 30px;outline:none}.isbd-training-footer{display:flex;justify-content:space-between;gap:16px;padding:7px 18px;background:#fff;border-top:1px solid #d9e0d7;color:#657268;font-size:11px}.isbd-training-minimized{height:54px;inset:auto 20px 20px auto;width:min(720px,calc(100vw - 40px))}.isbd-training-minimized .isbd-training-body,.isbd-training-minimized .isbd-training-footer{display:none}.isbd-training-onboarding{max-width:760px;margin:5vh auto;background:#fff;border:1px solid #dce4da;border-radius:12px;padding:38px;text-align:center}.isbd-training-onboarding h1{font-size:30px}.isbd-training-welcome-mark{display:inline-grid;place-items:center;width:86px;height:86px;border-radius:50%;background:#e4efe6;color:#245d3b;font-weight:800}.isbd-training-step-dots span{display:inline-block;width:9px;height:9px;border-radius:50%;background:#c8d2c7;margin:0 4px}.isbd-training-step-dots span.active{background:#2f754b}.isbd-training-outcomes{columns:2;text-align:left;list-style:none;padding:0}.isbd-training-outcomes li{padding:7px}.isbd-training-experience{display:grid;grid-template-columns:1fr 1fr;gap:10px;border:0}.isbd-training-experience label,.isbd-training-choices label{display:block;border:1px solid #ccd7ca;background:#fafbf9;border-radius:7px;padding:11px;text-align:left;font-weight:500}.isbd-training-model{display:flex;justify-content:center;flex-wrap:wrap;gap:8px}.isbd-training-model span{background:#e7efe7;border-radius:4px;padding:8px 13px;font-weight:700}.isbd-training-actions{display:flex;justify-content:center;gap:8px;margin-top:24px}.isbd-training-dashboard-hero{display:flex;justify-content:space-between;gap:24px;align-items:center;background:#fff;border:1px solid #dce4da;border-radius:10px;padding:22px}.isbd-training-dashboard-hero h1{margin:3px 0 8px}.isbd-training-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}.isbd-training-metrics article,.isbd-training-card{background:#fff;border:1px solid #dce4da;border-radius:9px;padding:16px}.isbd-training-metrics strong{display:block;font-size:28px;color:#245d3b}.isbd-training-metrics span{color:#617067}.isbd-training-dashboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.isbd-training-card h2{font-size:16px;margin-top:0}.isbd-training-card ul{padding-left:18px}.isbd-training-breadcrumb{display:flex;gap:7px;align-items:center;color:#607065;margin-bottom:12px}.isbd-training-breadcrumb button{border:0;background:transparent;color:#276947;padding:0;text-decoration:underline}.isbd-training-lesson-heading,.isbd-training-practice-heading{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.isbd-training-lesson-heading h1{margin:2px 0 15px}.isbd-training-level,.isbd-training-skill{background:#e5eee5;color:#275f3f;padding:6px 10px;border-radius:4px;font-size:11px;font-weight:700}.isbd-training-concept-sections{display:grid;grid-template-columns:1fr 1fr;gap:10px}.isbd-training-concept{background:#fff;border:1px solid #dce4da;border-radius:8px;padding:13px}.isbd-training-concept h2{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#37644a;margin:0 0 5px}.isbd-training-concept.see_it{font-family:monospace;background:#f1f5f0}.isbd-training-practice{background:#fff;border:1px solid #cbd9ca;border-left:5px solid #347c50;border-radius:9px;margin-top:16px;padding:18px}.isbd-training-practice-heading h2{font-size:18px;margin:3px 0 14px}.isbd-training-choices{border:0;padding:0;display:grid;gap:7px}.isbd-training-lab{border:1px solid #d4ded2;background:#f8faf7;border-radius:8px;padding:13px}.isbd-training-lab legend{font-size:13px;font-weight:700;border:0;width:auto;padding:0 5px}.isbd-training-field-meta{display:flex;gap:10px}.isbd-training-field-meta label:first-child{width:110px}.isbd-training-field-meta label{width:90px}.isbd-training-subfield{display:flex;align-items:flex-end;gap:8px;margin:8px 0}.isbd-training-subfield label{margin:0}.isbd-training-subfield label.value{flex:1}.isbd-training-subfield label span{display:block;font-size:11px}.isbd-training-row-actions{display:flex;gap:4px}.isbd-training-practice-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}.isbd-training-feedback>div,.isbd-training-notice{padding:10px;border-radius:7px;margin-top:10px}.isbd-training-feedback .correct{background:#e8f4ea;border-left:4px solid #347c50}.isbd-training-feedback .incorrect{background:#fff1e5;border-left:4px solid #b66b27}.isbd-training-feedback .hint,.isbd-training-feedback .explanation{background:#edf3fa;border-left:4px solid #47799e}.isbd-training-notice{background:#fff8db}.isbd-training-exercise-nav,.isbd-training-lesson-footer{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:15px}.isbd-training-readiness{color:#795c19;font-weight:700;text-align:center}.isbd-training-readiness.ready{color:#28633f}.isbd-training-tutor{margin-top:14px;border-top:1px solid #dae2d8;padding-top:10px}.isbd-training-tutor summary{cursor:pointer;font-weight:700}.isbd-training-tutor-actions{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.isbd-training-glossary{max-width:880px}.isbd-training-glossary-search{max-width:420px}.isbd-training-glossary dl{display:grid;grid-template-columns:1fr 1fr;gap:10px}.isbd-training-glossary dl div{background:#fff;border:1px solid #dce4da;border-radius:8px;padding:12px}.isbd-training-glossary dt{color:#275f3f}.isbd-training-glossary dd{margin:4px 0 0}.isbd-training-workspace button:focus,.isbd-training-workspace input:focus,.isbd-training-workspace textarea:focus,.isbd-training-workspace summary:focus{outline:3px solid #f0c419!important;outline-offset:2px}.isbd-training-workspace .isbd-progress-bar{height:7px;background:#e1e7df;border-radius:999px;overflow:hidden;margin-top:7px}.isbd-training-workspace .isbd-progress-bar span{display:block;height:100%;background:#347c50}
+            @media(max-width:900px){.isbd-training-workspace{inset:8px}.isbd-training-body{grid-template-columns:1fr;grid-template-rows:minmax(110px,175px) minmax(0,1fr)}.isbd-training-path{border-right:0;border-bottom:1px solid #d3ddd1;max-height:175px}.isbd-training-path>ol{display:flex;overflow:auto}.isbd-training-path>ol>li{min-width:210px}.isbd-training-lesson-list{display:block!important;overflow:visible!important}.isbd-training-lesson-list li{min-width:0!important}.isbd-training-advanced{display:none}.isbd-training-main{padding:16px}.isbd-training-concept-sections,.isbd-training-dashboard-grid,.isbd-training-glossary dl{grid-template-columns:1fr}.isbd-training-header-progress{display:none}}
             @media(max-width:600px){.isbd-training-header{align-items:flex-start}.isbd-training-header h2{font-size:15px}.isbd-training-header-actions{justify-content:flex-end}.isbd-training-metrics{grid-template-columns:1fr}.isbd-training-dashboard-hero,.isbd-training-lesson-heading,.isbd-training-practice-heading{display:block}.isbd-training-experience{grid-template-columns:1fr}.isbd-training-subfield{align-items:stretch;flex-wrap:wrap}.isbd-training-row-actions{width:100%}.isbd-training-footer span:last-child{display:none}}
             @media(prefers-reduced-motion:reduce){.isbd-training-workspace *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
         `;

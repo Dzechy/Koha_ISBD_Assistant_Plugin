@@ -29,9 +29,10 @@ const fixtures = JSON.parse(fs.readFileSync(path.join(root, 't/fixtures/isbd_pun
 const ruleIds = new Set((pack.rules || []).map(rule => rule.id).filter(Boolean));
 const fixtureNames = new Set(fixtures.map(fixture => fixture.name));
 
-assert.strictEqual(guide.schema_version, '3.0.0', 'training schema version is explicit');
-assert.strictEqual(guide.guide_version, '3.0.0', 'training curriculum version is explicit');
+assert.strictEqual(guide.schema_version, '4.0.0', 'training schema version is explicit');
+assert.strictEqual(guide.guide_version, '4.0.0', 'training curriculum version is explicit');
 assert(Array.isArray(guide.modules) && guide.modules.length === 11, 'curriculum has the complete eleven-module learning path');
+assert.strictEqual(guide.modules.flatMap(module => module.lessons).length, 33, 'curriculum has a substantial thirty-three-lesson path');
 assert(Array.isArray(guide.skills) && guide.skills.length >= 10, 'curriculum declares independently mastered skills');
 assert(Array.isArray(guide.glossary) && guide.glossary.length >= 14, 'contextual glossary is data-driven');
 
@@ -46,6 +47,8 @@ guide.modules.forEach(module => {
   assert(Array.isArray(module.skills) && module.skills.length, `${module.id} assesses skills`);
   module.skills.forEach(skill => assert(skillIds.has(skill), `${module.id} references declared skill ${skill}`));
   assert(Array.isArray(module.lessons), `${module.id} has lessons`);
+  assert(module.lessons.length >= 3, `${module.id} has a staged multi-lesson sequence`);
+  let previousMinimumDifficulty = 0;
   module.lessons.forEach(lesson => {
     ['why', 'how', 'common_mistake', 'do_not_automate'].forEach(key => {
       assert(lesson[key], `${module.id}/${lesson.id} includes ${key}`);
@@ -54,6 +57,9 @@ guide.modules.forEach(module => {
       && lesson.sections.learn && lesson.sections.see_it && lesson.sections.reflection,
     `${module.id}/${lesson.id} supports the complete lesson model`);
     assert(Array.isArray(lesson.exercises) && lesson.exercises.length >= 2, `${module.id}/${lesson.id} has meaningful assessment`);
+    const minimumDifficulty = Math.min(...lesson.exercises.map(exercise => Number(exercise.difficulty) || 0));
+    assert(minimumDifficulty >= previousMinimumDifficulty, `${module.id}/${lesson.id} does not regress in difficulty`);
+    previousMinimumDifficulty = minimumDifficulty;
     lesson.exercises.forEach(exercise => {
       assert(exercise.id && !exerciseIds.has(exercise.id), `${module.id}/${lesson.id} has a unique exercise id`);
       exerciseIds.add(exercise.id);

@@ -38,8 +38,14 @@ assert(source.includes('assistantResponse: (result.assistant_response'),
     'cataloguing state retains bounded original assistant output');
 assert(source.includes('Original AI response · no applicable candidate was extracted'),
     'the original assistant response is visibly labelled when no candidate can be applied');
-assert(source.includes('.isbd-panel .body { flex: 1 1 auto; min-height: 0;'),
+assert(source.includes('.isbd-panel .body { flex: 1 1 0; min-height: 0;'),
     'cataloging assistant body is a bounded flex scroller');
+assert(source.includes('scrollbar-gutter: stable') && source.includes('touch-action: auto'),
+    'floating panels expose stable mouse, keyboard, and touch scrolling');
+assert(source.includes('.isbd-guide-modal {') && source.includes('resize: both; overflow: hidden;'),
+    'the guide uses one bounded content scroller instead of competing nested scrollers');
+assert(source.includes('.isbd-ai-badge {') && source.includes('border-radius: 4px;'),
+    'status badges use restrained corners instead of fully rounded pills');
 assert(source.includes("bindFloatingPanelDrag($panel, 'isbdpanel')"),
     'cataloging panel uses the shared pointer drag implementation');
 assert(source.includes('pointerdown.'),

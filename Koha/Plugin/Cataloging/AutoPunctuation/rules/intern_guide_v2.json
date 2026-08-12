@@ -1,14 +1,22 @@
 {
-  "schema_version": "3.0.0",
-  "guide_version": "3.0.0",
-  "course_version": "3.0.0",
+  "schema_version": "4.0.0",
+  "guide_version": "4.0.0",
+  "course_version": "4.0.0",
   "rules_version": "1.0.0",
   "course": {
     "id": "isbd-cataloguing-competency",
     "title": "ISBD Cataloguing Competency",
-    "version": "3.0.0",
-    "description": "A structured course in MARC21, ISBD reasoning, safe automation, and professional cataloguer judgment.",
-    "learning_model": ["learn", "see", "try", "check", "understand", "practice", "master"],
+    "version": "4.0.0",
+    "description": "A 33-lesson path in MARC21, ISBD reasoning, safe automation, and professional cataloguer judgment, sequenced from foundation to independent assessment.",
+    "learning_model": [
+      "learn",
+      "see",
+      "try",
+      "check",
+      "understand",
+      "practice",
+      "master"
+    ],
     "mastery_threshold": 0.85,
     "review_trigger": 2
   },
@@ -21,16 +29,36 @@
     {
       "id": "outcomes",
       "title": "What you'll learn",
-      "items": ["MARC structure", "ISBD descriptive areas", "prescribed punctuation", "field relationships", "cataloguer judgment", "automation boundaries", "AI-assisted review"]
+      "items": [
+        "MARC structure",
+        "ISBD descriptive areas",
+        "prescribed punctuation",
+        "field relationships",
+        "cataloguer judgment",
+        "automation boundaries",
+        "AI-assisted review"
+      ]
     },
     {
       "id": "experience",
       "title": "How much cataloguing experience do you have?",
       "options": [
-        { "value": "new", "label": "Completely new" },
-        { "value": "basic_marc", "label": "Basic MARC knowledge" },
-        { "value": "some_experience", "label": "Some cataloguing experience" },
-        { "value": "experienced", "label": "Experienced cataloguer" }
+        {
+          "value": "new",
+          "label": "Completely new"
+        },
+        {
+          "value": "basic_marc",
+          "label": "Basic MARC knowledge"
+        },
+        {
+          "value": "some_experience",
+          "label": "Some cataloguing experience"
+        },
+        {
+          "value": "experienced",
+          "label": "Experienced cataloguer"
+        }
       ]
     },
     {
@@ -44,38 +72,162 @@
     "store_guide_version_with_progress": true,
     "store_rules_version_with_progress": true,
     "mark_modules_for_review_when_guide_or_rules_version_changes": true,
-    "supervisor_statuses": ["not_started", "in_progress", "completed", "mastered", "review_required"],
-    "export_formats": ["csv", "json", "xlsx"]
+    "supervisor_statuses": [
+      "not_started",
+      "in_progress",
+      "completed",
+      "mastered",
+      "review_required"
+    ],
+    "export_formats": [
+      "csv",
+      "json",
+      "xlsx"
+    ]
   },
   "skills": [
-    { "id": "cataloguing-foundations", "title": "Cataloguing foundations", "module_id": "foundations", "required_demonstrations": 2, "minimum_difficulty": 2 },
-    { "id": "marc-structure", "title": "MARC structure", "module_id": "marc-structure", "required_demonstrations": 2, "minimum_difficulty": 3 },
-    { "id": "isbd-areas", "title": "ISBD descriptive areas", "module_id": "isbd-areas", "required_demonstrations": 2, "minimum_difficulty": 3 },
-    { "id": "semantic-relationships", "title": "Semantic field relationships", "module_id": "title-responsibility", "required_demonstrations": 2, "minimum_difficulty": 3 },
-    { "id": "terminal-punctuation", "title": "Terminal punctuation", "module_id": "title-responsibility", "required_demonstrations": 2, "minimum_difficulty": 3 },
-    { "id": "edition-250", "title": "Edition statements", "module_id": "edition-statements", "required_demonstrations": 2, "minimum_difficulty": 3 },
-    { "id": "publication-264", "title": "Publication and 264 indicators", "module_id": "publication", "required_demonstrations": 2, "minimum_difficulty": 3 },
-    { "id": "physical-300", "title": "Physical description", "module_id": "physical-description", "required_demonstrations": 2, "minimum_difficulty": 3 },
-    { "id": "series", "title": "Series transcription and access", "module_id": "series", "required_demonstrations": 2, "minimum_difficulty": 3 },
-    { "id": "notes-identifiers", "title": "Notes and identifiers", "module_id": "notes-identifiers", "required_demonstrations": 2, "minimum_difficulty": 3 },
-    { "id": "automation-boundaries", "title": "Automation boundaries", "module_id": "automation-ai", "required_demonstrations": 2, "minimum_difficulty": 3 },
-    { "id": "record-review", "title": "Independent record review", "module_id": "practical-assessment", "required_demonstrations": 2, "minimum_difficulty": 5 }
+    {
+      "id": "cataloguing-foundations",
+      "title": "Cataloguing foundations",
+      "module_id": "foundations",
+      "required_demonstrations": 2,
+      "minimum_difficulty": 2
+    },
+    {
+      "id": "marc-structure",
+      "title": "MARC structure",
+      "module_id": "marc-structure",
+      "required_demonstrations": 2,
+      "minimum_difficulty": 3
+    },
+    {
+      "id": "isbd-areas",
+      "title": "ISBD descriptive areas",
+      "module_id": "isbd-areas",
+      "required_demonstrations": 2,
+      "minimum_difficulty": 3
+    },
+    {
+      "id": "semantic-relationships",
+      "title": "Semantic field relationships",
+      "module_id": "title-responsibility",
+      "required_demonstrations": 2,
+      "minimum_difficulty": 3
+    },
+    {
+      "id": "terminal-punctuation",
+      "title": "Terminal punctuation",
+      "module_id": "title-responsibility",
+      "required_demonstrations": 2,
+      "minimum_difficulty": 3
+    },
+    {
+      "id": "edition-250",
+      "title": "Edition statements",
+      "module_id": "edition-statements",
+      "required_demonstrations": 2,
+      "minimum_difficulty": 3
+    },
+    {
+      "id": "publication-264",
+      "title": "Publication and 264 indicators",
+      "module_id": "publication",
+      "required_demonstrations": 2,
+      "minimum_difficulty": 3
+    },
+    {
+      "id": "physical-300",
+      "title": "Physical description",
+      "module_id": "physical-description",
+      "required_demonstrations": 2,
+      "minimum_difficulty": 3
+    },
+    {
+      "id": "series",
+      "title": "Series transcription and access",
+      "module_id": "series",
+      "required_demonstrations": 2,
+      "minimum_difficulty": 3
+    },
+    {
+      "id": "notes-identifiers",
+      "title": "Notes and identifiers",
+      "module_id": "notes-identifiers",
+      "required_demonstrations": 2,
+      "minimum_difficulty": 3
+    },
+    {
+      "id": "automation-boundaries",
+      "title": "Automation boundaries",
+      "module_id": "automation-ai",
+      "required_demonstrations": 2,
+      "minimum_difficulty": 3
+    },
+    {
+      "id": "record-review",
+      "title": "Independent record review",
+      "module_id": "practical-assessment",
+      "required_demonstrations": 2,
+      "minimum_difficulty": 5
+    }
   ],
   "glossary": [
-    { "term": "MARC", "definition": "A standard for representing bibliographic and authority data in machine-readable fields." },
-    { "term": "tag", "definition": "A three-character number identifying a MARC field and its bibliographic role." },
-    { "term": "indicator", "definition": "One of two field positions whose value changes how a MARC field is interpreted or displayed." },
-    { "term": "subfield", "definition": "A coded component within a MARC variable field, such as 245$a for title proper." },
-    { "term": "ISBD", "definition": "International Standard Bibliographic Description, which organizes descriptive elements and their presentation." },
-    { "term": "prescribed punctuation", "definition": "Punctuation that expresses the relationship between ISBD descriptive elements." },
-    { "term": "title proper", "definition": "The chief title of a resource, normally transcribed in 245$a." },
-    { "term": "other title information", "definition": "A subtitle or other information subordinate to the title proper, normally in 245$b." },
-    { "term": "statement of responsibility", "definition": "A statement naming persons or bodies responsible for the resource, normally in 245$c." },
-    { "term": "edition statement", "definition": "A statement identifying an edition, normally transcribed in field 250." },
-    { "term": "extent", "definition": "The number and type of physical units, normally recorded in 300$a." },
-    { "term": "authority control", "definition": "Use of controlled, verified forms for names, subjects, and other access points." },
-    { "term": "transcription", "definition": "Recording descriptive information from the prescribed source according to cataloguing instructions." },
-    { "term": "descriptive area", "definition": "An ISBD grouping of related bibliographic elements, such as title, edition, or publication." }
+    {
+      "term": "MARC",
+      "definition": "A standard for representing bibliographic and authority data in machine-readable fields."
+    },
+    {
+      "term": "tag",
+      "definition": "A three-character number identifying a MARC field and its bibliographic role."
+    },
+    {
+      "term": "indicator",
+      "definition": "One of two field positions whose value changes how a MARC field is interpreted or displayed."
+    },
+    {
+      "term": "subfield",
+      "definition": "A coded component within a MARC variable field, such as 245$a for title proper."
+    },
+    {
+      "term": "ISBD",
+      "definition": "International Standard Bibliographic Description, which organizes descriptive elements and their presentation."
+    },
+    {
+      "term": "prescribed punctuation",
+      "definition": "Punctuation that expresses the relationship between ISBD descriptive elements."
+    },
+    {
+      "term": "title proper",
+      "definition": "The chief title of a resource, normally transcribed in 245$a."
+    },
+    {
+      "term": "other title information",
+      "definition": "A subtitle or other information subordinate to the title proper, normally in 245$b."
+    },
+    {
+      "term": "statement of responsibility",
+      "definition": "A statement naming persons or bodies responsible for the resource, normally in 245$c."
+    },
+    {
+      "term": "edition statement",
+      "definition": "A statement identifying an edition, normally transcribed in field 250."
+    },
+    {
+      "term": "extent",
+      "definition": "The number and type of physical units, normally recorded in 300$a."
+    },
+    {
+      "term": "authority control",
+      "definition": "Use of controlled, verified forms for names, subjects, and other access points."
+    },
+    {
+      "term": "transcription",
+      "definition": "Recording descriptive information from the prescribed source according to cataloguing instructions."
+    },
+    {
+      "term": "descriptive area",
+      "definition": "An ISBD grouping of related bibliographic elements, such as title, edition, or publication."
+    }
   ],
   "modules": [
     {
@@ -84,10 +236,18 @@
       "level": "foundation",
       "title": "Foundations",
       "description": "Understand what a bibliographic record describes and where professional judgment begins.",
-      "objectives": ["Distinguish description from workflow", "Recognize evidence and judgment", "Explain the learning model"],
+      "objectives": [
+        "Distinguish description from workflow",
+        "Recognize evidence and judgment",
+        "Explain the learning model",
+        "Apply concepts in staged interactive practice",
+        "Explain decisions from evidence"
+      ],
       "prerequisites": [],
       "depends_on": [],
-      "skills": ["cataloguing-foundations"],
+      "skills": [
+        "cataloguing-foundations"
+      ],
       "mastery_threshold": 0.85,
       "lessons": [
         {
@@ -109,10 +269,20 @@
               "id": "foundation-knowledge-1",
               "type": "knowledge",
               "prompt": "What does a bibliographic record primarily describe?",
-              "options": ["The resource", "The cataloguer's workflow", "The plugin configuration", "The circulation history"],
+              "options": [
+                "The resource",
+                "The cataloguer's workflow",
+                "The plugin configuration",
+                "The circulation history"
+              ],
               "expected_answer": "The resource",
-              "scoring": { "passing_score": 1 },
-              "hints": ["Focus on the object being catalogued.", "The record represents bibliographic evidence, not software actions."],
+              "scoring": {
+                "passing_score": 1
+              },
+              "hints": [
+                "Focus on the object being catalogued.",
+                "The record represents bibliographic evidence, not software actions."
+              ],
               "explanation": "A bibliographic record is a structured description of a resource.",
               "referenced_concept": "bibliographic description",
               "skill": "cataloguing-foundations",
@@ -122,18 +292,150 @@
               "id": "foundation-judgment-1",
               "type": "cataloguer_judgment",
               "prompt": "A title page is ambiguous about whether a name belongs to the title. Who must decide?",
-              "options": ["The cataloguer reviewing the source", "The punctuation engine", "The AI tutor", "The browser"],
+              "options": [
+                "The cataloguer reviewing the source",
+                "The punctuation engine",
+                "The AI tutor",
+                "The browser"
+              ],
               "expected_answer": "The cataloguer reviewing the source",
-              "hints": ["Ask whether punctuation alone can resolve the evidence.", "Ambiguous transcription remains a human decision."],
+              "hints": [
+                "Ask whether punctuation alone can resolve the evidence.",
+                "Ambiguous transcription remains a human decision."
+              ],
               "explanation": "Source-of-information and ambiguous transcription decisions require cataloguer judgment.",
               "referenced_concept": "transcription",
               "skill": "cataloguing-foundations",
               "difficulty": 3
             }
           ]
+        },
+        {
+          "id": "sources-and-transcription",
+          "title": "Sources of information and faithful transcription",
+          "generated_v4": true,
+          "why": "Cataloguers must separate what the resource says from later interpretation.",
+          "how": "Work from source evidence, identify the transcription evidence relationship, then make only the supported change.",
+          "common_mistake": "Treating transcription evidence as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous transcription evidence when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Sources of information and faithful transcription extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "Cataloguers must separate what the resource says from later interpretation.",
+            "learn": "Transcribe from the prescribed source, retain evidence, and record uncertainty instead of silently inventing data.",
+            "see_it": "A title page supplies the title; an external website may help verify identity but does not silently replace the source.",
+            "reflection": "What evidence would make a transcription evidence decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "sources-and-transcription-check",
+              "type": "recognition",
+              "prompt": "Which action preserves the evidence chain?",
+              "options": [
+                "Transcribe the prescribed source and record uncertainty",
+                "Replace unclear wording from memory",
+                "Copy a retailer description without review",
+                "Normalize every unusual form silently"
+              ],
+              "expected_answer": "Transcribe the prescribed source and record uncertainty",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the cataloguing foundations principle."
+              ],
+              "explanation": "Transcribe the prescribed source and record uncertainty. This follows from the lesson's evidence-first treatment of cataloguing foundations.",
+              "referenced_concept": "cataloguing foundations",
+              "skill": "cataloguing-foundations",
+              "difficulty": 3
+            },
+            {
+              "id": "sources-and-transcription-apply",
+              "type": "reasoning",
+              "prompt": "When the preferred source is ambiguous, what should happen?",
+              "options": [
+                "Escalate the judgment and document the evidence",
+                "Let punctuation software choose the title",
+                "Delete the ambiguous element",
+                "Assume the most common wording"
+              ],
+              "expected_answer": "Escalate the judgment and document the evidence",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the cataloguing foundations principle."
+              ],
+              "explanation": "Escalate the judgment and document the evidence. This follows from the lesson's evidence-first treatment of cataloguing foundations.",
+              "referenced_concept": "cataloguing foundations",
+              "skill": "cataloguing-foundations",
+              "difficulty": 4
+            }
+          ]
+        },
+        {
+          "id": "decisions-and-notes",
+          "title": "Cataloguer decisions and defensible notes",
+          "generated_v4": true,
+          "why": "A high-quality record makes consequential decisions traceable.",
+          "how": "Work from source evidence, identify the professional judgment relationship, then make only the supported change.",
+          "common_mistake": "Treating professional judgment as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous professional judgment when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Cataloguer decisions and defensible notes extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "A high-quality record makes consequential decisions traceable.",
+            "learn": "Distinguish objective transcription, rule-governed transformation, and local professional judgment.",
+            "see_it": "A deterministic colon can be suggested automatically; choosing which conflicting date is authoritative needs review.",
+            "reflection": "What evidence would make a professional judgment decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "decisions-and-notes-check",
+              "type": "recognition",
+              "prompt": "Which task most clearly requires cataloguer judgment?",
+              "options": [
+                "Choosing between conflicting publication dates",
+                "Removing a duplicated generated point",
+                "Showing the MARC tag",
+                "Counting present subfields"
+              ],
+              "expected_answer": "Choosing between conflicting publication dates",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the cataloguing foundations principle."
+              ],
+              "explanation": "Choosing between conflicting publication dates. This follows from the lesson's evidence-first treatment of cataloguing foundations.",
+              "referenced_concept": "cataloguing foundations",
+              "skill": "cataloguing-foundations",
+              "difficulty": 4
+            },
+            {
+              "id": "decisions-and-notes-apply",
+              "type": "reasoning",
+              "prompt": "What makes a cataloguing decision defensible?",
+              "options": [
+                "Evidence, an applicable rule, and a recorded rationale",
+                "A confident interface badge",
+                "The shortest possible record",
+                "An unverified AI answer"
+              ],
+              "expected_answer": "Evidence, an applicable rule, and a recorded rationale",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the cataloguing foundations principle."
+              ],
+              "explanation": "Evidence, an applicable rule, and a recorded rationale. This follows from the lesson's evidence-first treatment of cataloguing foundations.",
+              "referenced_concept": "cataloguing foundations",
+              "skill": "cataloguing-foundations",
+              "difficulty": 5
+            }
+          ]
         }
       ],
-      "assessment": { "exercise_ids": ["foundation-knowledge-1", "foundation-judgment-1"], "mastery_threshold": 0.85 }
+      "assessment": {
+        "exercise_ids": [
+          "foundation-knowledge-1",
+          "foundation-judgment-1",
+          "sources-and-transcription-apply",
+          "decisions-and-notes-apply"
+        ],
+        "mastery_threshold": 0.85
+      }
     },
     {
       "id": "marc-structure",
@@ -141,10 +443,22 @@
       "level": "foundation",
       "title": "MARC Structure",
       "description": "Read tags, indicators, subfields, occurrences, and repeated elements as structured data.",
-      "objectives": ["Identify field components", "Preserve repeated subfield order", "Recognize indicator meaning"],
-      "prerequisites": ["foundations"],
-      "depends_on": ["foundations"],
-      "skills": ["marc-structure"],
+      "objectives": [
+        "Identify field components",
+        "Preserve repeated subfield order",
+        "Recognize indicator meaning",
+        "Apply concepts in staged interactive practice",
+        "Explain decisions from evidence"
+      ],
+      "prerequisites": [
+        "foundations"
+      ],
+      "depends_on": [
+        "foundations"
+      ],
+      "skills": [
+        "marc-structure"
+      ],
       "mastery_threshold": 0.85,
       "lessons": [
         {
@@ -166,9 +480,17 @@
               "id": "marc-recognition-245c",
               "type": "recognition",
               "prompt": "Which component contains the statement of responsibility in a typical 245 field?",
-              "options": ["245$c", "245$a", "245 indicator 2", "300$a"],
+              "options": [
+                "245$c",
+                "245$a",
+                "245 indicator 2",
+                "300$a"
+              ],
               "expected_answer": "245$c",
-              "hints": ["Look for the subfield role, not its screen position.", "The statement of responsibility follows the title information."],
+              "hints": [
+                "Look for the subfield role, not its screen position.",
+                "The statement of responsibility follows the title information."
+              ],
               "explanation": "In a typical MARC21 title statement, 245$c contains the statement of responsibility.",
               "referenced_rule": "ISBD_TITLE_245C_001",
               "referenced_concept": "statement of responsibility",
@@ -179,9 +501,37 @@
               "id": "marc-application-field",
               "type": "field_builder",
               "prompt": "Build a 245 field with first indicator 1, second indicator 0, title proper 'Things fall apart', and responsibility 'Chinua Achebe'.",
-              "initial_record": { "tag": "245", "ind1": " ", "ind2": " ", "subfields": [{ "code": "a", "value": "" }] },
-              "expected_answer": { "tag": "245", "ind1": "1", "ind2": "0", "subfields": [{ "code": "a", "value": "Things fall apart" }, { "code": "c", "value": "/ Chinua Achebe." }] },
-              "hints": ["Set both indicators before editing subfields.", "Use $a for title proper and $c for responsibility.", "The relationship before $c is expressed by a slash."],
+              "initial_record": {
+                "tag": "245",
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "code": "a",
+                    "value": ""
+                  }
+                ]
+              },
+              "expected_answer": {
+                "tag": "245",
+                "ind1": "1",
+                "ind2": "0",
+                "subfields": [
+                  {
+                    "code": "a",
+                    "value": "Things fall apart"
+                  },
+                  {
+                    "code": "c",
+                    "value": "/ Chinua Achebe."
+                  }
+                ]
+              },
+              "hints": [
+                "Set both indicators before editing subfields.",
+                "Use $a for title proper and $c for responsibility.",
+                "The relationship before $c is expressed by a slash."
+              ],
               "explanation": "The tag and indicators identify the field, while $a and $c carry distinct bibliographic elements.",
               "referenced_rule": "ISBD_TITLE_245C_001",
               "referenced_concept": "MARC field structure",
@@ -189,9 +539,133 @@
               "difficulty": 3
             }
           ]
+        },
+        {
+          "id": "repeatability-and-order",
+          "title": "Repeatability, occurrence, and subfield order",
+          "generated_v4": true,
+          "why": "Repeated fields and repeated subfields carry meaning that must not be flattened.",
+          "how": "Work from source evidence, identify the MARC field structure relationship, then make only the supported change.",
+          "common_mistake": "Treating MARC field structure as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous MARC field structure when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Repeatability, occurrence, and subfield order extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "Repeated fields and repeated subfields carry meaning that must not be flattened.",
+            "learn": "Preserve occurrence identity and evaluate ordered subfields within the correct field instance.",
+            "see_it": "Two 264 fields can describe publication and copyright; their second indicators keep the functions distinct.",
+            "reflection": "What evidence would make a MARC field structure decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "repeatability-and-order-check",
+              "type": "recognition",
+              "prompt": "What must a field-level fix preserve?",
+              "options": [
+                "The exact field occurrence and subfield order",
+                "Only the visible text",
+                "The first matching tag in the record",
+                "Alphabetical subfield order"
+              ],
+              "expected_answer": "The exact field occurrence and subfield order",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the marc structure principle."
+              ],
+              "explanation": "The exact field occurrence and subfield order. This follows from the lesson's evidence-first treatment of marc structure.",
+              "referenced_concept": "marc structure",
+              "skill": "marc-structure",
+              "difficulty": 3
+            },
+            {
+              "id": "repeatability-and-order-apply",
+              "type": "reasoning",
+              "prompt": "Why is tag-only targeting unsafe?",
+              "options": [
+                "A record may contain multiple occurrences with different functions",
+                "MARC tags are optional",
+                "Indicators are always blank",
+                "Subfields cannot repeat"
+              ],
+              "expected_answer": "A record may contain multiple occurrences with different functions",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the marc structure principle."
+              ],
+              "explanation": "A record may contain multiple occurrences with different functions. This follows from the lesson's evidence-first treatment of marc structure.",
+              "referenced_concept": "marc structure",
+              "skill": "marc-structure",
+              "difficulty": 4
+            }
+          ]
+        },
+        {
+          "id": "indicators-and-nonfiling",
+          "title": "Indicators and nonfiling characters",
+          "generated_v4": true,
+          "why": "Indicators are data, not decoration; changing one may change access or display behavior.",
+          "how": "Work from source evidence, identify the indicator semantics relationship, then make only the supported change.",
+          "common_mistake": "Treating indicator semantics as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous indicator semantics when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Indicators and nonfiling characters extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "Indicators are data, not decoration; changing one may change access or display behavior.",
+            "learn": "Interpret both indicator positions from the field definition and count nonfiling characters deliberately.",
+            "see_it": "245 14 can signal an added title entry and four nonfiling characters for “The ”.",
+            "reflection": "What evidence would make a indicator semantics decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "indicators-and-nonfiling-check",
+              "type": "recognition",
+              "prompt": "In 245, what can the second indicator represent?",
+              "options": [
+                "The number of nonfiling characters",
+                "The number of authors",
+                "The ISBD area number",
+                "The subfield count"
+              ],
+              "expected_answer": "The number of nonfiling characters",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the marc structure principle."
+              ],
+              "explanation": "The number of nonfiling characters. This follows from the lesson's evidence-first treatment of marc structure.",
+              "referenced_concept": "marc structure",
+              "skill": "marc-structure",
+              "difficulty": 4
+            },
+            {
+              "id": "indicators-and-nonfiling-apply",
+              "type": "reasoning",
+              "prompt": "Before changing an indicator, what evidence is required?",
+              "options": [
+                "The tag definition and the bibliographic content",
+                "The panel width",
+                "A color-coded badge",
+                "The last record edited"
+              ],
+              "expected_answer": "The tag definition and the bibliographic content",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the marc structure principle."
+              ],
+              "explanation": "The tag definition and the bibliographic content. This follows from the lesson's evidence-first treatment of marc structure.",
+              "referenced_concept": "marc structure",
+              "skill": "marc-structure",
+              "difficulty": 5
+            }
+          ]
         }
       ],
-      "assessment": { "exercise_ids": ["marc-recognition-245c", "marc-application-field"], "mastery_threshold": 0.85 }
+      "assessment": {
+        "exercise_ids": [
+          "marc-recognition-245c",
+          "marc-application-field",
+          "repeatability-and-order-apply",
+          "indicators-and-nonfiling-apply"
+        ],
+        "mastery_threshold": 0.85
+      }
     },
     {
       "id": "isbd-areas",
@@ -199,10 +673,22 @@
       "level": "foundation",
       "title": "ISBD Areas",
       "description": "Connect descriptive elements to ISBD areas and understand punctuation as relationship notation.",
-      "objectives": ["Recognize descriptive areas", "Explain prescribed punctuation", "Distinguish content from presentation"],
-      "prerequisites": ["marc-structure"],
-      "depends_on": ["marc-structure"],
-      "skills": ["isbd-areas"],
+      "objectives": [
+        "Recognize descriptive areas",
+        "Explain prescribed punctuation",
+        "Distinguish content from presentation",
+        "Apply concepts in staged interactive practice",
+        "Explain decisions from evidence"
+      ],
+      "prerequisites": [
+        "marc-structure"
+      ],
+      "depends_on": [
+        "marc-structure"
+      ],
+      "skills": [
+        "isbd-areas"
+      ],
       "mastery_threshold": 0.85,
       "lessons": [
         {
@@ -224,9 +710,17 @@
               "id": "isbd-area-recognition",
               "type": "recognition",
               "prompt": "Which descriptive area contains title and statement of responsibility?",
-              "options": ["Area 1", "Area 2", "Area 5", "Area 8"],
+              "options": [
+                "Area 1",
+                "Area 2",
+                "Area 5",
+                "Area 8"
+              ],
               "expected_answer": "Area 1",
-              "hints": ["It is the first descriptive area after content form/media type.", "Title and responsibility are taught together."],
+              "hints": [
+                "It is the first descriptive area after content form/media type.",
+                "Title and responsibility are taught together."
+              ],
               "explanation": "ISBD Area 1 contains title and statement of responsibility information.",
               "referenced_concept": "descriptive area",
               "skill": "isbd-areas",
@@ -236,9 +730,17 @@
               "id": "isbd-reasoning-boundary",
               "type": "reasoning",
               "prompt": "Why is a colon used between 245$a and 245$b in this course?",
-              "options": ["It expresses the title-proper to other-title-information relationship", "Every 245 contains a colon", "The plugin always inserts one", "$b is always last"],
+              "options": [
+                "It expresses the title-proper to other-title-information relationship",
+                "Every 245 contains a colon",
+                "The plugin always inserts one",
+                "$b is always last"
+              ],
               "expected_answer": "It expresses the title-proper to other-title-information relationship",
-              "hints": ["Name both bibliographic elements.", "The mark communicates a relationship, not a field-wide habit."],
+              "hints": [
+                "Name both bibliographic elements.",
+                "The mark communicates a relationship, not a field-wide habit."
+              ],
               "explanation": "The prescribed punctuation follows the semantic relationship between title proper and other title information.",
               "referenced_rule": "ISBD_TITLE_245B_001",
               "referenced_concept": "prescribed punctuation",
@@ -246,9 +748,133 @@
               "difficulty": 3
             }
           ]
+        },
+        {
+          "id": "area-sequence",
+          "title": "Descriptive areas and element sequence",
+          "generated_v4": true,
+          "why": "Area boundaries organize a description and explain why separators differ.",
+          "how": "Work from source evidence, identify the ISBD area sequence relationship, then make only the supported change.",
+          "common_mistake": "Treating ISBD area sequence as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous ISBD area sequence when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Descriptive areas and element sequence extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "Area boundaries organize a description and explain why separators differ.",
+            "learn": "Identify the descriptive area and element roles before selecting prescribed punctuation.",
+            "see_it": "Title and responsibility belong to Area 1; edition belongs to Area 2; publication belongs to Area 4.",
+            "reflection": "What evidence would make a ISBD area sequence decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "area-sequence-check",
+              "type": "recognition",
+              "prompt": "Which area contains edition information?",
+              "options": [
+                "Area 2",
+                "Area 1",
+                "Area 5",
+                "Area 8"
+              ],
+              "expected_answer": "Area 2",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the isbd areas principle."
+              ],
+              "explanation": "Area 2. This follows from the lesson's evidence-first treatment of isbd areas.",
+              "referenced_concept": "isbd areas",
+              "skill": "isbd-areas",
+              "difficulty": 3
+            },
+            {
+              "id": "area-sequence-apply",
+              "type": "reasoning",
+              "prompt": "What should be identified before a separator is applied?",
+              "options": [
+                "The bibliographic roles on both sides of the boundary",
+                "The button color",
+                "The longest subfield",
+                "The current panel position"
+              ],
+              "expected_answer": "The bibliographic roles on both sides of the boundary",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the isbd areas principle."
+              ],
+              "explanation": "The bibliographic roles on both sides of the boundary. This follows from the lesson's evidence-first treatment of isbd areas.",
+              "referenced_concept": "isbd areas",
+              "skill": "isbd-areas",
+              "difficulty": 4
+            }
+          ]
+        },
+        {
+          "id": "punctuation-provenance",
+          "title": "Punctuation provenance and safe normalization",
+          "generated_v4": true,
+          "why": "Identical characters can be transcribed, intrinsic, prescribed, or generated.",
+          "how": "Work from source evidence, identify the punctuation provenance relationship, then make only the supported change.",
+          "common_mistake": "Treating punctuation provenance as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous punctuation provenance when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Punctuation provenance and safe normalization extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "Identical characters can be transcribed, intrinsic, prescribed, or generated.",
+            "learn": "Track where punctuation came from before removing or replacing it.",
+            "see_it": "The point in “ed.” is intrinsic; a following comma can still be prescribed for the next edition element.",
+            "reflection": "What evidence would make a punctuation provenance decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "punctuation-provenance-check",
+              "type": "recognition",
+              "prompt": "Why should provenance be tracked?",
+              "options": [
+                "It prevents meaningful punctuation from being removed as generated noise",
+                "It makes every field shorter",
+                "It removes the need for rules",
+                "It converts MARC to plain text"
+              ],
+              "expected_answer": "It prevents meaningful punctuation from being removed as generated noise",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the isbd areas principle."
+              ],
+              "explanation": "It prevents meaningful punctuation from being removed as generated noise. This follows from the lesson's evidence-first treatment of isbd areas.",
+              "referenced_concept": "isbd areas",
+              "skill": "isbd-areas",
+              "difficulty": 4
+            },
+            {
+              "id": "punctuation-provenance-apply",
+              "type": "reasoning",
+              "prompt": "Which point is intrinsic rather than a field terminator?",
+              "options": [
+                "The point in the abbreviation “ed.”",
+                "A generated duplicate final point",
+                "A colon introducing 245$b",
+                "A slash introducing 245$c"
+              ],
+              "expected_answer": "The point in the abbreviation “ed.”",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the isbd areas principle."
+              ],
+              "explanation": "The point in the abbreviation “ed.”. This follows from the lesson's evidence-first treatment of isbd areas.",
+              "referenced_concept": "isbd areas",
+              "skill": "isbd-areas",
+              "difficulty": 5
+            }
+          ]
         }
       ],
-      "assessment": { "exercise_ids": ["isbd-area-recognition", "isbd-reasoning-boundary"], "mastery_threshold": 0.85 }
+      "assessment": {
+        "exercise_ids": [
+          "isbd-area-recognition",
+          "isbd-reasoning-boundary",
+          "area-sequence-apply",
+          "punctuation-provenance-apply"
+        ],
+        "mastery_threshold": 0.85
+      }
     },
     {
       "id": "title-responsibility",
@@ -256,10 +882,23 @@
       "level": "practitioner",
       "title": "Title & Responsibility",
       "description": "Construct and review semantic relationships in 245 title statements.",
-      "objectives": ["Construct 245 fields", "Detect duplicate and misplaced punctuation", "Explain title relationships"],
-      "prerequisites": ["isbd-areas"],
-      "depends_on": ["isbd-areas"],
-      "skills": ["semantic-relationships", "terminal-punctuation"],
+      "objectives": [
+        "Construct 245 fields",
+        "Detect duplicate and misplaced punctuation",
+        "Explain title relationships",
+        "Apply concepts in staged interactive practice",
+        "Explain decisions from evidence"
+      ],
+      "prerequisites": [
+        "isbd-areas"
+      ],
+      "depends_on": [
+        "isbd-areas"
+      ],
+      "skills": [
+        "semantic-relationships",
+        "terminal-punctuation"
+      ],
       "mastery_threshold": 0.85,
       "lessons": [
         {
@@ -281,9 +920,49 @@
               "id": "title-fix-245",
               "type": "field_builder",
               "prompt": "Correct the punctuation without changing the bibliographic information.",
-              "initial_record": { "tag": "245", "ind1": "1", "ind2": "0", "subfields": [{ "code": "a", "value": "The great Gatsby" }, { "code": "b", "value": "a novel." }, { "code": "c", "value": "F. Scott Fitzgerald" }] },
-              "expected_answer": { "tag": "245", "ind1": "1", "ind2": "0", "subfields": [{ "code": "a", "value": "The great Gatsby" }, { "code": "b", "value": ": a novel" }, { "code": "c", "value": "/ F. Scott Fitzgerald." }] },
-              "hints": ["Look at the relationship between $a and $b.", "$a is title proper; $b is other title information.", "Now inspect the relationship between $b and responsibility in $c."],
+              "initial_record": {
+                "tag": "245",
+                "ind1": "1",
+                "ind2": "0",
+                "subfields": [
+                  {
+                    "code": "a",
+                    "value": "The great Gatsby"
+                  },
+                  {
+                    "code": "b",
+                    "value": "a novel."
+                  },
+                  {
+                    "code": "c",
+                    "value": "F. Scott Fitzgerald"
+                  }
+                ]
+              },
+              "expected_answer": {
+                "tag": "245",
+                "ind1": "1",
+                "ind2": "0",
+                "subfields": [
+                  {
+                    "code": "a",
+                    "value": "The great Gatsby"
+                  },
+                  {
+                    "code": "b",
+                    "value": ": a novel"
+                  },
+                  {
+                    "code": "c",
+                    "value": "/ F. Scott Fitzgerald."
+                  }
+                ]
+              },
+              "hints": [
+                "Look at the relationship between $a and $b.",
+                "$a is title proper; $b is other title information.",
+                "Now inspect the relationship between $b and responsibility in $c."
+              ],
               "explanation": "The colon expresses the $a-to-$b relationship, the slash introduces responsibility, and the complete statement ends once.",
               "referenced_rule": "ISBD_TITLE_245B_001",
               "referenced_concept": "title relationships",
@@ -294,9 +973,20 @@
               "id": "title-detect-errors",
               "type": "error_detection",
               "prompt": "Find every problem in: 245 10 $a The great Gatsby $b : a novel. $c / F. Scott Fitzgerald..",
-              "options": ["Period before the slash in $b", "Duplicate final period in $c", "Colon after $a", "First indicator 1"],
-              "expected_answer": ["Period before the slash in $b", "Duplicate final period in $c"],
-              "hints": ["Check every boundary and the final terminator separately.", "One listed colon is the correct title-to-subtitle boundary."],
+              "options": [
+                "Period before the slash in $b",
+                "Duplicate final period in $c",
+                "Colon after $a",
+                "First indicator 1"
+              ],
+              "expected_answer": [
+                "Period before the slash in $b",
+                "Duplicate final period in $c"
+              ],
+              "hints": [
+                "Check every boundary and the final terminator separately.",
+                "One listed colon is the correct title-to-subtitle boundary."
+              ],
               "explanation": "$b must not carry an extra period before the responsibility slash, and $c must end with only one point.",
               "referenced_rule": "ISBD_DOUBLE_PUNCT_001",
               "referenced_concept": "duplicate punctuation",
@@ -307,9 +997,17 @@
               "id": "title-why-slash",
               "type": "reasoning",
               "prompt": "Why does the slash appear before 245$c?",
-              "options": ["$c contains the statement of responsibility", "Every 245 requires a slash", "$c is always last", "The plugin inserts it automatically"],
+              "options": [
+                "$c contains the statement of responsibility",
+                "Every 245 requires a slash",
+                "$c is always last",
+                "The plugin inserts it automatically"
+              ],
               "expected_answer": "$c contains the statement of responsibility",
-              "hints": ["Identify the role of $c.", "The punctuation introduces a bibliographic element."],
+              "hints": [
+                "Identify the role of $c.",
+                "The punctuation introduces a bibliographic element."
+              ],
               "explanation": "The slash is prescribed because $c introduces the statement of responsibility, not because of its physical position.",
               "referenced_rule": "ISBD_TITLE_245C_001",
               "referenced_concept": "statement of responsibility",
@@ -317,9 +1015,134 @@
               "difficulty": 3
             }
           ]
+        },
+        {
+          "id": "parallel-and-variant-titles",
+          "title": "Parallel, other, and variant titles",
+          "generated_v4": true,
+          "why": "Different title roles use different fields and boundaries and should not be collapsed.",
+          "how": "Work from source evidence, identify the title relationships relationship, then make only the supported change.",
+          "common_mistake": "Treating title relationships as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous title relationships when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Parallel, other, and variant titles extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "Different title roles use different fields and boundaries and should not be collapsed.",
+            "learn": "Determine whether wording is parallel title, other title information, or a variant access title.",
+            "see_it": "245$b continues the title statement; 246 supplies a variant title access point under its own indicator rules.",
+            "reflection": "What evidence would make a title relationships decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "parallel-and-variant-titles-check",
+              "type": "recognition",
+              "prompt": "Where is a variant title access point commonly recorded?",
+              "options": [
+                "246",
+                "250",
+                "300",
+                "500"
+              ],
+              "expected_answer": "246",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the semantic relationships principle."
+              ],
+              "explanation": "246. This follows from the lesson's evidence-first treatment of semantic relationships.",
+              "referenced_concept": "semantic relationships",
+              "skill": "semantic-relationships",
+              "difficulty": 4
+            },
+            {
+              "id": "parallel-and-variant-titles-apply",
+              "type": "reasoning",
+              "prompt": "Why should 245$b and 246 not be treated as interchangeable?",
+              "options": [
+                "They serve descriptive and access functions differently",
+                "They always contain identical text",
+                "246 is a punctuation-only field",
+                "245 has no indicators"
+              ],
+              "expected_answer": "They serve descriptive and access functions differently",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the semantic relationships principle."
+              ],
+              "explanation": "They serve descriptive and access functions differently. This follows from the lesson's evidence-first treatment of semantic relationships.",
+              "referenced_concept": "semantic relationships",
+              "skill": "semantic-relationships",
+              "difficulty": 5
+            }
+          ]
+        },
+        {
+          "id": "compound-responsibility",
+          "title": "Compound responsibility statements",
+          "generated_v4": true,
+          "why": "Multiple names and functions must remain faithful to the source while the statement ends once.",
+          "how": "Work from source evidence, identify the responsibility relationships relationship, then make only the supported change.",
+          "common_mistake": "Treating responsibility relationships as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous responsibility relationships when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Compound responsibility statements extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "Multiple names and functions must remain faithful to the source while the statement ends once.",
+            "learn": "Identify one or more responsibility groups, preserve wording, and apply only supported separators.",
+            "see_it": "245$c by Amina Yusuf ; illustrations by Ken Obi.",
+            "reflection": "What evidence would make a responsibility relationships decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "compound-responsibility-check",
+              "type": "recognition",
+              "prompt": "What should software avoid doing in a responsibility statement?",
+              "options": [
+                "Rewriting names or assigning unsupported roles",
+                "Detecting duplicate final punctuation",
+                "Showing the source value",
+                "Flagging a missing boundary"
+              ],
+              "expected_answer": "Rewriting names or assigning unsupported roles",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the semantic relationships principle."
+              ],
+              "explanation": "Rewriting names or assigning unsupported roles. This follows from the lesson's evidence-first treatment of semantic relationships.",
+              "referenced_concept": "semantic relationships",
+              "skill": "semantic-relationships",
+              "difficulty": 5
+            },
+            {
+              "id": "compound-responsibility-apply",
+              "type": "reasoning",
+              "prompt": "How should a complete responsibility statement end?",
+              "options": [
+                "With one appropriate terminal mark",
+                "With a point after every name",
+                "Without regard to following fields",
+                "With a colon before each role"
+              ],
+              "expected_answer": "With one appropriate terminal mark",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the semantic relationships principle."
+              ],
+              "explanation": "With one appropriate terminal mark. This follows from the lesson's evidence-first treatment of semantic relationships.",
+              "referenced_concept": "semantic relationships",
+              "skill": "semantic-relationships",
+              "difficulty": 6
+            }
+          ]
         }
       ],
-      "assessment": { "exercise_ids": ["title-fix-245", "title-detect-errors", "title-why-slash"], "mastery_threshold": 0.85 }
+      "assessment": {
+        "exercise_ids": [
+          "title-fix-245",
+          "title-detect-errors",
+          "title-why-slash",
+          "parallel-and-variant-titles-apply",
+          "compound-responsibility-apply"
+        ],
+        "mastery_threshold": 0.85
+      }
     },
     {
       "id": "edition-statements",
@@ -327,10 +1150,22 @@
       "level": "practitioner",
       "title": "Edition Statements",
       "description": "Preserve meaningful abbreviation points while applying Area 2 relationships.",
-      "objectives": ["Recognize edition elements", "Preserve abbreviations", "Apply 250 relationships"],
-      "prerequisites": ["title-responsibility"],
-      "depends_on": ["title-responsibility"],
-      "skills": ["edition-250"],
+      "objectives": [
+        "Recognize edition elements",
+        "Preserve abbreviations",
+        "Apply 250 relationships",
+        "Apply concepts in staged interactive practice",
+        "Explain decisions from evidence"
+      ],
+      "prerequisites": [
+        "title-responsibility"
+      ],
+      "depends_on": [
+        "title-responsibility"
+      ],
+      "skills": [
+        "edition-250"
+      ],
       "mastery_threshold": 0.85,
       "lessons": [
         {
@@ -353,8 +1188,13 @@
               "type": "application",
               "prompt": "Enter the correctly punctuated 250$a before an additional edition statement in 250$b: 2nd ed.",
               "expected_answer": "2nd ed.,",
-              "acceptable_alternatives": ["2nd ed., "],
-              "hints": ["The abbreviation point belongs to 'ed.'.", "An additional edition statement is introduced after a comma boundary."],
+              "acceptable_alternatives": [
+                "2nd ed., "
+              ],
+              "hints": [
+                "The abbreviation point belongs to 'ed.'.",
+                "An additional edition statement is introduced after a comma boundary."
+              ],
               "explanation": "The intrinsic point in 'ed.' is preserved before the prescribed comma boundary.",
               "referenced_rule": "ISBD_EDITION_250A_HAS_B",
               "referenced_concept": "edition statement",
@@ -365,9 +1205,20 @@
               "id": "edition-error-detection",
               "type": "error_detection",
               "prompt": "Which problems occur in 250 ## $a 2nd ed, $b revised by Ada Okafor.. ?",
-              "options": ["Missing abbreviation point in ed.", "Duplicate terminal point", "The slash boundary", "Use of field 250"],
-              "expected_answer": ["Missing abbreviation point in ed.", "Duplicate terminal point"],
-              "hints": ["Separate intrinsic abbreviation punctuation from field-ending punctuation.", "One point is missing and another is duplicated."],
+              "options": [
+                "Missing abbreviation point in ed.",
+                "Duplicate terminal point",
+                "The slash boundary",
+                "Use of field 250"
+              ],
+              "expected_answer": [
+                "Missing abbreviation point in ed.",
+                "Duplicate terminal point"
+              ],
+              "hints": [
+                "Separate intrinsic abbreviation punctuation from field-ending punctuation.",
+                "One point is missing and another is duplicated."
+              ],
               "explanation": "The edition abbreviation needs its point, while the responsibility statement should end only once.",
               "referenced_rule": "ISBD_EDITION_250A_HAS_B",
               "referenced_concept": "abbreviation punctuation",
@@ -375,9 +1226,133 @@
               "difficulty": 4
             }
           ]
+        },
+        {
+          "id": "edition-responsibility",
+          "title": "Responsibility relating to an edition",
+          "generated_v4": true,
+          "why": "Responsibility for a particular edition is not necessarily responsibility for the whole work.",
+          "how": "Work from source evidence, identify the edition responsibility relationship, then make only the supported change.",
+          "common_mistake": "Treating edition responsibility as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous edition responsibility when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Responsibility relating to an edition extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "Responsibility for a particular edition is not necessarily responsibility for the whole work.",
+            "learn": "Keep edition wording and its related responsibility in their correct 250 subfields.",
+            "see_it": "250 ## $a 3rd ed. / $b revised by Ada Okafor.",
+            "reflection": "What evidence would make a edition responsibility decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "edition-responsibility-check",
+              "type": "recognition",
+              "prompt": "Which subfield can carry responsibility relating to an edition?",
+              "options": [
+                "250$b",
+                "245$b",
+                "300$c",
+                "020$q"
+              ],
+              "expected_answer": "250$b",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the edition 250 principle."
+              ],
+              "explanation": "250$b. This follows from the lesson's evidence-first treatment of edition 250.",
+              "referenced_concept": "edition 250",
+              "skill": "edition-250",
+              "difficulty": 4
+            },
+            {
+              "id": "edition-responsibility-apply",
+              "type": "reasoning",
+              "prompt": "What boundary introduces edition responsibility?",
+              "options": [
+                "A slash relationship after the edition statement",
+                "A colon for dimensions",
+                "An equals sign for ISBN",
+                "No boundary is ever used"
+              ],
+              "expected_answer": "A slash relationship after the edition statement",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the edition 250 principle."
+              ],
+              "explanation": "A slash relationship after the edition statement. This follows from the lesson's evidence-first treatment of edition 250.",
+              "referenced_concept": "edition 250",
+              "skill": "edition-250",
+              "difficulty": 5
+            }
+          ]
+        },
+        {
+          "id": "parallel-edition-statements",
+          "title": "Parallel and additional edition statements",
+          "generated_v4": true,
+          "why": "Complex edition statements require both punctuation knowledge and careful source interpretation.",
+          "how": "Work from source evidence, identify the complex edition relationships relationship, then make only the supported change.",
+          "common_mistake": "Treating complex edition relationships as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous complex edition relationships when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Parallel and additional edition statements extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "Complex edition statements require both punctuation knowledge and careful source interpretation.",
+            "learn": "Preserve parallel wording and distinguish an additional edition statement from related responsibility.",
+            "see_it": "The relationship—not the mere presence of 250$b—determines whether a comma, equals sign, or slash is appropriate.",
+            "reflection": "What evidence would make a complex edition relationships decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "parallel-edition-statements-check",
+              "type": "recognition",
+              "prompt": "What determines punctuation before a complex 250$b?",
+              "options": [
+                "The bibliographic relationship represented by the subfield",
+                "The subfield length",
+                "The current UI theme",
+                "A universal comma rule"
+              ],
+              "expected_answer": "The bibliographic relationship represented by the subfield",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the edition 250 principle."
+              ],
+              "explanation": "The bibliographic relationship represented by the subfield. This follows from the lesson's evidence-first treatment of edition 250.",
+              "referenced_concept": "edition 250",
+              "skill": "edition-250",
+              "difficulty": 5
+            },
+            {
+              "id": "parallel-edition-statements-apply",
+              "type": "reasoning",
+              "prompt": "When should automation stop and ask for review?",
+              "options": [
+                "When the relationship of the edition wording is ambiguous",
+                "Whenever 250 exists",
+                "Only when the panel is minimized",
+                "After deleting the source wording"
+              ],
+              "expected_answer": "When the relationship of the edition wording is ambiguous",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the edition 250 principle."
+              ],
+              "explanation": "When the relationship of the edition wording is ambiguous. This follows from the lesson's evidence-first treatment of edition 250.",
+              "referenced_concept": "edition 250",
+              "skill": "edition-250",
+              "difficulty": 6
+            }
+          ]
         }
       ],
-      "assessment": { "exercise_ids": ["edition-application", "edition-error-detection"], "mastery_threshold": 0.85 }
+      "assessment": {
+        "exercise_ids": [
+          "edition-application",
+          "edition-error-detection",
+          "edition-responsibility-apply",
+          "parallel-edition-statements-apply"
+        ],
+        "mastery_threshold": 0.85
+      }
     },
     {
       "id": "publication",
@@ -385,10 +1360,22 @@
       "level": "practitioner",
       "title": "Publication",
       "description": "Apply Area 4 punctuation and interpret 264 functions through the second indicator.",
-      "objectives": ["Interpret 264 indicator 2", "Construct publication relationships", "Protect copyright statements"],
-      "prerequisites": ["edition-statements"],
-      "depends_on": ["edition-statements"],
-      "skills": ["publication-264"],
+      "objectives": [
+        "Interpret 264 indicator 2",
+        "Construct publication relationships",
+        "Protect copyright statements",
+        "Apply concepts in staged interactive practice",
+        "Explain decisions from evidence"
+      ],
+      "prerequisites": [
+        "edition-statements"
+      ],
+      "depends_on": [
+        "edition-statements"
+      ],
+      "skills": [
+        "publication-264"
+      ],
       "mastery_threshold": 0.85,
       "lessons": [
         {
@@ -410,9 +1397,17 @@
               "id": "publication-indicator-recognition",
               "type": "recognition",
               "prompt": "Which 264 second indicator identifies a copyright notice?",
-              "options": ["4", "1", "0", "3"],
+              "options": [
+                "4",
+                "1",
+                "0",
+                "3"
+              ],
               "expected_answer": "4",
-              "hints": ["Publication uses 1.", "Copyright has its own distinct function value."],
+              "hints": [
+                "Publication uses 1.",
+                "Copyright has its own distinct function value."
+              ],
               "explanation": "264 ind2=4 identifies a copyright notice and is handled conservatively.",
               "referenced_rule": "ISBD_PUBL_264_COPYRIGHT_NO_PUNCT",
               "referenced_concept": "264 function indicator",
@@ -423,9 +1418,49 @@
               "id": "publication-build-264",
               "type": "field_builder",
               "prompt": "Build a publication statement for Lagos, Spectrum Books, 2026.",
-              "initial_record": { "tag": "264", "ind1": " ", "ind2": "1", "subfields": [{ "code": "a", "value": "Lagos" }, { "code": "b", "value": "Spectrum Books" }, { "code": "c", "value": "2026" }] },
-              "expected_answer": { "tag": "264", "ind1": " ", "ind2": "1", "subfields": [{ "code": "a", "value": "Lagos :" }, { "code": "b", "value": "Spectrum Books," }, { "code": "c", "value": "2026." }] },
-              "hints": ["Confirm the function in indicator 2.", "Place precedes publisher; publisher precedes date.", "Check colon, comma, and terminal point separately."],
+              "initial_record": {
+                "tag": "264",
+                "ind1": " ",
+                "ind2": "1",
+                "subfields": [
+                  {
+                    "code": "a",
+                    "value": "Lagos"
+                  },
+                  {
+                    "code": "b",
+                    "value": "Spectrum Books"
+                  },
+                  {
+                    "code": "c",
+                    "value": "2026"
+                  }
+                ]
+              },
+              "expected_answer": {
+                "tag": "264",
+                "ind1": " ",
+                "ind2": "1",
+                "subfields": [
+                  {
+                    "code": "a",
+                    "value": "Lagos :"
+                  },
+                  {
+                    "code": "b",
+                    "value": "Spectrum Books,"
+                  },
+                  {
+                    "code": "c",
+                    "value": "2026."
+                  }
+                ]
+              },
+              "hints": [
+                "Confirm the function in indicator 2.",
+                "Place precedes publisher; publisher precedes date.",
+                "Check colon, comma, and terminal point separately."
+              ],
               "explanation": "The punctuation expresses the place-to-agent and agent-to-date relationships for a publication statement.",
               "referenced_rule": "ISBD_PUBL_260B_HAS_C",
               "referenced_concept": "publication statement",
@@ -433,9 +1468,133 @@
               "difficulty": 4
             }
           ]
+        },
+        {
+          "id": "repeated-places-agents",
+          "title": "Repeated places and publication agents",
+          "generated_v4": true,
+          "why": "Publication statements can repeat places and agents without losing their pairing.",
+          "how": "Work from source evidence, identify the repeated publication elements relationship, then make only the supported change.",
+          "common_mistake": "Treating repeated publication elements as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous repeated publication elements when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Repeated places and publication agents extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "Publication statements can repeat places and agents without losing their pairing.",
+            "learn": "Read the ordered $a and $b sequence and preserve each place-to-agent relationship.",
+            "see_it": "264 #1 $a Lagos : $b Spectrum ; $a Accra : $b Horizon, $c 2026.",
+            "reflection": "What evidence would make a repeated publication elements decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "repeated-places-agents-check",
+              "type": "recognition",
+              "prompt": "What must be preserved in repeated 264 elements?",
+              "options": [
+                "The order and pairing of places and agents",
+                "Only the last publisher",
+                "Alphabetical place order",
+                "A single merged subfield"
+              ],
+              "expected_answer": "The order and pairing of places and agents",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the publication 264 principle."
+              ],
+              "explanation": "The order and pairing of places and agents. This follows from the lesson's evidence-first treatment of publication 264.",
+              "referenced_concept": "publication 264",
+              "skill": "publication-264",
+              "difficulty": 4
+            },
+            {
+              "id": "repeated-places-agents-apply",
+              "type": "reasoning",
+              "prompt": "Why can flattening repeated 264 subfields be harmful?",
+              "options": [
+                "It destroys which agent is associated with which place",
+                "It changes the panel color",
+                "It adds an indicator automatically",
+                "It converts dates to notes"
+              ],
+              "expected_answer": "It destroys which agent is associated with which place",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the publication 264 principle."
+              ],
+              "explanation": "It destroys which agent is associated with which place. This follows from the lesson's evidence-first treatment of publication 264.",
+              "referenced_concept": "publication 264",
+              "skill": "publication-264",
+              "difficulty": 5
+            }
+          ]
+        },
+        {
+          "id": "production-distribution-copyright",
+          "title": "Production, distribution, and copyright functions",
+          "generated_v4": true,
+          "why": "The same 264 tag can encode different functions with different punctuation expectations.",
+          "how": "Work from source evidence, identify the 264 function indicators relationship, then make only the supported change.",
+          "common_mistake": "Treating 264 function indicators as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous 264 function indicators when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Production, distribution, and copyright functions extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "The same 264 tag can encode different functions with different punctuation expectations.",
+            "learn": "Use indicator 2 to distinguish production, publication, distribution, manufacture, and copyright.",
+            "see_it": "264 #1 is publication, 264 #2 distribution, 264 #3 manufacture, and 264 #4 copyright.",
+            "reflection": "What evidence would make a 264 function indicators decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "production-distribution-copyright-check",
+              "type": "recognition",
+              "prompt": "Which evidence identifies the function of a 264 field?",
+              "options": [
+                "The second indicator",
+                "The field width",
+                "The first letter of $b",
+                "The number of spaces"
+              ],
+              "expected_answer": "The second indicator",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the publication 264 principle."
+              ],
+              "explanation": "The second indicator. This follows from the lesson's evidence-first treatment of publication 264.",
+              "referenced_concept": "publication 264",
+              "skill": "publication-264",
+              "difficulty": 5
+            },
+            {
+              "id": "production-distribution-copyright-apply",
+              "type": "reasoning",
+              "prompt": "Why is 264 #4 handled conservatively?",
+              "options": [
+                "A copyright notice is not an ordinary publication statement",
+                "It has no date",
+                "It is always invalid",
+                "It belongs to Area 1"
+              ],
+              "expected_answer": "A copyright notice is not an ordinary publication statement",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the publication 264 principle."
+              ],
+              "explanation": "A copyright notice is not an ordinary publication statement. This follows from the lesson's evidence-first treatment of publication 264.",
+              "referenced_concept": "publication 264",
+              "skill": "publication-264",
+              "difficulty": 6
+            }
+          ]
         }
       ],
-      "assessment": { "exercise_ids": ["publication-indicator-recognition", "publication-build-264"], "mastery_threshold": 0.85 }
+      "assessment": {
+        "exercise_ids": [
+          "publication-indicator-recognition",
+          "publication-build-264",
+          "repeated-places-agents-apply",
+          "production-distribution-copyright-apply"
+        ],
+        "mastery_threshold": 0.85
+      }
     },
     {
       "id": "physical-description",
@@ -443,10 +1602,22 @@
       "level": "practitioner",
       "title": "Physical Description",
       "description": "Construct 300 relationships while preserving meaningful abbreviation points.",
-      "objectives": ["Identify extent and dimensions", "Apply colon and semicolon boundaries", "Preserve p. and ill."],
-      "prerequisites": ["publication"],
-      "depends_on": ["publication"],
-      "skills": ["physical-300"],
+      "objectives": [
+        "Identify extent and dimensions",
+        "Apply colon and semicolon boundaries",
+        "Preserve p. and ill.",
+        "Apply concepts in staged interactive practice",
+        "Explain decisions from evidence"
+      ],
+      "prerequisites": [
+        "publication"
+      ],
+      "depends_on": [
+        "publication"
+      ],
+      "skills": [
+        "physical-300"
+      ],
       "mastery_threshold": 0.85,
       "lessons": [
         {
@@ -469,7 +1640,10 @@
               "type": "application",
               "prompt": "Correct 300$b when it contains 'ill.' and is followed by 300$c dimensions.",
               "expected_answer": "ill. ;",
-              "hints": ["The point belongs to the abbreviation.", "Dimensions are introduced by a semicolon relationship."],
+              "hints": [
+                "The point belongs to the abbreviation.",
+                "Dimensions are introduced by a semicolon relationship."
+              ],
               "explanation": "The abbreviation point is intrinsic; the spaced semicolon is the prescribed boundary before dimensions.",
               "referenced_rule": "ISBD_PHYS_300B_HAS_C",
               "referenced_concept": "physical details",
@@ -480,9 +1654,17 @@
               "id": "physical-reasoning",
               "type": "reasoning",
               "prompt": "Why should the assistant preserve the point in '320 p. ; 24 cm.'?",
-              "options": ["It belongs to the abbreviation p.", "Every 300$a requires two marks", "The semicolon replaces a point", "Dimensions are an identifier"],
+              "options": [
+                "It belongs to the abbreviation p.",
+                "Every 300$a requires two marks",
+                "The semicolon replaces a point",
+                "Dimensions are an identifier"
+              ],
               "expected_answer": "It belongs to the abbreviation p.",
-              "hints": ["Distinguish intrinsic from prescribed punctuation.", "Read 'p.' as an abbreviated word."],
+              "hints": [
+                "Distinguish intrinsic from prescribed punctuation.",
+                "Read 'p.' as an abbreviated word."
+              ],
               "explanation": "The point is part of the abbreviation and must survive relationship punctuation.",
               "referenced_rule": "ISBD_PHYS_300A_HAS_C_NO_B",
               "referenced_concept": "intrinsic punctuation",
@@ -490,9 +1672,133 @@
               "difficulty": 4
             }
           ]
+        },
+        {
+          "id": "accompanying-material",
+          "title": "Accompanying material and 300$e",
+          "generated_v4": true,
+          "why": "Accompanying material extends the carrier description and has its own boundary.",
+          "how": "Work from source evidence, identify the accompanying material relationship, then make only the supported change.",
+          "common_mistake": "Treating accompanying material as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous accompanying material when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Accompanying material and 300$e extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "Accompanying material extends the carrier description and has its own boundary.",
+            "learn": "Identify extent, details, dimensions, and accompanying material before applying separators.",
+            "see_it": "300 ## $a 1 volume : $b illustrations ; $c 24 cm + $e 1 map.",
+            "reflection": "What evidence would make a accompanying material decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "accompanying-material-check",
+              "type": "recognition",
+              "prompt": "Which subfield commonly records accompanying material?",
+              "options": [
+                "300$e",
+                "300$a only",
+                "245$c",
+                "264$b"
+              ],
+              "expected_answer": "300$e",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the physical 300 principle."
+              ],
+              "explanation": "300$e. This follows from the lesson's evidence-first treatment of physical 300.",
+              "referenced_concept": "physical 300",
+              "skill": "physical-300",
+              "difficulty": 4
+            },
+            {
+              "id": "accompanying-material-apply",
+              "type": "reasoning",
+              "prompt": "What separator commonly introduces accompanying material?",
+              "options": [
+                "A plus sign relationship",
+                "An equals sign",
+                "A responsibility slash",
+                "No separator"
+              ],
+              "expected_answer": "A plus sign relationship",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the physical 300 principle."
+              ],
+              "explanation": "A plus sign relationship. This follows from the lesson's evidence-first treatment of physical 300.",
+              "referenced_concept": "physical 300",
+              "skill": "physical-300",
+              "difficulty": 5
+            }
+          ]
+        },
+        {
+          "id": "multipart-and-nonprint",
+          "title": "Multipart and nonprint carrier descriptions",
+          "generated_v4": true,
+          "why": "Nonprint and multipart resources make extent wording more varied and less safely inferred.",
+          "how": "Work from source evidence, identify the complex physical description relationship, then make only the supported change.",
+          "common_mistake": "Treating complex physical description as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous complex physical description when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Multipart and nonprint carrier descriptions extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "Nonprint and multipart resources make extent wording more varied and less safely inferred.",
+            "learn": "Transcribe or record carrier evidence using the applicable standard; automate only known boundaries.",
+            "see_it": "A sound disc, map, or multipart kit may require dimensions and accompanying material unlike a monograph.",
+            "reflection": "What evidence would make a complex physical description decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "multipart-and-nonprint-check",
+              "type": "recognition",
+              "prompt": "What should automation avoid inferring from a title alone?",
+              "options": [
+                "The resource extent and carrier details",
+                "The presence of a 300 tag",
+                "The subfield codes already entered",
+                "A duplicated generated point"
+              ],
+              "expected_answer": "The resource extent and carrier details",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the physical 300 principle."
+              ],
+              "explanation": "The resource extent and carrier details. This follows from the lesson's evidence-first treatment of physical 300.",
+              "referenced_concept": "physical 300",
+              "skill": "physical-300",
+              "difficulty": 5
+            },
+            {
+              "id": "multipart-and-nonprint-apply",
+              "type": "reasoning",
+              "prompt": "What is the safest response to ambiguous carrier evidence?",
+              "options": [
+                "Request cataloguer review and preserve the supplied evidence",
+                "Guess the most common extent",
+                "Delete 300",
+                "Copy the previous record"
+              ],
+              "expected_answer": "Request cataloguer review and preserve the supplied evidence",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the physical 300 principle."
+              ],
+              "explanation": "Request cataloguer review and preserve the supplied evidence. This follows from the lesson's evidence-first treatment of physical 300.",
+              "referenced_concept": "physical 300",
+              "skill": "physical-300",
+              "difficulty": 6
+            }
+          ]
         }
       ],
-      "assessment": { "exercise_ids": ["physical-application", "physical-reasoning"], "mastery_threshold": 0.85 }
+      "assessment": {
+        "exercise_ids": [
+          "physical-application",
+          "physical-reasoning",
+          "accompanying-material-apply",
+          "multipart-and-nonprint-apply"
+        ],
+        "mastery_threshold": 0.85
+      }
     },
     {
       "id": "series",
@@ -500,10 +1806,22 @@
       "level": "practitioner",
       "title": "Series",
       "description": "Distinguish transcribed series statements from authority-controlled series access points.",
-      "objectives": ["Review 490 relationships", "Protect 8XX authority headings", "Avoid manufactured final punctuation"],
-      "prerequisites": ["physical-description"],
-      "depends_on": ["physical-description"],
-      "skills": ["series"],
+      "objectives": [
+        "Review 490 relationships",
+        "Protect 8XX authority headings",
+        "Avoid manufactured final punctuation",
+        "Apply concepts in staged interactive practice",
+        "Explain decisions from evidence"
+      ],
+      "prerequisites": [
+        "physical-description"
+      ],
+      "depends_on": [
+        "physical-description"
+      ],
+      "skills": [
+        "series"
+      ],
       "mastery_threshold": 0.85,
       "lessons": [
         {
@@ -525,9 +1843,17 @@
               "id": "series-recognition",
               "type": "recognition",
               "prompt": "Which field is a transcribed series statement?",
-              "options": ["490", "830", "100", "020"],
+              "options": [
+                "490",
+                "830",
+                "100",
+                "020"
+              ],
               "expected_answer": "490",
-              "hints": ["Separate description from controlled access.", "The 8XX field is the controlled access point."],
+              "hints": [
+                "Separate description from controlled access.",
+                "The 8XX field is the controlled access point."
+              ],
               "explanation": "490 records the transcribed series statement; 830 is a controlled series access point.",
               "referenced_rule": "ISBD_SERIES_490A",
               "referenced_concept": "series statement",
@@ -538,9 +1864,17 @@
               "id": "series-automation-judgment",
               "type": "automation_judgment",
               "prompt": "Should the assistant rewrite an 830 heading to a form it predicts is authorized?",
-              "options": ["No, authority verification and cataloguer review are required", "Yes, whenever confidence is high", "Yes, because 830 is punctuation-only", "Only when 490 is absent"],
+              "options": [
+                "No, authority verification and cataloguer review are required",
+                "Yes, whenever confidence is high",
+                "Yes, because 830 is punctuation-only",
+                "Only when 490 is absent"
+              ],
               "expected_answer": "No, authority verification and cataloguer review are required",
-              "hints": ["Ask whether this is a deterministic punctuation decision.", "Controlled headings require authoritative evidence."],
+              "hints": [
+                "Ask whether this is a deterministic punctuation decision.",
+                "Controlled headings require authoritative evidence."
+              ],
               "explanation": "The assistant must not manufacture or authorize controlled access points.",
               "referenced_rule": "ISBD_SERIES_8XX_HANDSOFF",
               "referenced_concept": "authority control",
@@ -548,9 +1882,133 @@
               "difficulty": 4
             }
           ]
+        },
+        {
+          "id": "series-numbering-issn",
+          "title": "Series numbering and ISSN relationships",
+          "generated_v4": true,
+          "why": "Series title, numbering, and ISSN are distinct elements with ordered relationships.",
+          "how": "Work from source evidence, identify the series elements relationship, then make only the supported change.",
+          "common_mistake": "Treating series elements as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous series elements when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Series numbering and ISSN relationships extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "Series title, numbering, and ISSN are distinct elements with ordered relationships.",
+            "learn": "Keep transcribed series elements in sequence and avoid manufacturing unsupported punctuation.",
+            "see_it": "490 1# $a African studies, $x 1234-5678 ; $v volume 12",
+            "reflection": "What evidence would make a series elements decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "series-numbering-issn-check",
+              "type": "recognition",
+              "prompt": "Which subfield commonly contains series numbering?",
+              "options": [
+                "490$v",
+                "490$a",
+                "245$c",
+                "300$b"
+              ],
+              "expected_answer": "490$v",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the series principle."
+              ],
+              "explanation": "490$v. This follows from the lesson's evidence-first treatment of series.",
+              "referenced_concept": "series",
+              "skill": "series",
+              "difficulty": 4
+            },
+            {
+              "id": "series-numbering-issn-apply",
+              "type": "reasoning",
+              "prompt": "Which subfield can contain a series ISSN?",
+              "options": [
+                "490$x",
+                "490$v",
+                "250$b",
+                "020$c"
+              ],
+              "expected_answer": "490$x",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the series principle."
+              ],
+              "explanation": "490$x. This follows from the lesson's evidence-first treatment of series.",
+              "referenced_concept": "series",
+              "skill": "series",
+              "difficulty": 5
+            }
+          ]
+        },
+        {
+          "id": "series-authority-workflow",
+          "title": "490/830 authority workflow",
+          "generated_v4": true,
+          "why": "A transcribed series statement and an authorized access point must be reviewed together but not conflated.",
+          "how": "Work from source evidence, identify the series authority control relationship, then make only the supported change.",
+          "common_mistake": "Treating series authority control as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous series authority control when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "490/830 authority workflow extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "A transcribed series statement and an authorized access point must be reviewed together but not conflated.",
+            "learn": "Transcribe in 490, verify the controlled form, and record an appropriate 8XX access point.",
+            "see_it": "490 1# preserves the source form while 830 supplies the controlled series access form.",
+            "reflection": "What evidence would make a series authority control decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "series-authority-workflow-check",
+              "type": "recognition",
+              "prompt": "What does first indicator 1 in 490 signal?",
+              "options": [
+                "A series tracing is made in an 8XX field",
+                "No series exists",
+                "The title is nonfiling",
+                "The field is a note"
+              ],
+              "expected_answer": "A series tracing is made in an 8XX field",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the series principle."
+              ],
+              "explanation": "A series tracing is made in an 8XX field. This follows from the lesson's evidence-first treatment of series.",
+              "referenced_concept": "series",
+              "skill": "series",
+              "difficulty": 5
+            },
+            {
+              "id": "series-authority-workflow-apply",
+              "type": "reasoning",
+              "prompt": "What must be verified before changing 830?",
+              "options": [
+                "The relevant authority evidence",
+                "The 490 punctuation alone",
+                "The panel badge",
+                "The record creation date only"
+              ],
+              "expected_answer": "The relevant authority evidence",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the series principle."
+              ],
+              "explanation": "The relevant authority evidence. This follows from the lesson's evidence-first treatment of series.",
+              "referenced_concept": "series",
+              "skill": "series",
+              "difficulty": 6
+            }
+          ]
         }
       ],
-      "assessment": { "exercise_ids": ["series-recognition", "series-automation-judgment"], "mastery_threshold": 0.85 }
+      "assessment": {
+        "exercise_ids": [
+          "series-recognition",
+          "series-automation-judgment",
+          "series-numbering-issn-apply",
+          "series-authority-workflow-apply"
+        ],
+        "mastery_threshold": 0.85
+      }
     },
     {
       "id": "notes-identifiers",
@@ -558,10 +2016,22 @@
       "level": "practitioner",
       "title": "Notes & Identifiers",
       "description": "Differentiate simple note punctuation, structured notes, and punctuation-free identifiers.",
-      "objectives": ["Review simple notes", "Recognize structured-note handoffs", "Remove punctuation from standard numbers"],
-      "prerequisites": ["series"],
-      "depends_on": ["series"],
-      "skills": ["notes-identifiers"],
+      "objectives": [
+        "Review simple notes",
+        "Recognize structured-note handoffs",
+        "Remove punctuation from standard numbers",
+        "Apply concepts in staged interactive practice",
+        "Explain decisions from evidence"
+      ],
+      "prerequisites": [
+        "series"
+      ],
+      "depends_on": [
+        "series"
+      ],
+      "skills": [
+        "notes-identifiers"
+      ],
       "mastery_threshold": 0.85,
       "lessons": [
         {
@@ -583,9 +2053,20 @@
               "id": "identifier-error-detection",
               "type": "error_detection",
               "prompt": "Find the problems: 020 ## $a 9789781234567. and 500 ## $a Includes index",
-              "options": ["ISBN has terminal punctuation", "Simple note lacks terminal punctuation", "020 should be 245", "500 must never contain punctuation"],
-              "expected_answer": ["ISBN has terminal punctuation", "Simple note lacks terminal punctuation"],
-              "hints": ["Compare the semantic role of each field.", "One is a standard number; one is a sentence-like note."],
+              "options": [
+                "ISBN has terminal punctuation",
+                "Simple note lacks terminal punctuation",
+                "020 should be 245",
+                "500 must never contain punctuation"
+              ],
+              "expected_answer": [
+                "ISBN has terminal punctuation",
+                "Simple note lacks terminal punctuation"
+              ],
+              "hints": [
+                "Compare the semantic role of each field.",
+                "One is a standard number; one is a sentence-like note."
+              ],
               "explanation": "Identifier punctuation should be removed, while the simple note needs its terminal point.",
               "referenced_rule": "ISBD_STDNUM_NO_PUNCT_001",
               "referenced_concept": "field-specific policy",
@@ -596,9 +2077,17 @@
               "id": "complex-note-judgment",
               "type": "automation_judgment",
               "prompt": "A 505 contains chapter titles separated by dashes. Should the assistant normalize all internal punctuation automatically?",
-              "options": ["No, structured note internals require context and review", "Yes, every 5XX is a sentence", "Yes, if the note is long", "Only by deleting dashes"],
+              "options": [
+                "No, structured note internals require context and review",
+                "Yes, every 5XX is a sentence",
+                "Yes, if the note is long",
+                "Only by deleting dashes"
+              ],
               "expected_answer": "No, structured note internals require context and review",
-              "hints": ["505 is a structured contents note.", "The internal marks may carry meaning."],
+              "hints": [
+                "505 is a structured contents note.",
+                "The internal marks may carry meaning."
+              ],
               "explanation": "Complex structured notes are a deliberate automation handoff.",
               "referenced_rule": "ISBD_NOTES_COMPLEX_HANDSOFF",
               "referenced_concept": "structured notes",
@@ -606,9 +2095,133 @@
               "difficulty": 4
             }
           ]
+        },
+        {
+          "id": "note-types-and-scope",
+          "title": "Note types, scope, and punctuation",
+          "generated_v4": true,
+          "why": "Notes serve different purposes, and their internal punctuation may be prose rather than prescribed boundaries.",
+          "how": "Work from source evidence, identify the note semantics relationship, then make only the supported change.",
+          "common_mistake": "Treating note semantics as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous note semantics when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Note types, scope, and punctuation extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "Notes serve different purposes, and their internal punctuation may be prose rather than prescribed boundaries.",
+            "learn": "Choose the appropriate note field, retain meaningful prose punctuation, and normalize only safe terminal duplication.",
+            "see_it": "A 500 general note and a 504 bibliography note should not be selected merely because their text looks similar.",
+            "reflection": "What evidence would make a note semantics decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "note-types-and-scope-check",
+              "type": "recognition",
+              "prompt": "What determines the MARC note field?",
+              "options": [
+                "The semantic purpose of the note",
+                "The note length",
+                "Its last punctuation mark",
+                "The current lesson number"
+              ],
+              "expected_answer": "The semantic purpose of the note",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the notes identifiers principle."
+              ],
+              "explanation": "The semantic purpose of the note. This follows from the lesson's evidence-first treatment of notes identifiers.",
+              "referenced_concept": "notes identifiers",
+              "skill": "notes-identifiers",
+              "difficulty": 4
+            },
+            {
+              "id": "note-types-and-scope-apply",
+              "type": "reasoning",
+              "prompt": "What is a safe automated note change?",
+              "options": [
+                "Removing an exact duplicate generated terminal point",
+                "Rewriting the note for style",
+                "Changing its meaning",
+                "Choosing a specialized note type from wording alone"
+              ],
+              "expected_answer": "Removing an exact duplicate generated terminal point",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the notes identifiers principle."
+              ],
+              "explanation": "Removing an exact duplicate generated terminal point. This follows from the lesson's evidence-first treatment of notes identifiers.",
+              "referenced_concept": "notes identifiers",
+              "skill": "notes-identifiers",
+              "difficulty": 5
+            }
+          ]
+        },
+        {
+          "id": "identifier-qualifiers",
+          "title": "Identifier qualifiers and canceled numbers",
+          "generated_v4": true,
+          "why": "Identifiers can carry qualifiers, prices, and status information that punctuation cleanup must preserve.",
+          "how": "Work from source evidence, identify the identifier structure relationship, then make only the supported change.",
+          "common_mistake": "Treating identifier structure as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous identifier structure when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Identifier qualifiers and canceled numbers extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "Identifiers can carry qualifiers, prices, and status information that punctuation cleanup must preserve.",
+            "learn": "Distinguish the identifier from qualifiers and canceled or invalid forms before normalizing.",
+            "see_it": "020 ## $a 9781234567890 $q paperback distinguishes the number from its binding qualifier.",
+            "reflection": "What evidence would make a identifier structure decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "identifier-qualifiers-check",
+              "type": "recognition",
+              "prompt": "Which subfield commonly carries an ISBN qualifier?",
+              "options": [
+                "020$q",
+                "020$a",
+                "020$z",
+                "245$q"
+              ],
+              "expected_answer": "020$q",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the notes identifiers principle."
+              ],
+              "explanation": "020$q. This follows from the lesson's evidence-first treatment of notes identifiers.",
+              "referenced_concept": "notes identifiers",
+              "skill": "notes-identifiers",
+              "difficulty": 5
+            },
+            {
+              "id": "identifier-qualifiers-apply",
+              "type": "reasoning",
+              "prompt": "Where is a canceled or invalid ISBN commonly recorded?",
+              "options": [
+                "020$z",
+                "020$q",
+                "264$c",
+                "300$e"
+              ],
+              "expected_answer": "020$z",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the notes identifiers principle."
+              ],
+              "explanation": "020$z. This follows from the lesson's evidence-first treatment of notes identifiers.",
+              "referenced_concept": "notes identifiers",
+              "skill": "notes-identifiers",
+              "difficulty": 6
+            }
+          ]
         }
       ],
-      "assessment": { "exercise_ids": ["identifier-error-detection", "complex-note-judgment"], "mastery_threshold": 0.85 }
+      "assessment": {
+        "exercise_ids": [
+          "identifier-error-detection",
+          "complex-note-judgment",
+          "note-types-and-scope-apply",
+          "identifier-qualifiers-apply"
+        ],
+        "mastery_threshold": 0.85
+      }
     },
     {
       "id": "automation-ai",
@@ -616,10 +2229,22 @@
       "level": "reviewer",
       "title": "Automation & AI",
       "description": "Practice distinguishing deterministic help, advisory AI, authority evidence, local policy, and human judgment.",
-      "objectives": ["Classify safe automation", "Review AI advice", "Protect authority and local-policy decisions"],
-      "prerequisites": ["notes-identifiers"],
-      "depends_on": ["notes-identifiers"],
-      "skills": ["automation-boundaries"],
+      "objectives": [
+        "Classify safe automation",
+        "Review AI advice",
+        "Protect authority and local-policy decisions",
+        "Apply concepts in staged interactive practice",
+        "Explain decisions from evidence"
+      ],
+      "prerequisites": [
+        "notes-identifiers"
+      ],
+      "depends_on": [
+        "notes-identifiers"
+      ],
+      "skills": [
+        "automation-boundaries"
+      ],
       "mastery_threshold": 0.85,
       "lessons": [
         {
@@ -641,9 +2266,17 @@
               "id": "automation-safe-choice",
               "type": "automation_judgment",
               "prompt": "Which task is the safest candidate for deterministic automation?",
-              "options": ["Add known prescribed punctuation between identified 245 elements", "Choose title proper from an ambiguous source", "Authorize a new subject heading", "Apply an undocumented local policy"],
+              "options": [
+                "Add known prescribed punctuation between identified 245 elements",
+                "Choose title proper from an ambiguous source",
+                "Authorize a new subject heading",
+                "Apply an undocumented local policy"
+              ],
               "expected_answer": "Add known prescribed punctuation between identified 245 elements",
-              "hints": ["Look for explicit elements and a known relationship.", "The safest option does not require new bibliographic judgment."],
+              "hints": [
+                "Look for explicit elements and a known relationship.",
+                "The safest option does not require new bibliographic judgment."
+              ],
               "explanation": "Known punctuation relationships can be deterministic once the elements are identified.",
               "referenced_rule": "ISBD_TITLE_245B_001",
               "referenced_concept": "safe automation",
@@ -654,18 +2287,150 @@
               "id": "ai-safety-review",
               "type": "cataloguer_judgment",
               "prompt": "An AI tutor suggests an LCSH heading with high confidence but no authority verification. What should happen next?",
-              "options": ["Verify it against the authority source and policy before use", "Apply it automatically", "Treat confidence as authority", "Replace the deterministic rules"],
+              "options": [
+                "Verify it against the authority source and policy before use",
+                "Apply it automatically",
+                "Treat confidence as authority",
+                "Replace the deterministic rules"
+              ],
               "expected_answer": "Verify it against the authority source and policy before use",
-              "hints": ["Confidence is not authority status.", "Controlled headings require authoritative verification."],
+              "hints": [
+                "Confidence is not authority status.",
+                "Controlled headings require authoritative verification."
+              ],
               "explanation": "AI suggestions remain unverified and require professional review against authoritative sources.",
               "referenced_concept": "AI-assisted review",
               "skill": "automation-boundaries",
               "difficulty": 4
             }
           ]
+        },
+        {
+          "id": "deterministic-versus-inferred",
+          "title": "Deterministic fixes versus inferred changes",
+          "generated_v4": true,
+          "why": "Reliable automation has bounded inputs, explicit rules, and reversible outputs.",
+          "how": "Work from source evidence, identify the automation risk relationship, then make only the supported change.",
+          "common_mistake": "Treating automation risk as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous automation risk when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Deterministic fixes versus inferred changes extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "Reliable automation has bounded inputs, explicit rules, and reversible outputs.",
+            "learn": "Classify each proposed change as deterministic, evidence-dependent, or professional judgment.",
+            "see_it": "Removing a duplicated generated point is deterministic; selecting an authorized subject from context is inferred.",
+            "reflection": "What evidence would make a automation risk decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "deterministic-versus-inferred-check",
+              "type": "recognition",
+              "prompt": "Which change is most suitable for deterministic automation?",
+              "options": [
+                "Removing a known duplicated generated delimiter",
+                "Inventing a missing subtitle",
+                "Choosing among ambiguous subjects",
+                "Inferring the chief source"
+              ],
+              "expected_answer": "Removing a known duplicated generated delimiter",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the automation boundaries principle."
+              ],
+              "explanation": "Removing a known duplicated generated delimiter. This follows from the lesson's evidence-first treatment of automation boundaries.",
+              "referenced_concept": "automation boundaries",
+              "skill": "automation-boundaries",
+              "difficulty": 4
+            },
+            {
+              "id": "deterministic-versus-inferred-apply",
+              "type": "reasoning",
+              "prompt": "What should accompany every automated mutation?",
+              "options": [
+                "A preview, provenance, and an undo path",
+                "A hidden confidence score only",
+                "Permanent application",
+                "Unbounded record rewriting"
+              ],
+              "expected_answer": "A preview, provenance, and an undo path",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the automation boundaries principle."
+              ],
+              "explanation": "A preview, provenance, and an undo path. This follows from the lesson's evidence-first treatment of automation boundaries.",
+              "referenced_concept": "automation boundaries",
+              "skill": "automation-boundaries",
+              "difficulty": 5
+            }
+          ]
+        },
+        {
+          "id": "ai-verification-audit",
+          "title": "AI verification, confidence, and audit trails",
+          "generated_v4": true,
+          "why": "AI output is a proposal, not authority evidence or a cataloguing rule.",
+          "how": "Work from source evidence, identify the AI-assisted review relationship, then make only the supported change.",
+          "common_mistake": "Treating AI-assisted review as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous AI-assisted review when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "AI verification, confidence, and audit trails extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "AI output is a proposal, not authority evidence or a cataloguing rule.",
+            "learn": "Verify suggestions against supplied evidence and authoritative sources; retain what was requested, returned, and applied.",
+            "see_it": "A suggested LCSH string remains unverified until authority data supports its status.",
+            "reflection": "What evidence would make a AI-assisted review decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "ai-verification-audit-check",
+              "type": "recognition",
+              "prompt": "What does an AI confidence label prove?",
+              "options": [
+                "Only the model’s reported confidence, not bibliographic correctness",
+                "That the heading is authorized",
+                "That the record is complete",
+                "That no review is needed"
+              ],
+              "expected_answer": "Only the model’s reported confidence, not bibliographic correctness",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the automation boundaries principle."
+              ],
+              "explanation": "Only the model’s reported confidence, not bibliographic correctness. This follows from the lesson's evidence-first treatment of automation boundaries.",
+              "referenced_concept": "automation boundaries",
+              "skill": "automation-boundaries",
+              "difficulty": 5
+            },
+            {
+              "id": "ai-verification-audit-apply",
+              "type": "reasoning",
+              "prompt": "What should an AI audit trail retain?",
+              "options": [
+                "The request, response, verification state, and applied action",
+                "Only the final badge color",
+                "Only accepted suggestions",
+                "The user password"
+              ],
+              "expected_answer": "The request, response, verification state, and applied action",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the automation boundaries principle."
+              ],
+              "explanation": "The request, response, verification state, and applied action. This follows from the lesson's evidence-first treatment of automation boundaries.",
+              "referenced_concept": "automation boundaries",
+              "skill": "automation-boundaries",
+              "difficulty": 6
+            }
+          ]
         }
       ],
-      "assessment": { "exercise_ids": ["automation-safe-choice", "ai-safety-review"], "mastery_threshold": 0.85 }
+      "assessment": {
+        "exercise_ids": [
+          "automation-safe-choice",
+          "ai-safety-review",
+          "deterministic-versus-inferred-apply",
+          "ai-verification-audit-apply"
+        ],
+        "mastery_threshold": 0.85
+      }
     },
     {
       "id": "practical-assessment",
@@ -673,13 +2438,141 @@
       "level": "assessment",
       "title": "Practical Assessment",
       "description": "Demonstrate independent MARC recognition, ISBD reasoning, correction, construction, review, and automation judgment.",
-      "objectives": ["Construct a realistic title statement", "Review another cataloguer's work", "Justify automation boundaries"],
-      "prerequisites": ["automation-ai"],
-      "depends_on": ["automation-ai"],
-      "skills": ["record-review"],
+      "objectives": [
+        "Construct a realistic title statement",
+        "Review another cataloguer's work",
+        "Justify automation boundaries",
+        "Apply concepts in staged interactive practice",
+        "Explain decisions from evidence"
+      ],
+      "prerequisites": [
+        "automation-ai"
+      ],
+      "depends_on": [
+        "automation-ai"
+      ],
+      "skills": [
+        "record-review"
+      ],
       "mastery_threshold": 0.85,
       "certification": true,
       "lessons": [
+        {
+          "id": "field-audit-workflow",
+          "title": "Staged field audit",
+          "generated_v4": true,
+          "why": "A disciplined review separates structure, semantics, punctuation, and authority checks.",
+          "how": "Work from source evidence, identify the independent field review relationship, then make only the supported change.",
+          "common_mistake": "Treating independent field review as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous independent field review when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Staged field audit extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "A disciplined review separates structure, semantics, punctuation, and authority checks.",
+            "learn": "Inspect tags and indicators, then subfield roles, then boundaries, then controlled values.",
+            "see_it": "A 245 review starts with indicators and title roles before duplicate punctuation is normalized.",
+            "reflection": "What evidence would make a independent field review decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "field-audit-workflow-check",
+              "type": "recognition",
+              "prompt": "What is the first stage of a defensible field audit?",
+              "options": [
+                "Confirm field structure and indicator meaning",
+                "Apply all suggestions",
+                "Rewrite the title",
+                "Ignore the source"
+              ],
+              "expected_answer": "Confirm field structure and indicator meaning",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the record review principle."
+              ],
+              "explanation": "Confirm field structure and indicator meaning. This follows from the lesson's evidence-first treatment of record review.",
+              "referenced_concept": "record review",
+              "skill": "record-review",
+              "difficulty": 3
+            },
+            {
+              "id": "field-audit-workflow-apply",
+              "type": "reasoning",
+              "prompt": "When should a punctuation fix be applied?",
+              "options": [
+                "After the element relationship and provenance are known",
+                "Whenever a mark looks unusual",
+                "Before reading the field",
+                "Only after AI approval"
+              ],
+              "expected_answer": "After the element relationship and provenance are known",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the record review principle."
+              ],
+              "explanation": "After the element relationship and provenance are known. This follows from the lesson's evidence-first treatment of record review.",
+              "referenced_concept": "record review",
+              "skill": "record-review",
+              "difficulty": 4
+            }
+          ]
+        },
+        {
+          "id": "whole-record-risk-triage",
+          "title": "Whole-record risk triage",
+          "generated_v4": true,
+          "why": "Record-level review prioritizes changes by impact, reversibility, and evidence quality.",
+          "how": "Work from source evidence, identify the record-level review relationship, then make only the supported change.",
+          "common_mistake": "Treating record-level review as a visual formatting pattern instead of a bibliographic decision.",
+          "do_not_automate": "Do not infer ambiguous record-level review when the record or source evidence is incomplete.",
+          "sections": {
+            "introduction": "Whole-record risk triage extends the earlier module concepts with a practical review workflow.",
+            "why_it_matters": "Record-level review prioritizes changes by impact, reversibility, and evidence quality.",
+            "learn": "Resolve structural errors, review descriptive relationships, verify access points, and document unresolved judgments.",
+            "see_it": "A destructive authority change deserves more scrutiny than a reversible duplicate-point removal.",
+            "reflection": "What evidence would make a record-level review decision safe, explainable, and reversible?"
+          },
+          "exercises": [
+            {
+              "id": "whole-record-risk-triage-check",
+              "type": "recognition",
+              "prompt": "Which proposed change deserves the highest review priority?",
+              "options": [
+                "An unverified change to a controlled access point",
+                "A reversible display-only preview",
+                "Opening the glossary",
+                "Moving the training panel"
+              ],
+              "expected_answer": "An unverified change to a controlled access point",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the record review principle."
+              ],
+              "explanation": "An unverified change to a controlled access point. This follows from the lesson's evidence-first treatment of record review.",
+              "referenced_concept": "record review",
+              "skill": "record-review",
+              "difficulty": 4
+            },
+            {
+              "id": "whole-record-risk-triage-apply",
+              "type": "reasoning",
+              "prompt": "What completes a whole-record review?",
+              "options": [
+                "Documented resolution or escalation of remaining material risks",
+                "A 100% cosmetic progress bar",
+                "Accepting every suggestion",
+                "Closing the panel"
+              ],
+              "expected_answer": "Documented resolution or escalation of remaining material risks",
+              "hints": [
+                "Focus on the bibliographic role, not the visual appearance.",
+                "Compare the supplied evidence with the record review principle."
+              ],
+              "explanation": "Documented resolution or escalation of remaining material risks. This follows from the lesson's evidence-first treatment of record review.",
+              "referenced_concept": "record review",
+              "skill": "record-review",
+              "difficulty": 5
+            }
+          ]
+        },
         {
           "id": "final-competency-assessment",
           "title": "Final competency assessment",
@@ -699,9 +2592,49 @@
               "id": "assessment-construct-title",
               "type": "record_construction",
               "prompt": "The title page reads: The history of Nigerian libraries / a study of development and practice / by John Okafor. Construct the 245 field; use first indicator 1 and second indicator 0.",
-              "initial_record": { "tag": "245", "ind1": "1", "ind2": "0", "subfields": [{ "code": "a", "value": "" }, { "code": "b", "value": "" }, { "code": "c", "value": "" }] },
-              "expected_answer": { "tag": "245", "ind1": "1", "ind2": "0", "subfields": [{ "code": "a", "value": "The history of Nigerian libraries" }, { "code": "b", "value": ": a study of development and practice" }, { "code": "c", "value": "/ John Okafor." }] },
-              "hints": ["Identify title proper, other title information, and responsibility.", "Express each relationship once.", "Check both indicators and the final terminator."],
+              "initial_record": {
+                "tag": "245",
+                "ind1": "1",
+                "ind2": "0",
+                "subfields": [
+                  {
+                    "code": "a",
+                    "value": ""
+                  },
+                  {
+                    "code": "b",
+                    "value": ""
+                  },
+                  {
+                    "code": "c",
+                    "value": ""
+                  }
+                ]
+              },
+              "expected_answer": {
+                "tag": "245",
+                "ind1": "1",
+                "ind2": "0",
+                "subfields": [
+                  {
+                    "code": "a",
+                    "value": "The history of Nigerian libraries"
+                  },
+                  {
+                    "code": "b",
+                    "value": ": a study of development and practice"
+                  },
+                  {
+                    "code": "c",
+                    "value": "/ John Okafor."
+                  }
+                ]
+              },
+              "hints": [
+                "Identify title proper, other title information, and responsibility.",
+                "Express each relationship once.",
+                "Check both indicators and the final terminator."
+              ],
               "explanation": "The constructed field preserves the information while expressing title, subtitle, and responsibility relationships.",
               "referenced_rule": "ISBD_TITLE_245C_001",
               "referenced_concept": "record construction",
@@ -712,9 +2645,20 @@
               "id": "assessment-review-record",
               "type": "error_detection",
               "prompt": "Review another cataloguer's record: 264 #4 $a Lagos : $b Spectrum Books, $c ©2026. and 020 ## $a 9789781234567. Identify every unsafe punctuation action.",
-              "options": ["Manufactured publication punctuation in copyright 264", "Terminal point on ISBN", "Copyright symbol", "Use of 264 tag"],
-              "expected_answer": ["Manufactured publication punctuation in copyright 264", "Terminal point on ISBN"],
-              "hints": ["Read the 264 function indicator first.", "Then inspect the semantic role of the standard number."],
+              "options": [
+                "Manufactured publication punctuation in copyright 264",
+                "Terminal point on ISBN",
+                "Copyright symbol",
+                "Use of 264 tag"
+              ],
+              "expected_answer": [
+                "Manufactured publication punctuation in copyright 264",
+                "Terminal point on ISBN"
+              ],
+              "hints": [
+                "Read the 264 function indicator first.",
+                "Then inspect the semantic role of the standard number."
+              ],
               "explanation": "Copyright 264 is not normalized as an ordinary publication statement, and identifiers must not carry sentence punctuation.",
               "referenced_rule": "ISBD_PUBL_264_COPYRIGHT_NO_PUNCT",
               "referenced_concept": "record review",
@@ -725,9 +2669,17 @@
               "id": "assessment-automation-judgment",
               "type": "automation_judgment",
               "prompt": "During final review, the source is ambiguous about whether a phrase is subtitle or responsibility. What is the correct action?",
-              "options": ["Pause automation and review the prescribed source and policy", "Let AI choose and apply automatically", "Always place it in 245$b", "Delete the phrase"],
+              "options": [
+                "Pause automation and review the prescribed source and policy",
+                "Let AI choose and apply automatically",
+                "Always place it in 245$b",
+                "Delete the phrase"
+              ],
               "expected_answer": "Pause automation and review the prescribed source and policy",
-              "hints": ["This is a source interpretation question.", "Deterministic punctuation begins only after elements are identified."],
+              "hints": [
+                "This is a source interpretation question.",
+                "Deterministic punctuation begins only after elements are identified."
+              ],
               "explanation": "Ambiguous transcription is a professional judgment boundary and cannot be certified through automated guessing.",
               "referenced_concept": "cataloguer judgment",
               "skill": "record-review",
@@ -737,7 +2689,13 @@
         }
       ],
       "assessment": {
-        "exercise_ids": ["assessment-construct-title", "assessment-review-record", "assessment-automation-judgment"],
+        "exercise_ids": [
+          "assessment-construct-title",
+          "assessment-review-record",
+          "assessment-automation-judgment",
+          "field-audit-workflow-apply",
+          "whole-record-risk-triage-apply"
+        ],
         "mastery_threshold": 0.85,
         "hints_disqualify_attempt": true,
         "revealed_answers_disqualify_attempt": true

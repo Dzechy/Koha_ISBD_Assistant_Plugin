@@ -1,12 +1,12 @@
 # Training System Design
 
-The ISBD training system is a professional cataloguing competency course embedded in the Koha cataloguing page. It uses curriculum schema `3.0.0` in `Koha/Plugin/Cataloging/AutoPunctuation/rules/intern_guide_v2.json` and the pure browser/Node model in `js/training_engine.js`.
+The ISBD training system is a professional cataloguing competency course embedded in the Koha cataloguing page. It uses curriculum schema `4.0.0` in `Koha/Plugin/Cataloging/AutoPunctuation/rules/intern_guide_v2.json` and the pure browser/Node model in `js/training_engine.js`.
 
 ## Learning model
 
 The course follows **Learn → See → Try → Check → Understand → Practice → Master**. It teaches bibliographic concepts and relationships rather than plugin controls or isolated punctuation marks. Lessons support introduction, why it matters, learning content, annotated examples, interactive practice, feedback, explanation, reflection, and mastery evidence.
 
-The learning path contains eleven ordered modules:
+The learning path contains eleven ordered modules and thirty-three lessons. Every module has three lessons sequenced from concept recognition to applied judgment:
 
 1. Foundations
 2. MARC Structure
@@ -20,7 +20,7 @@ The learning path contains eleven ordered modules:
 10. Automation & AI
 11. Practical Assessment
 
-Modules are prerequisite-locked. Completed modules can be revisited. Advanced review mode unlocks navigation explicitly but never changes scores, completion, mastery, or certification.
+Modules and their lessons are prerequisite-locked. Completing independently assessed practice unlocks the next lesson; mastering a module unlocks the next module. Completed lessons can be revisited. Advanced review mode unlocks navigation explicitly but never changes scores, completion, mastery, or certification.
 
 ## Curriculum schema
 
@@ -66,4 +66,4 @@ perl tests/training_progress_regression.pl
 perl tests/ai_subsystem_regression.pl
 ```
 
-The regression suite covers onboarding, prerequisites, exercise scoring, hints, failure recording, mastery, weak-skill recommendations, persistence, version invalidation, revisiting lessons, supervisor summaries, and final certification.
+The regression suite covers onboarding, module and lesson prerequisites, completion readiness, exercise scoring, hints, failure recording, mastery, weak-skill recommendations, persistence, version invalidation, revisiting lessons, supervisor summaries, and final certification. `node scripts/expand_training_curriculum.js --check` also verifies that the expanded runtime curriculum matches its reviewed generator specification.

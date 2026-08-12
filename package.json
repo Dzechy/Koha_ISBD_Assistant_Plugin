@@ -3,7 +3,8 @@
   "private": true,
   "description": "Build-time dependencies and verification scripts for the Koha ISBD Assistant plugin.",
   "scripts": {
-    "test:lccs": "node tests/lccs_evidence.js"
+    "test:lccs": "node tests/lccs_evidence.js",
+    "test:training": "node scripts/expand_training_curriculum.js --check && node tests/guide_consistency.js && node tests/training_engine_regression.js && node tests/training_ui_regression.js"
   },
   "dependencies": {
     "lccs-2024": "1.1.0"

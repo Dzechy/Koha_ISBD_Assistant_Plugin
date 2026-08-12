@@ -454,7 +454,7 @@
             .isbd-toast.error { background: #fdeaea; border-left-color: #b33a3a; border-top-color: #b33a3a; color: #7f1d1d; }
             .isbd-toast.action { background: #eaf6ea; border-left-color: #408540; border-top-color: #408540; color: #1f5b1f; }
             .isbd-toast.success { background: #eaf6ea; border-left-color: #408540; border-top-color: #408540; color: #1f5b1f; }
-            .isbd-panel { position: fixed; right: 20px; top: 120px; width: 610px; height: 670px; max-height: calc(100vh - 24px); background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18); border-radius: 10px; z-index: 9998; display: flex; flex-direction: column; resize: both; overflow: hidden; min-width: 280px; min-height: 180px; }
+            .isbd-panel { position: fixed; right: 20px; top: 120px; width: 610px; height: min(670px, calc(100vh - 144px)); height: min(670px, calc(100dvh - 144px)); max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18); border-radius: 10px; z-index: 9998; display: flex; flex-direction: column; resize: both; overflow: hidden; min-width: 280px; min-height: 180px; }
             .isbd-panel header { padding: 10px 12px; background: #408540; color: #fff; font-weight: 700; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; cursor: move; touch-action: none; }
             .isbd-panel header > div,
             .isbd-ai-panel header > div,
@@ -502,7 +502,7 @@
             .isbd-panel .btn-primary:hover,
             .isbd-ai-panel .btn-primary:hover,
             .isbd-guide-modal .btn-primary:hover { background: #377637; border-color: #2a622a; color: #fff; }
-            .isbd-panel .body { flex: 1 1 auto; min-height: 0; padding: 14px 16px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; font-size: 12px; background: #f8fafc; }
+            .isbd-panel .body { flex: 1 1 0; min-height: 0; padding: 14px 16px; overflow: auto; scrollbar-gutter: stable; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: auto; font-size: 12px; background: #f8fafc; }
             .isbd-panel-intro { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; }
             .isbd-panel-count { white-space: nowrap; font-weight: 700; color: #334155; }
             .isbd-panel.minimized { min-height: 0; height: auto; resize: none; overflow: hidden; }
@@ -524,9 +524,9 @@
             .isbd-preview { font-family: monospace; background: #f8fafc; padding: 4px 6px; border-radius: 4px; display: inline-block; margin-top: 6px; }
             .isbd-raw-wrapper { margin-top: 6px; }
             .isbd-raw-output { display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px; font-size: 11px; max-height: 140px; overflow: auto; white-space: pre-wrap; }
-            .isbd-ai-panel { position: fixed; right: 24px; bottom: 24px; width: 640px; height: 700px; max-height: calc(100vh - 24px); background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 14px 32px rgba(15, 23, 42, 0.22); border-radius: 10px; z-index: 10002; display: flex; flex-direction: column; resize: both; overflow: hidden; min-width: 300px; min-height: 200px; }
+            .isbd-ai-panel { position: fixed; right: 24px; bottom: 24px; width: 640px; height: min(700px, calc(100vh - 48px)); height: min(700px, calc(100dvh - 48px)); max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 14px 32px rgba(15, 23, 42, 0.22); border-radius: 10px; z-index: 10002; display: flex; flex-direction: column; resize: both; overflow: hidden; min-width: 300px; min-height: 200px; }
             .isbd-ai-panel header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; cursor: move; touch-action: none; padding: 8px 10px; background: #408540; color: #fff; font-weight: 700; }
-            .isbd-ai-panel .body { flex: 1 1 auto; min-height: 0; padding: 14px 16px; font-size: 12px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; background: #f8fafc; }
+            .isbd-ai-panel .body { flex: 1 1 0; min-height: 0; padding: 14px 16px; font-size: 12px; overflow: auto; scrollbar-gutter: stable; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: auto; background: #f8fafc; }
             .isbd-ai-panel.minimized { min-height: 0; height: auto; resize: none; overflow: hidden; }
             .isbd-ai-panel.minimized .body { display: none; }
             .isbd-ai-panel .meta { color: #5b6b7c; font-size: 11px; margin-bottom: 6px; }
@@ -547,7 +547,7 @@
             .isbd-ai-result-card { min-width: 0; border: 1px solid #e2e8f0; border-radius: 7px; background: #f8fafc; padding: 10px; }
             .isbd-ai-result-card-title { color: #64748b; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 5px; }
             .isbd-ai-result-value-large { color: #172033; font-family: monospace; font-size: 15px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
-            .isbd-ai-badge { display: inline-flex; align-items: center; width: fit-content; border: 1px solid #cbd5e1; border-radius: 999px; background: #eef2f6; color: #475569; font-size: 10px; font-weight: 700; line-height: 1.2; padding: 3px 7px; }
+            .isbd-ai-badge { display: inline-flex; align-items: center; width: fit-content; border: 1px solid #cbd5e1; border-radius: 4px; background: #eef2f6; color: #475569; font-size: 10px; font-weight: 700; line-height: 1.2; padding: 3px 7px; }
             .isbd-ai-badge.success { border-color: #a7d7aa; background: #e9f5ea; color: #2d6f2d; }
             .isbd-ai-badge.warning { border-color: #ead277; background: #fff8dc; color: #735c00; }
             .isbd-ai-badge.info { border-color: #b8d5ec; background: #eaf3ff; color: #245f8f; }
@@ -580,14 +580,14 @@
             .isbd-ai-callnumber-hints { margin-top: 12px; }
             .isbd-ai-callnumber-hints .meta { margin-bottom: 7px; }
             .isbd-ai-callnumber-hints .meta:last-child { margin-bottom: 0; }
-            .isbd-guide-modal { position: fixed; top: 120px; right: 24px; left: auto; transform: none; background: #ffffff; border: 1px solid #d1d9e0; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2); border-radius: 6px; padding: 0; z-index: 10001; width: 610px; height: 670px; resize: both; overflow: auto; min-width: 320px; min-height: 220px; max-height: calc(100vh - 24px); display: flex; flex-direction: column; }
+            .isbd-guide-modal { position: fixed; top: 120px; right: 24px; left: auto; transform: none; background: #ffffff; border: 1px solid #d1d9e0; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2); border-radius: 6px; padding: 0; z-index: 10001; width: 610px; height: min(670px, calc(100vh - 144px)); height: min(670px, calc(100dvh - 144px)); resize: both; overflow: hidden; min-width: 320px; min-height: 220px; max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); display: flex; flex-direction: column; }
             .isbd-guide-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 10000; }
             .isbd-guide-highlight { border: 2px solid #3b82f6 !important; box-shadow: 0 0 10px rgba(59,130,246,0.4) !important; }
             .isbd-focus-flash { border: 2px solid #408540 !important; box-shadow: 0 0 8px rgba(64,133,64,0.4) !important; }
             .isbd-about-modal { position: fixed; top: 22%; left: 50%; transform: translateX(-50%); background: #ffffff; border: 1px solid #d1d9e0; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2); border-radius: 6px; padding: 14px; z-index: 10001; width: 420px; }
             .isbd-about-dialog { position: fixed; top: 14%; left: 50%; transform: translateX(-50%); background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 14px 32px rgba(15, 23, 42, 0.22); border-radius: 10px; padding: 0; z-index: 10003; width: 600px; max-width: 94vw; max-height: 82vh; overflow: hidden; min-width: 320px; min-height: 220px; display: flex; flex-direction: column; resize: both; }
             .isbd-about-dialog header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; cursor: move; touch-action: none; padding: 8px 10px; background: #408540; color: #ffffff; font-weight: 700; }
-            .isbd-about-dialog .body { flex: 1 1 auto; min-height: 0; padding: 16px 18px; font-size: 12px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; background: #f8fafc; }
+            .isbd-about-dialog .body { flex: 1 1 0; min-height: 0; padding: 16px 18px; font-size: 12px; overflow: auto; scrollbar-gutter: stable; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: auto; background: #f8fafc; }
             .isbd-about-lead { font-size: 14px; color: #334155; margin: 0 0 14px; }
             .isbd-about-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
             .isbd-about-card { background: #fff; border: 1px solid #dbe3ec; border-radius: 7px; padding: 10px; }
@@ -599,7 +599,7 @@
             .isbd-guide-modal.minimized .isbd-guide-content { display: none; }
             .isbd-guide-modal.minimized { min-height: 0; height: auto; resize: none; overflow: hidden; }
             .isbd-guide-modal header { display: flex; justify-content: space-between; align-items: center; cursor: move; touch-action: none; padding: 8px 10px; background: #408540; color: #ffffff; font-weight: 700; }
-            .isbd-guide-content { flex: 1 1 auto; min-height: 0; padding: 14px 16px; font-size: 12px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+            .isbd-guide-content { flex: 1 1 0; min-height: 0; padding: 14px 16px; font-size: 12px; overflow: auto; scrollbar-gutter: stable; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: auto; }
             .isbd-guide-steps { max-height: 160px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px; margin-top: 8px; }
             .isbd-guide-steps button { width: 100%; text-align: left; margin-bottom: 4px; }
             .isbd-guide-progress { margin-top: 8px; font-size: 12px; color: #5b6b7c; }
@@ -609,7 +609,7 @@
             .isbd-guide-status.success { color: #408540; }
             .isbd-guide-status.error { color: #c0392b; }
             .isbd-guide-status.info { color: #5b6b7c; }
-            .isbd-status-text { font-weight: 600; color: #5b6b7c; display: inline-block; padding: 2px 8px; border-radius: 999px; background: #eef2f6; }
+            .isbd-status-text { font-weight: 600; color: #5b6b7c; display: inline-block; padding: 2px 8px; border-radius: 4px; background: #eef2f6; }
             .isbd-status-text.success { color: #2d6f2d; background: #e9f5ea; }
             .isbd-status-text.error { color: #a94442; background: #fbeaea; }
             .isbd-status-text.info { color: #245f8f; background: #eaf3ff; }
