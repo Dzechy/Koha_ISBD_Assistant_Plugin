@@ -233,6 +233,7 @@ function makeExercise(lessonId, index, spec, skill, difficulty) {
   const types = ['recognition', 'reasoning', 'application'];
   return {
     id: `${lessonId}-${suffixes[index] || `practice-${index + 1}`}`,
+    generated_v4: true,
     type: types[index] || 'application',
     prompt,
     options: [answer].concat(wrong),
@@ -279,7 +280,8 @@ function makeLesson(module, spec, position, baseDifficulty) {
 }
 
 function addCoreChallenge(module, lesson) {
-  lesson.exercises = (lesson.exercises || []).filter(exercise => !exercise.generated_v41);
+  lesson.exercises = (lesson.exercises || []).filter(exercise =>
+    !exercise.generated_v4 && !exercise.generated_v41 && !exercise.generated_v42);
   if (lesson.id === 'title-relationship-lab') {
     lesson.exercises.sort((left, right) => Number(left.difficulty || 0) - Number(right.difficulty || 0));
   }
@@ -289,16 +291,38 @@ function addCoreChallenge(module, lesson) {
   const skill = (lesson.exercises[lesson.exercises.length - 1] || {}).skill || module.skills[0];
   const challenge = makeExercise(lesson.id, 2, spec, skill, maxDifficulty + 1);
   challenge.id = `${lesson.id}-advanced-challenge`;
+  delete challenge.generated_v4;
   challenge.generated_v41 = true;
   lesson.exercises.push(challenge);
   return lesson;
 }
 
-curriculum.schema_version = '4.1.0';
-curriculum.guide_version = '4.1.0';
-curriculum.course_version = '4.1.0';
-curriculum.course.version = '4.1.0';
-curriculum.course.description = 'A 33-lesson path with 101 scored exercises in MARC21, ISBD reasoning, safe automation, and professional cataloguer judgment, sequenced from foundation to independent assessment.';
+function makeModuleCapstone(module, lesson, difficulty) {
+  const objectives = (module.objectives || []).slice(0, 3).join(', ');
+  const skill = module.skills[module.skills.length - 1] || module.skills[0];
+  const exercise = makeExercise(lesson.id, 3, [
+    `Capstone case: a proposed ${module.title} change is partly supported, partly ambiguous, and not yet applied. Which workflow demonstrates independent competency?`,
+    `Verify the evidence for ${objectives}, apply only supported reversible changes, and document or escalate the ambiguity`,
+    [
+      'Apply every proposed change to maximize completion',
+      'Reject the whole record without examining the supported changes',
+      'Use interface confidence and formatting as substitutes for bibliographic evidence'
+    ]
+  ], skill, difficulty);
+  exercise.id = `${module.id}-module-capstone`;
+  delete exercise.generated_v4;
+  exercise.generated_v42 = true;
+  exercise.type = 'cataloguer_judgment';
+  exercise.referenced_concept = `${module.title} integrated review`;
+  exercise.explanation = `Independent competency in ${module.title} requires evidence-based decisions, reversible application, and explicit escalation of unresolved professional judgment.`;
+  return exercise;
+}
+
+curriculum.schema_version = '4.2.0';
+curriculum.guide_version = '4.2.0';
+curriculum.course_version = '4.2.0';
+curriculum.course.version = '4.2.0';
+curriculum.course.description = 'An 11-lesson path with 112 scored exercises in MARC21, ISBD reasoning, safe automation, and professional cataloguer judgment, sequenced from foundation to independent assessment.';
 
 curriculum.modules.forEach((module, moduleIndex) => {
   const coreLessons = (module.lessons || []).filter(lesson => !lesson.generated_v4)
@@ -308,14 +332,15 @@ curriculum.modules.forEach((module, moduleIndex) => {
     ? 3
     : Math.max(...coreLessons.flatMap(lesson => (lesson.exercises || []).map(exercise => Number(exercise.difficulty) || 1)), 1);
   const generated = specs.map((spec, position) => makeLesson(module, spec, position, baseDifficulty));
-  module.lessons = module.id === 'practical-assessment' ? generated.concat(coreLessons) : coreLessons.concat(generated);
-  const generatedAssessmentIds = generated.flatMap(lesson => [lesson.exercises[1].id, lesson.exercises[2].id]);
-  const coreChallengeIds = coreLessons.map(lesson => lesson.exercises[lesson.exercises.length - 1].id);
-  const coreExerciseIds = new Set(coreLessons.flatMap(lesson => (lesson.exercises || []).map(exercise => exercise.id)));
-  module.assessment.exercise_ids = Array.from(new Set(
-    (module.assessment.exercise_ids || []).filter(id => coreExerciseIds.has(id))
-      .concat(coreChallengeIds, generatedAssessmentIds)
-  ));
+  const lesson = coreLessons[0];
+  if (!lesson) throw new Error(`Missing core lesson for ${module.id}`);
+  const supportingExercises = generated.flatMap(item => item.exercises || []);
+  const combined = lesson.exercises.concat(supportingExercises)
+    .sort((left, right) => Number(left.difficulty || 0) - Number(right.difficulty || 0));
+  const capstoneDifficulty = Math.max(...combined.map(exercise => Number(exercise.difficulty) || 1)) + 1;
+  lesson.exercises = combined.concat(makeModuleCapstone(module, lesson, capstoneDifficulty));
+  module.lessons = [lesson];
+  module.assessment.exercise_ids = lesson.exercises.map(exercise => exercise.id);
   module.objectives = Array.from(new Set((module.objectives || []).concat(['Apply concepts in staged interactive practice', 'Explain decisions from evidence'])));
   module.order = moduleIndex + 1;
 });
