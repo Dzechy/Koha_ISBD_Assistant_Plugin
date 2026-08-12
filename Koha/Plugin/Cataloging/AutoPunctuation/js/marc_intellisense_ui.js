@@ -877,7 +877,9 @@
                 toast('warning', 'Cataloging Assistant panel is disabled for this internship profile.');
                 return;
             }
-            $('.isbd-panel').toggle();
+            const $panel = $('.isbd-panel');
+            if ($panel.is(':visible')) $panel.hide();
+            else $panel.css('display', 'flex');
             updatePanelToggleButton();
         });
 
@@ -966,7 +968,7 @@
         const isReadOnly = !!(state && (state.readOnly || !internFeatureAllowed(state, 'panelApplyActions')));
         const readOnlyAttr = isReadOnly ? 'disabled title="Disabled in internship mode."' : '';
         const panel = `
-            <div class="isbd-panel" style="display:block;">
+            <div class="isbd-panel">
                 <header>
                     <span>Cataloging Assistant</span>
                     <div>

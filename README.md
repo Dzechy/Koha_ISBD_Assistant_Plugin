@@ -47,7 +47,7 @@ The plugin is ISBD-first, but it can be used in AACR2, RDA, and local MARC21 wor
 - Applies deterministic punctuation fixes when allowed.
 - Supports ghost text and AI Assist for guided suggestions.
 - Verifies AI subject candidates against the Library of Congress Linked Data Service and shows authorized labels, variants, evidence, and authority-only retry states.
-- Provides an eleven-lesson cataloguing course with 112 scored exercises across eleven prerequisite-ordered modules, with onboarding, practice labs, assessment, remediation, and mastery tracking.
+- Provides a 44-lesson cataloguing course with 112 scored exercises across eleven prerequisite-ordered modules, with onboarding, practice labs, assessment, remediation, and mastery tracking.
 - Lets administrators restrict trainees through internship mode.
 - Lets administrators add local JSON rules without editing plugin code.
 - Provides a coverage report that shows which active MARC framework fields are covered, excluded, or missing deterministic rules.
@@ -420,7 +420,7 @@ Modules unlock only after prerequisite mastery. Completion means the required le
 
 The optional AI tutor can explain a concept, offer a no-answer hint, or point to the supplied rule context. It is constrained by the curriculum and remains advisory. Deterministic rules and authoritative cataloguing sources remain primary.
 
-The workspace can remain enabled for new cataloguers while experienced staff are excluded through `guide_users`. Curriculum data lives in `Koha/Plugin/Cataloging/AutoPunctuation/rules/intern_guide_v2.json` using schema and guide version `4.2.0`. Its 11 comprehensive lessons contain 112 scored exercises, with at least 10 exercises per lesson in non-decreasing difficulty order. Modules remain prerequisite-locked until the preceding lesson is mastered. When course, guide, or rules versions change, completed work is preserved but marked as requiring review.
+The workspace can remain enabled for new cataloguers while experienced staff are excluded through `guide_users`. Curriculum data lives in `Koha/Plugin/Cataloging/AutoPunctuation/rules/intern_guide_v2.json` using schema and guide version `4.3.0`. Each module contains a core lesson, two focused lessons, and a capstone, for 44 lessons and 112 scored exercises. Answer choices are reshuffled whenever an exercise is displayed. Exercise drafts and lesson reflections save automatically. Modules remain prerequisite-locked until the preceding module is mastered. When course, guide, or rules versions change, completed work is preserved but marked as requiring review.
 
 Internship mode is stricter. It lets supervisors choose trainee accounts and decide whether those users can toggle the assistant, toggle auto-apply, show the panel, use AI, apply panel actions, or apply AI-generated actions.
 

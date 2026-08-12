@@ -11,7 +11,7 @@
 })(typeof window !== 'undefined' ? window : globalThis, function() {
     'use strict';
 
-    const ENGINE_VERSION = '1.1.0';
+    const ENGINE_VERSION = '1.2.0';
 
     function clone(value) {
         return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
@@ -141,6 +141,8 @@
             module_progress: {},
             lesson_progress: {},
             exercise_attempts: {},
+            draft_answers: {},
+            reflections: {},
             quiz_results: {},
             hint_usage: {},
             revealed_answers: {},
@@ -182,6 +184,7 @@
 
         [
             'onboarding', 'module_progress', 'lesson_progress', 'exercise_attempts',
+            'draft_answers', 'reflections',
             'quiz_results', 'hint_usage', 'revealed_answers', 'skill_mastery',
             'mistakes', 'assessment_results'
         ].forEach(key => {

@@ -60,7 +60,18 @@ firstLesson.exercises.slice(3).forEach((exercise, exerciseOffset) => {
 const completion = engine.completeLesson(curriculum, progress, firstLesson.id, 2600);
 assert.strictEqual(completion.ok, true, 'lesson completes after required successful practice');
 assert.strictEqual(engine.lessonRequirements(curriculum, progress, firstLesson.id).completed, true, 'lesson reports functional completion readiness after all exercises');
-assert.strictEqual(engine.moduleStatus(curriculum, progress, firstModule.id), 'mastered', 'module mastery combines the comprehensive lesson, skill, and assessment evidence');
+assert.strictEqual(engine.moduleStatus(curriculum, progress, firstModule.id), 'in_progress', 'one lesson does not complete a multi-lesson module');
+assert.notStrictEqual(engine.lessonStatus(curriculum, progress, firstModule.id, firstModule.lessons[1].id), 'locked', 'completing a lesson unlocks the next lesson in its module');
+firstModule.lessons.slice(1).forEach((lesson, lessonOffset) => {
+    assert.strictEqual(engine.selectLesson(curriculum, progress, firstModule.id, lesson.id, 2610 + lessonOffset).ok, true,
+        `${lesson.id} opens after its prerequisite lesson`);
+    lesson.exercises.forEach((exercise, exerciseOffset) => {
+        engine.recordExerciseAttempt(curriculum, progress, exercise.id, engine.clone(exercise.expected_answer), {}, 2630 + lessonOffset * 10 + exerciseOffset);
+    });
+    assert.strictEqual(engine.completeLesson(curriculum, progress, lesson.id, 2670 + lessonOffset).ok, true,
+        `${lesson.id} completes with successful practice`);
+});
+assert.strictEqual(engine.moduleStatus(curriculum, progress, firstModule.id), 'mastered', 'module mastery combines all lessons, skills, and assessment evidence');
 assert.notStrictEqual(engine.moduleStatus(curriculum, progress, secondModule.id), 'locked', 'mastering the complete prerequisite unlocks the next module');
 
 const activityCount = progress.recent_activity.length;

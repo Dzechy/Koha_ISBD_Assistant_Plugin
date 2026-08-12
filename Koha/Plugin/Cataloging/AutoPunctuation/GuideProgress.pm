@@ -279,7 +279,7 @@ sub _normalize_training_progress {
     my %allowed = map { $_ => 1 } qw(
       engine_version course_version guide_version rules_version onboarding
       current_module current_lesson current_step module_progress lesson_progress
-      exercise_attempts quiz_results hint_usage revealed_answers skill_mastery
+      exercise_attempts draft_answers reflections quiz_results hint_usage revealed_answers skill_mastery
       mistakes review_recommendations requires_review assessment_results
       recent_activity last_activity advanced_mode
     );

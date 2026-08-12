@@ -318,11 +318,32 @@ function makeModuleCapstone(module, lesson, difficulty) {
   return exercise;
 }
 
-curriculum.schema_version = '4.2.0';
-curriculum.guide_version = '4.2.0';
-curriculum.course_version = '4.2.0';
-curriculum.course.version = '4.2.0';
-curriculum.course.description = 'An 11-lesson path with 112 scored exercises in MARC21, ISBD reasoning, safe automation, and professional cataloguer judgment, sequenced from foundation to independent assessment.';
+function makeCapstoneLesson(module, coreLesson, difficulty) {
+  const title = `${module.title} capstone`;
+  return {
+    id: `${module.id}-capstone`,
+    title,
+    generated_v4: true,
+    why: `The capstone combines the module's concepts in one evidence-based professional decision.`,
+    how: 'Review the evidence, separate deterministic changes from judgment, and document any unresolved risk.',
+    common_mistake: 'Treating completion of individual checks as proof that the whole cataloguing decision is safe.',
+    do_not_automate: 'Do not automate unresolved relationships or authority-sensitive decisions merely to complete the module.',
+    sections: {
+      introduction: `${title} brings the preceding lessons together in an integrated cataloguing case.`,
+      why_it_matters: `Professional competency requires transferring the module's individual skills to a complete decision workflow.`,
+      learn: 'Recheck source evidence, MARC structure, bibliographic relationships, reversibility, and the need for escalation.',
+      see_it: 'A strong capstone response applies supported changes, preserves evidence, and records what still needs professional review.',
+      reflection: `Which part of ${module.title} still needs the most deliberate evidence checking in your own work?`
+    },
+    exercises: [makeModuleCapstone(module, coreLesson, difficulty)]
+  };
+}
+
+curriculum.schema_version = '4.3.0';
+curriculum.guide_version = '4.3.0';
+curriculum.course_version = '4.3.0';
+curriculum.course.version = '4.3.0';
+curriculum.course.description = 'A 44-lesson path with 112 scored exercises in MARC21, ISBD reasoning, safe automation, and professional cataloguer judgment, sequenced from foundation to independent assessment.';
 
 curriculum.modules.forEach((module, moduleIndex) => {
   const coreLessons = (module.lessons || []).filter(lesson => !lesson.generated_v4)
@@ -334,13 +355,12 @@ curriculum.modules.forEach((module, moduleIndex) => {
   const generated = specs.map((spec, position) => makeLesson(module, spec, position, baseDifficulty));
   const lesson = coreLessons[0];
   if (!lesson) throw new Error(`Missing core lesson for ${module.id}`);
-  const supportingExercises = generated.flatMap(item => item.exercises || []);
-  const combined = lesson.exercises.concat(supportingExercises)
-    .sort((left, right) => Number(left.difficulty || 0) - Number(right.difficulty || 0));
-  const capstoneDifficulty = Math.max(...combined.map(exercise => Number(exercise.difficulty) || 1)) + 1;
-  lesson.exercises = combined.concat(makeModuleCapstone(module, lesson, capstoneDifficulty));
-  module.lessons = [lesson];
-  module.assessment.exercise_ids = lesson.exercises.map(exercise => exercise.id);
+  lesson.exercises.sort((left, right) => Number(left.difficulty || 0) - Number(right.difficulty || 0));
+  const allPractice = lesson.exercises.concat(generated.flatMap(item => item.exercises || []));
+  const capstoneDifficulty = Math.max(...allPractice.map(exercise => Number(exercise.difficulty) || 1)) + 1;
+  const capstone = makeCapstoneLesson(module, lesson, capstoneDifficulty);
+  module.lessons = [lesson].concat(generated, capstone);
+  module.assessment.exercise_ids = module.lessons.flatMap(item => item.exercises || []).map(exercise => exercise.id);
   module.objectives = Array.from(new Set((module.objectives || []).concat(['Apply concepts in staged interactive practice', 'Explain decisions from evidence'])));
   module.order = moduleIndex + 1;
 });

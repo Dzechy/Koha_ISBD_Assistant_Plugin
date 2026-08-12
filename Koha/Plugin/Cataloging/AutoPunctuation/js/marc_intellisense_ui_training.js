@@ -13,6 +13,28 @@
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
+    function randomizedOptions(session, exercise) {
+        const options = (exercise.options || []).slice();
+        for (let index = options.length - 1; index > 0; index -= 1) {
+            const swapIndex = Math.floor(Math.random() * (index + 1));
+            [options[index], options[swapIndex]] = [options[swapIndex], options[index]];
+        }
+        const previous = session.optionOrders[exercise.id] || [];
+        if (options.length > 1 && previous.length === options.length
+            && options.every((option, index) => option === previous[index])) {
+            options.push(options.shift());
+        }
+        session.optionOrders[exercise.id] = options.slice();
+        return options;
+    }
+
+    function storeDraft(session, exerciseId, answer) {
+        session.answers[exerciseId] = engine.clone(answer);
+        session.progress.draft_answers = session.progress.draft_answers || {};
+        session.progress.draft_answers[exerciseId] = engine.clone(answer);
+        persist(session);
+    }
+
     function storageKey(settings) {
         const user = String(settings.currentUserId || 'anonymous').trim() || 'anonymous';
         const framework = String(settings.frameworkCode || 'default').trim() || 'default';
@@ -421,7 +443,7 @@
                     <span class="isbd-training-level">${html(context.module.level || 'course')}</span>
                 </div>
                 <div class="isbd-training-concept-sections">${Object.keys(lesson.sections || {}).map(key => `
-                    <article class="isbd-training-concept ${key}"><h2>${html(sectionLabel(key))}</h2><p>${html(lesson.sections[key])}</p></article>`).join('')}</div>
+                    <article class="isbd-training-concept ${key}"><h2>${html(sectionLabel(key))}</h2><p>${html(lesson.sections[key])}</p>${key === 'reflection' ? `<label class="isbd-training-reflection-answer">Your reflection<textarea class="form-control" rows="3" data-reflection-answer>${html((session.progress.reflections || {})[lesson.id] || '')}</textarea><small>Saved automatically for your next visit.</small></label>` : ''}</article>`).join('')}</div>
                 ${exercise ? renderExerciseMarkup(session, exercise, session.exerciseIndex, exercises.length) : '<p>No exercise is required for this lesson.</p>'}
                 <div class="isbd-training-lesson-footer">
                     <button type="button" class="btn btn-default" data-prev-lesson ${neighboring.previous ? '' : 'disabled'}>← Previous lesson</button>
@@ -430,6 +452,7 @@
                 </div>
             </section>`;
         bindLesson(session, exercises, exercise, neighboring);
+        bindReflection(session, lesson);
         main.focus();
     }
 
@@ -450,7 +473,7 @@
                 <span class="isbd-training-skill">${html((engine.indexCurriculum(session.curriculum).skills[exercise.skill] || {}).title || exercise.skill)}</span>
             </div>
             ${exercise.initial_record || exercise.type === 'field_builder' || exercise.type === 'record_construction'
-                ? renderFieldLab(exercise, session.answers[exercise.id]) : renderAnswerControl(exercise, session.answers[exercise.id])}
+                ? renderFieldLab(exercise, session.answers[exercise.id]) : renderAnswerControl(session, exercise, session.answers[exercise.id])}
             <div class="isbd-training-practice-actions">
                 <button type="button" class="btn btn-primary" data-check-answer>Check answer</button>
                 <button type="button" class="btn btn-default" data-hint>Give me a hint</button>
@@ -498,8 +521,8 @@
         </fieldset>`;
     }
 
-    function renderAnswerControl(exercise, current) {
-        const options = exercise.options || [];
+    function renderAnswerControl(session, exercise, current) {
+        const options = randomizedOptions(session, exercise);
         if (exercise.type === 'error_detection' || exercise.type === 'multi_select') {
             const selected = Array.isArray(current) ? current : [];
             return `<fieldset class="isbd-training-choices"><legend>Select every applicable answer</legend>${options.map(option => `<label><input type="checkbox" name="exercise-answer" value="${html(option)}" ${selected.includes(option) ? 'checked' : ''}> ${html(option)}</label>`).join('')}</fieldset>`;
@@ -533,7 +556,7 @@
 
     function bindFieldLab(session, exercise) {
         const main = session.root.querySelector('.isbd-training-main');
-        const capture = () => { session.answers[exercise.id] = readAnswer(main, exercise); };
+        const capture = () => { storeDraft(session, exercise.id, readAnswer(main, exercise)); };
         main.querySelectorAll('input').forEach(input => input.addEventListener('input', capture));
         const add = main.querySelector('[data-add-subfield]');
         if (add) add.addEventListener('click', () => {
@@ -568,9 +591,19 @@
     function bindAnswerDraft(session, exercise) {
         const main = session.root.querySelector('.isbd-training-main');
         if (!exercise || exercise.initial_record || exercise.type === 'field_builder' || exercise.type === 'record_construction') return;
-        const capture = () => { session.answers[exercise.id] = readAnswer(main, exercise); };
+        const capture = () => { storeDraft(session, exercise.id, readAnswer(main, exercise)); };
         main.querySelectorAll('input[name="exercise-answer"], [data-text-answer]').forEach(control => {
             control.addEventListener(control.matches('textarea') ? 'input' : 'change', capture);
+        });
+    }
+
+    function bindReflection(session, lesson) {
+        const control = session.root.querySelector('[data-reflection-answer]');
+        if (!control) return;
+        control.addEventListener('input', event => {
+            session.progress.reflections = session.progress.reflections || {};
+            session.progress.reflections[lesson.id] = String(event.target.value || '').slice(0, 4000);
+            persist(session);
         });
     }
 
@@ -607,7 +640,7 @@
         bindAnswerDraft(session, exercise);
         main.querySelector('[data-check-answer]').addEventListener('click', () => {
             const answer = readAnswer(main, exercise);
-            session.answers[exercise.id] = answer;
+            storeDraft(session, exercise.id, answer);
             const recorded = engine.recordExerciseAttempt(session.curriculum, session.progress, exercise.id, answer);
             if (!recorded.ok) return;
             session.feedback[exercise.id] = {
@@ -638,7 +671,7 @@
         });
         main.querySelector('[data-show-answer]').addEventListener('click', () => {
             const revealed = engine.revealAnswer(session.progress, exercise);
-            session.answers[exercise.id] = engine.clone(revealed.answer);
+            storeDraft(session, exercise.id, revealed.answer);
             session.feedback[exercise.id] = {
                 correct: false, message: `Model answer: ${formatAnswer(revealed.answer)}`,
                 explanation: revealed.explanation, showExplanation: true
@@ -648,7 +681,10 @@
         });
         main.querySelector('[data-reset-exercise]').addEventListener('click', () => {
             engine.resetExerciseAssistance(session.progress, exercise.id);
-            session.answers[exercise.id] = exercise.initial_record ? defaultField(exercise) : (exercise.type === 'error_detection' ? [] : '');
+            const emptyAnswer = exercise.initial_record || exercise.type === 'field_builder' || exercise.type === 'record_construction'
+                ? defaultField(exercise)
+                : (exercise.type === 'error_detection' || exercise.type === 'multi_select' ? [] : '');
+            storeDraft(session, exercise.id, emptyAnswer);
             delete session.feedback[exercise.id];
             session.hint = '';
             persist(session);
@@ -796,10 +832,12 @@
         root.setAttribute('aria-label', 'ISBD cataloguing training workspace');
         document.body.appendChild(backdrop);
         document.body.appendChild(root);
+        const progress = loadStoredProgress(curriculum, settings || {});
         const session = {
             curriculum, settings: settings || {}, state: state || {}, root, backdrop,
-            progress: loadStoredProgress(curriculum, settings || {}), view: 'dashboard', exerciseIndex: 0,
-            answers: {}, feedback: {}, hint: '', syncMessage: '', saveTimer: null,
+            progress, view: 'dashboard', exerciseIndex: 0,
+            answers: engine.clone(progress.draft_answers || {}), feedback: {}, hint: '', syncMessage: '', saveTimer: null,
+            optionOrders: {},
             onClose: options && options.onClose
         };
         session.keyHandler = event => {

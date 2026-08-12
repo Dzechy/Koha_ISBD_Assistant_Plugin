@@ -29,10 +29,10 @@ const fixtures = JSON.parse(fs.readFileSync(path.join(root, 't/fixtures/isbd_pun
 const ruleIds = new Set((pack.rules || []).map(rule => rule.id).filter(Boolean));
 const fixtureNames = new Set(fixtures.map(fixture => fixture.name));
 
-assert.strictEqual(guide.schema_version, '4.2.0', 'training schema version is explicit');
-assert.strictEqual(guide.guide_version, '4.2.0', 'training curriculum version is explicit');
+assert.strictEqual(guide.schema_version, '4.3.0', 'training schema version is explicit');
+assert.strictEqual(guide.guide_version, '4.3.0', 'training curriculum version is explicit');
 assert(Array.isArray(guide.modules) && guide.modules.length === 11, 'curriculum has the complete eleven-module learning path');
-assert.strictEqual(guide.modules.flatMap(module => module.lessons).length, 11, 'curriculum has exactly eleven substantial lessons');
+assert.strictEqual(guide.modules.flatMap(module => module.lessons).length, 44, 'curriculum has four substantial lessons per module');
 assert(guide.modules.flatMap(module => module.lessons).flatMap(lesson => lesson.exercises).length >= 111,
   'curriculum has at least one hundred and eleven scored exercises');
 assert(Array.isArray(guide.skills) && guide.skills.length >= 10, 'curriculum declares independently mastered skills');
@@ -49,7 +49,7 @@ guide.modules.forEach(module => {
   assert(Array.isArray(module.skills) && module.skills.length, `${module.id} assesses skills`);
   module.skills.forEach(skill => assert(skillIds.has(skill), `${module.id} references declared skill ${skill}`));
   assert(Array.isArray(module.lessons), `${module.id} has lessons`);
-  assert.strictEqual(module.lessons.length, 1, `${module.id} has one comprehensive lesson`);
+  assert.strictEqual(module.lessons.length, 4, `${module.id} has core, focused, and capstone lessons`);
   module.lessons.forEach(lesson => {
     ['why', 'how', 'common_mistake', 'do_not_automate'].forEach(key => {
       assert(lesson[key], `${module.id}/${lesson.id} includes ${key}`);
@@ -57,7 +57,7 @@ guide.modules.forEach(module => {
     assert(lesson.sections && lesson.sections.introduction && lesson.sections.why_it_matters
       && lesson.sections.learn && lesson.sections.see_it && lesson.sections.reflection,
     `${module.id}/${lesson.id} supports the complete lesson model`);
-    assert(Array.isArray(lesson.exercises) && lesson.exercises.length >= 10, `${module.id}/${lesson.id} has at least ten meaningful assessments`);
+    assert(Array.isArray(lesson.exercises) && lesson.exercises.length >= 1, `${module.id}/${lesson.id} has meaningful assessed practice`);
     lesson.exercises.forEach((exercise, exerciseIndex) => {
       if (exerciseIndex > 0) {
         assert(Number(exercise.difficulty) >= Number(lesson.exercises[exerciseIndex - 1].difficulty),
@@ -86,7 +86,7 @@ guide.modules.forEach(module => {
   .forEach(type => assert(exerciseTypes.has(type), `curriculum supports ${type} questions`));
 
 assert.strictEqual(guide.modules[guide.modules.length - 1].certification, true, 'final module is a competency certification');
-const titleLab = guide.modules.find(module => module.id === 'title-responsibility').lessons[0].exercises
+const titleLab = guide.modules.find(module => module.id === 'title-responsibility').lessons.flatMap(lesson => lesson.exercises)
   .find(exercise => exercise.id === 'title-fix-245');
 assert.strictEqual(titleLab.expected_answer.subfields[0].value, 'The great Gatsby', 'training preserves prefix-on-current title boundary convention');
 assert(/^:\s/.test(titleLab.expected_answer.subfields[1].value), 'training stores the colon prefix on 245$b');

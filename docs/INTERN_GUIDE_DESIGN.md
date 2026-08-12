@@ -1,12 +1,12 @@
 # Training System Design
 
-The ISBD training system is a professional cataloguing competency course embedded in the Koha cataloguing page. It uses curriculum schema `4.2.0` in `Koha/Plugin/Cataloging/AutoPunctuation/rules/intern_guide_v2.json` and the pure browser/Node model in `js/training_engine.js`.
+The ISBD training system is a professional cataloguing competency course embedded in the Koha cataloguing page. It uses curriculum schema `4.3.0` in `Koha/Plugin/Cataloging/AutoPunctuation/rules/intern_guide_v2.json` and the pure browser/Node model in `js/training_engine.js`.
 
 ## Learning model
 
 The course follows **Learn → See → Try → Check → Understand → Practice → Master**. It teaches bibliographic concepts and relationships rather than plugin controls or isolated punctuation marks. Lessons support introduction, why it matters, learning content, annotated examples, interactive practice, feedback, explanation, reflection, and mastery evidence.
 
-The learning path contains eleven ordered modules, eleven comprehensive lessons, and 112 scored exercises. Every module has one lesson, every lesson has at least ten required exercises, and exercise difficulty is non-decreasing from foundational recognition to integrated cataloguer judgment:
+The learning path contains eleven ordered modules, 44 lessons, and 112 scored exercises. Every module has a core lesson, two focused lessons, and a capstone. Exercise difficulty is non-decreasing within each lesson and progresses from foundational recognition to integrated cataloguer judgment:
 
 1. Foundations
 2. MARC Structure
@@ -30,13 +30,13 @@ Educational content belongs in JSON whenever it can be safely represented there.
 
 ## Exercise and feedback model
 
-Supported exercise types include knowledge, recognition, application, field construction, record construction, error detection, reasoning, automation judgment, and cataloguer judgment. The MARC lab edits tags, indicators, ordered subfields, and repeated subfields.
+Supported exercise types include knowledge, recognition, application, field construction, record construction, error detection, reasoning, automation judgment, and cataloguer judgment. The MARC lab edits tags, indicators, ordered subfields, and repeated subfields. Choice arrays are shuffled on every render, with repeat-order protection, so answer position does not reveal correctness.
 
 Hints are progressive. A failed attempt records the assessed skill and contributes to weak-skill detection. The model answer is available only through an explicit action; a revealed attempt cannot count toward mastery. Final-assessment policy also excludes hinted attempts where configured.
 
 ## Progress and mastery
 
-Progress stores course, guide, and rules versions; onboarding; module and lesson progress; exercise attempts; quiz results; hint use; revealed answers; skill mastery; mistakes; review recommendations; assessment results; recent activity; and last activity.
+Progress stores course, guide, and rules versions; onboarding; module and lesson progress; exercise attempts and drafts; reflections; quiz results; hint use; revealed answers; skill mastery; mistakes; review recommendations; assessment results; recent activity; and last activity.
 
 Completion and mastery are separate:
 

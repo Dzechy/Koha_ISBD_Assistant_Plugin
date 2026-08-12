@@ -40,6 +40,8 @@ assert(source.includes('Original AI response · no applicable candidate was extr
     'the original assistant response is visibly labelled when no candidate can be applied');
 assert(source.includes('.isbd-panel .body { flex: 1 1 0; min-height: 0;'),
     'cataloging assistant body is a bounded flex scroller');
+assert(source.includes("else $panel.css('display', 'flex')") && !source.includes('class="isbd-panel" style="display:block;"'),
+    'cataloging assistant stays a flex layout when reopened so its body can scroll');
 assert(source.includes('scrollbar-gutter: stable') && source.includes('touch-action: auto'),
     'floating panels expose stable mouse, keyboard, and touch scrolling');
 assert(source.includes('.isbd-guide-modal {') && source.includes('resize: both; overflow: hidden;'),

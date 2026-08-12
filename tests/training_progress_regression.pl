@@ -27,6 +27,8 @@ my $progress = {
             { at => 20, correct => 1, score => 1, hints_used => 0 }
         ]
     },
+    draft_answers => { 'title-fix-245' => { tag => '245', ind1 => '1' } },
+    reflections   => { 'title-relationship-lab' => 'I need to verify the source.' },
     skill_mastery => {
         'semantic-relationships' => { status => 'practicing', score => 50 }
     },
@@ -43,6 +45,10 @@ is( $normalized->{onboarding}{experience}, 'basic_marc',
     'onboarding experience persists' );
 is( scalar @{ $normalized->{exercise_attempts}{'title-fix-245'} }, 2,
     'exercise attempts persist' );
+is( $normalized->{draft_answers}{'title-fix-245'}{tag}, '245',
+    'functional exercise drafts persist' );
+is( $normalized->{reflections}{'title-relationship-lab'},
+    'I need to verify the source.', 'lesson reflections persist' );
 ok( !exists $normalized->{untrusted_extra},
     'unknown top-level training data is discarded' );
 
